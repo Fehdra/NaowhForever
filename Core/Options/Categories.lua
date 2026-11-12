@@ -25,7 +25,7 @@ local CATEGORIES = {
           { name = "Top Bar", cards = { "QoL/Interface:topBar" } },
           { name = "Tooltips", cards = { "QoL/Interface:tooltips", "QoL/Interface:scout" } },
           { name = "Names & Badges", cards = { "QoL/Interface:unitNames", "QoL/Interface:supporterBadges" } },
-          { name = "Declutter", cards = { "QoL/Interface:uiClutter" } },
+          { name = "Declutter", cards = { "QoL/Interface:uiClutter", "QoL/Interface:tradeFilter" } },
           { name = "Advanced", cards = { "QoL/Interface:hdr", "QoL/Interface:consoleVariables" } },
       } },
     { name = "Character & Gear", band = "CHARACTER", navIcon = "shield",

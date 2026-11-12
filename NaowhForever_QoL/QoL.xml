@@ -41,6 +41,7 @@
     <Script file="Cursor\MouseRing.lua"/>
     <Script file="Combat\PetTracker.lua"/>
     <Script file="Interface\ChatZones.lua"/>
+    <Script file="Interface\TradeFilter.lua"/>
     <Script file="Combat\GcdTracker.lua"/>
     <Script file="Combat\FocusCastBar.lua"/>
     <Script file="Combat\DamageMeterLayout.lua"/>

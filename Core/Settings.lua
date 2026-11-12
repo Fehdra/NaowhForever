@@ -248,6 +248,9 @@ local S = UI.ModuleSettings("qol", {
     petOutline = "OUTLINE", petBackground = "none",
     petMissingText = ns.L("Pet Missing"), petPassiveText = ns.L("Pet Passive"), petLowHealthText = ns.L("Pet Low HP"),
     chatZones = F.chatZones, chatZonesChat = F.chatZonesChat, chatZonesLevel = true, chatZonesClassColour = true, chatZonesFinder = true, chatZonesWhere = true, chatZonesMaxAge = 15, chatZonesAsk = true, chatZonesShare = false,
+    tradeFilter = F.tradeFilter, tradeFilterPortals = true, tradeFilterGuilds = true, tradeFilterBoosts = true,
+    tradeFilterRepeats = true, tradeFilterRepeatMinutes = 5, tradeFilterWords = "", tradeFilterOthers = false,
+    tradeFilterAllow = "",
     finderRoles = F.finderRoles, finderRolesTank = false, finderRolesHealer = false, finderRolesDps = false,
     finderNeedTank = false, finderNeedHealer = false, finderNeedDps = false,
 

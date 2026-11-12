@@ -116,6 +116,7 @@ ns.FEATURES = {
         petTracker = false,
         chatZones = false,
         chatZonesChat = false,
+        tradeFilter = false,
         finderRoles = false,
         mouseRing = false,
         gcdTracker = false,

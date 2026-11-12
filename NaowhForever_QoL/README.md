@@ -46,6 +46,7 @@ NaowhForever_QoL/
                         (ns.OpenConsoleVariables), to change, export and import (ns.ImportConsoleVariables),
                         and the pinned ones put back at login
     ChatZones.lua       Chat Zones
+    TradeFilter.lua     Trade Spam Filter: hides spam in Trade chat, and the last hidden messages on a button
     ScoutData.lua       Scout's creature abilities and tameable beasts (packed) and armor by level, generated
     Scout.lua           Scout: abilities, armor and pet family on a creature's tooltip
     TownMailboxes.lua   mailboxes by map (ns.TownMailboxes), generated
@@ -732,6 +733,16 @@ NaowhForever_QoL/
   wide (155, 2 in). Forever's rows differ from Classic Era's, so the zone takes the activity
   line's font and stops short of the role icons, measured on screen (the icons are scaled).
   The game sends only the leader's zone; other members show one if it is known elsewhere.
+- Trade Spam Filter: a chat filter runs once per chat frame that shows the channel, so the
+  decision is kept for the message's line ID; otherwise a second chat tab would see every message
+  as a repeat. Trade is told apart by its zone channel ID (2), with the channel's base name as a
+  fallback; General (1) and LookingForGroup (26) only with Also General and LFG.
+- Trade Spam Filter keywords match whole words on the message with colors and links stripped,
+  so a "port" inside "report" or an item named like a keyword does not hide it. Your own words
+  and repeats are matched with link names kept, so an item name can be listed. "Dark Portal" is
+  let through. A guild message needs the word guild plus a recruiting word, so a question about
+  a guild still shows. Friends, Battle.net friends, your guild, your group and yourself are never
+  hidden. The repeat table is wiped past 500 entries rather than aged out one by one.
 - Chat Zones' sources can come back secret in an instance: a chat author, a search result's
   fields, its players' names and zones, and the measurements of a row or the member tooltip once
   the game has drawn secret text or icons in it, which can outlast the data's own secrecy. Each
