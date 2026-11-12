@@ -29,6 +29,8 @@ NaowhForever_Training/
   Builds.lua         talent builds: check, edit, share, learn, follow
   Trainer.lua        the prices a class trainer asks, and the module's events
   Grimoires.lua      Demon Books: the ranks each demon knows, read while it is out (Training.Grimoires)
+  Weapons.lua        your weapon skills: their level, the weapons you carry, a weapon master's price
+                     after your reputation discount (Training.WeaponSkills, Training.WeaponPrice)
   View/
     Style.lua        the planner's own look, over Shared/Style.lua (Training.Style)
     Rows.lua         pooled cards, rows and section titles, a spell's tooltip and menu (Training.Rows)
@@ -38,6 +40,7 @@ NaowhForever_Training/
     Place.lua        windows on whole pixels, kept account-wide
     Window.lua       the window (/nftraining, ns.OpenTrainingWindow, ns.ToggleTrainingWindow)
     MiniBar.lua      the mini bar
+    WeaponSkills.lua the Weapon Skills panel, on the shared tracker panel
     Toast.lua        the Level-Up Toast
     TrainerPanel.lua the Panel at the Trainer
     DemonTrainer.lua Demon Books' marks at the merchant and the line in a book's tooltip
@@ -74,6 +77,19 @@ view files and the window share.
   else 1; Dual Wield has no master (the class trainer teaches it). The Weapon Skills section of the
   Spells tab lists the ones you lack, and a click puts a waypoint on the nearest master of your faction.
   No price is known, so they read "At the trainer".
+- The Weapon Skills panel reads a skill's level from `C_SkillInfo.GetSkillLineInfoByID`, by the skill
+  line each weapon spell belongs to (`SKILL_BY_SPELL`), and the weapons you carry by their item
+  subclass (`SPELL_BY_SUBCLASS`). Known skills show only for the weapons you wear or carry unless
+  Show All Known Skills is on; the ones you lack always show unless Show Unlearned Skills is off.
+- A weapon master asks 10 silver (`BASE_COST`), less their city's reputation discount: 5% Friendly,
+  10% Honored, 15% Revered, 20% Exalted. `MASTER_FACTION` names each master's city; Bixi Wobblebonk
+  is Gnomeregan's, and Hanashi and Sayoc are Orgrimmar's. The price is the nearest master's, the one a
+  click puts a waypoint on.
+- Wands are not in TrainingWeapons (casters start with them), so the panel adds Wands only once it is
+  known.
+- The panel saves its top-left corner and is placed once, when it is built: the shared tracker panel
+  saves the anchor the game gives a dragged frame, and re-placing it on every reapply moved it as its
+  height changed.
 - A talent node is `{ spell, ranks, row, column, slot in the row, the node it needs at full rank }`; a
   build's points are nodes, one per point from level 10, 51 in all, 5 in a column for each row above.
 - Blizzard reuses a node for a new talent when it reworks a tree (the 30 October 2026 hotfix put Primal Bite

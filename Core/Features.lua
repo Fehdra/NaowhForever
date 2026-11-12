@@ -159,6 +159,7 @@ ns.FEATURES = {
         trainerPanel = true,
         spellbook = false,
         demonBooks = false,
+        weaponsShown = false,
     },
     discovery = {
         enabled = false,

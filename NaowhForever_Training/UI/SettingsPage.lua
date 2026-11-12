@@ -5,7 +5,7 @@ local Training = ns.Training
 local S = Training.Settings
 local Settings = ns.Shared.Settings
 
-local ORDER_ON_THE_WAY, ORDER_KEYS, ORDER_WINDOW, ORDER_BUILDS = 10, 15, 20, 30
+local ORDER_ON_THE_WAY, ORDER_KEYS, ORDER_WINDOW, ORDER_BUILDS, ORDER_SKILLS = 10, 15, 20, 30, 40
 local BUILDS_TAB = "builds"
 local TEXT_OFF = ns.L("Turn on the Training Planner")
 local TEXT_BUILDS_SEARCH = ns.L("talents talent points follow import export share auto spend")
@@ -149,6 +149,21 @@ page:Card({
         { key = "spellbook", label = "Spellbook Tab", toggle = true, needs = PadFree, why = PadWhy,
           help = "A Trainable tab under your spellbook that lists the spells you can train.",
           search = "spell book trainable" },
+    },
+})
+
+page:Card({
+    id = "skills", name = "Weapon Skills", order = ORDER_SKILLS,
+    help = "Your weapon skills in a small panel to leave up while you level.",
+    search = "weapon skill weapon master sword mace axe dagger bow gun staff polearm",
+    rows = {
+        { key = "weaponsShown", label = "Weapon Skills Panel", toggle = true, needs = Training.On, why = TEXT_OFF,
+          help = "Shows your weapon skill levels and where to learn the ones you lack." },
+        { key = "weaponsAll", label = "Show All Known Skills", toggle = true, needs = Training.On, why = TEXT_OFF,
+          help = "Lists every weapon skill you know, not only the weapons you carry." },
+        { key = "weaponsUnlearned", label = "Show Unlearned Skills", toggle = true, needs = Training.On,
+          why = TEXT_OFF,
+          help = "Lists the weapon skills you can still learn, with where and what they cost." },
     },
 })
 
