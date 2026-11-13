@@ -36,7 +36,7 @@ J.QuestData = {
         { 214, "Red Silk Bandanas", 14, "A", "pre", "Westfall, Sentinel Hill - Scout Riell Complete 6 quests, starting with The Defias Brotherhood, Gryan Stoutmantle, Sentinel Hill, Westfall (56.7, 47.4)", 1436, 56.7, 47.4 },
         { 166, "The Defias Brotherhood", 14, "A", "pre", "Westfall, Sentinel Hill - Gryan Stoutmantle Same prerequisites as Red Silk Bandanas (56.3, 47.5)", 1436, 56.3, 47.5 },
         { 1654, "The Test of Righteousness", 20, "A", "pre", "Paladin only - Ironforge, inside Gates - Jordan Stilwell Starts with Tome of Valor quest chains; starts in different places depending on race. See Paladin Quest guide below. (52.5, 36.9)", 1426, 52.5, 36.9, class = "PALADIN" },
-        { 95036, "A Moon-Kissed Blade", 20, "H", false, "Paladin only - Silverpine Forest, The Sepulcher - Lumina Windsinger (43.2, 40.8)", 1421, 43.2, 40.8, class = "PALADIN" },
+        { 95036, "A Moon-Kissed Blade", 20, "H", false, "Paladin only - Silverpine Forest, The Sepulcher - Lumina Windsinger (43.2, 40.8)", 1421, 43.2, 40.8, class = "PALADIN", races = 16 },
         { 92753, "Destruction in Deadmines", 9, "A", "pre", "Westfall - Alba Fairmoon Requires Explosive Consultation from Sprite Jumpsprocket in Stormwind (52.4, 53)", 1436, 52.4, 53.0 },
     } },
     { name = "Ruins of Lordaeron", map = 2999, levels = { 15, 20 }, quests = {
@@ -56,7 +56,7 @@ J.QuestData = {
         { 1014, "Arugal Must Die", 18, "H", true, "Silverpine Forest, Sepulcher - Dalar Dawnweaver (44.2, 39.8)", 1421, 44.2, 39.8 },
         { 1740, "The Orb of Soran'ruk", 20, "B", true, "Warlock only - The Barrens, Near Camp Taurajo - Doan Karhan (49.3, 57.2)", 1413, 49.3, 57.2, class = "WARLOCK" },
         { 1654, "The Test of Righteousness", 20, "A", "pre", "Paladin only - Ironforge, inside Gates - Jordan Stilwell Starts with Tome of Valor quest chains; starts in different places depending on race. See Paladin Quest guide below. (52.5, 36.9)", 1426, 52.5, 36.9, class = "PALADIN" },
-        { 95036, "A Moon-Kissed Blade", 20, "H", false, "Paladin only - Silverpine Forest, The Sepulcher - Lumina Windsinger (43.2, 40.8)", 1421, 43.2, 40.8, class = "PALADIN" },
+        { 95036, "A Moon-Kissed Blade", 20, "H", false, "Paladin only - Silverpine Forest, The Sepulcher - Lumina Windsinger (43.2, 40.8)", 1421, 43.2, 40.8, class = "PALADIN", races = 16 },
     } },
     { name = "Blackfathom Deeps", map = 48, levels = { 24, 32 }, quests = {
         { 6563, "The Essence of Aku'Mai", 17, "H", true, "Ashenvale, Zoram'gar Outpost - Je'neu Sancrea (11.6, 34.3)", 1440, 11.6, 34.3, lead = { 6562 } },
@@ -72,7 +72,7 @@ J.QuestData = {
         { 1200, "Blackfathom Villainy", 18, "A", "pre", "Blackfathom Deeps, Alcove SW of Ghamoo-ra - Argent Guard Thaelrid Requires In Search of Thaelrid" },
         { 1654, "The Test of Righteousness", 20, "A", "pre", "Paladin only - Ironforge, inside Gates - Jordan Stilwell Starts with Tome of Valor quest chains; starts in different places depending on race. See Paladin Quest guide below. (52.5, 36.9)", 1426, 52.5, 36.9, class = "PALADIN" },
         { 1442, "Seeking the Kor Gem", 20, "A", "pre", "Paladin only - Darkshore, Auberdine - Thundris Windweaver Part of The Test of Righteousness (37.4, 40.1)", 1439, 37.4, 40.1, class = "PALADIN" },
-        { 95036, "A Moon-Kissed Blade", 20, "H", false, "Paladin only - Silverpine Forest, The Sepulcher - Lumina Windsinger (43.2, 40.8)", 1421, 43.2, 40.8, class = "PALADIN" },
+        { 95036, "A Moon-Kissed Blade", 20, "H", false, "Paladin only - Silverpine Forest, The Sepulcher - Lumina Windsinger (43.2, 40.8)", 1421, 43.2, 40.8, class = "PALADIN", races = 16 },
         { 78916, "The Heart of the Void", 25, "A", false, "Blackfathom Deeps, the Blackfathom Pearl from Aku'mai; hand it in to Dawnwatcher Selgorm in Darnassus" },
     } },
     { name = "The Stockade", map = 34, levels = { 24, 32 }, quests = {
@@ -139,7 +139,7 @@ J.QuestData = {
         { 1113, "Hearts of Zeal", 30, "H", true, "Undercity, The Apothecarium - Master Apothecary Faranell Complete Going, Going, Guano!, Razorfen Kraul (48.8, 69.3)", 1458, 48.8, 69.3 },
     } },
     { name = "Scarlet Monastery - Library", map = 189, levels = { 29, 39 }, quests = {
-        { 1049, "Compendium of the Fallen", 28, "H", true, "Thunder Bluff, First Rise - Sage Truthseeker Undead cannot pick up this quest (34.4, 46.9)", 1456, 34.4, 46.9 },
+        { 1049, "Compendium of the Fallen", 28, "H", true, "Thunder Bluff, First Rise - Sage Truthseeker Undead cannot pick up this quest (34.4, 46.9)", 1456, 34.4, 46.9, races = 8589934754 },
         { 1160, "Test of Lore", 25, "H", "pre", "Undercity, The Apothecarium - Parqual Fintallas Complete 6 quests in chain, starting with Test of Faith (57.8, 65.4)", 1458, 57.8, 65.4 },
         { 1050, "Mythology of the Titans", 28, "A", true, "Ironforge, Hall of Explorers - Librarian Mae Paledust (75, 12.5)", 1455, 75.0, 12.5 },
         { 96800, "Past Due", 30, "A", true, "Alterac Mountains - Magus Olvek (9.8, 63)", 1416, 9.8, 63.0 },

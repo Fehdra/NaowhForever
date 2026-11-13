@@ -297,15 +297,17 @@ in the pull request it opens.
   Stronghold's 1.60.1.70862); it is nil where the
   client's Map table does not have the instance yet (still encrypted in 1.60.1), and those are
   found by the instance name `GetInstanceInfo` reports, so the name must be the client's own.
-- Each quest record is `{ questID, name, level, side ("A", "H" or "B"), shareable (true, false,
-  or "pre" for a prerequisite chain), where it starts, uiMapID, x, y }` (`J.C.QUEST` names the
-  fields), the last three only when its quest giver stands outside the dungeon, and `class` for
-  a class quest. Optional, from Wowhead's Forever quest database (2026-09-26), for the dungeons
-  up to level 20 so far: `alt` (the same quest's other versions, one per faction, either of which
-  counts), `steps` (the rest of its chain, all of which must be done for Done), `lead` (a lead-in
-  that only counts while you carry it) and `next` (`next[i] = { uiMapID, x, y, where }`, where
-  `steps[i]` is picked up). A step is a quest ID or a table of IDs (one per faction), any of
-  which counts.
+- Each quest record is `{ questID, name, level, side ("A", "H" or "B"), shareable (true, false, or
+  "pre" for a prerequisite chain), where it starts, uiMapID, x, y }` (`J.C.QUEST` names the
+  fields), the last three only when its quest giver stands outside the dungeon, `class` for a
+  class quest, and `races` for a quest only some races can take (a mask of their
+  `PlayableRaceBit`s, from the quest entity export; Compendium of the Fallen's also lets Horde
+  Skyborne in, whom the export's classic mask predates). Optional, from Wowhead's Forever quest
+  database (2026-09-26), for the dungeons up to level 20 so far: `alt` (the same quest's other
+  versions, one per faction, either of which counts), `steps` (the rest of its chain, all of which
+  must be done for Done), `lead` (a lead-in that only counts while you carry it) and `next`
+  (`next[i] = { uiMapID, x, y, where }`, where `steps[i]` is picked up). A step is a quest ID or a
+  table of IDs (one per faction), any of which counts.
 - The guide is Wowhead's Forever dungeon quest guide (patch 1.60.1, updated 2026-09-23).
   Positions on Stormwind, Mulgore, Redridge and the Eastern Plaguelands are converted to
   Forever's redrawn maps. The new dungeons' quests and all nine new dungeons' `levels` are by
