@@ -18,7 +18,7 @@ local PARTNER = "Player-1-PARTNER"
 
 local registry, timers, frames = {}, {}, {}
 local methods = {}
-for _, name in ipairs({ "SetSize", "SetFrameStrata", "EnableMouse", "EnableMouseWheel", "SetClampedToScreen",
+for _, name in ipairs({ "SetSize", "SetFrameStrata", "SetToplevel", "EnableMouse", "EnableMouseWheel", "SetClampedToScreen",
     "SetAllPoints", "SetJustifyH", "SetWordWrap", "SetTexCoord", "SetTexture", "SetAlpha", "RegisterForClicks" }) do
     methods[name] = Noop
 end

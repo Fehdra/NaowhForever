@@ -9,7 +9,7 @@ local function check(label, value) assert(value, label); checks = checks + 1 end
 local function Noop() end
 
 local methods = {}
-for _, name in ipairs({ "SetSize", "SetFrameStrata", "EnableMouse", "EnableMouseWheel", "SetClampedToScreen",
+for _, name in ipairs({ "SetSize", "SetFrameStrata", "SetToplevel", "EnableMouse", "EnableMouseWheel", "SetClampedToScreen",
     "SetAllPoints", "SetJustifyH", "SetWordWrap", "SetTexCoord", "SetTexture", "SetAlpha", "RegisterForClicks",
     "SetTextColor" }) do
     methods[name] = Noop

@@ -605,6 +605,7 @@ local function WindowFrame()
     window:SetScale(ns.UIScale())
     window:SetPoint("CENTER")
     window:SetFrameStrata("DIALOG")
+    window:SetToplevel(true)
     window:SetMovable(true)
     window:SetClampedToScreen(true)
     window:EnableMouse(true)
@@ -902,6 +903,7 @@ function ns.OpenOptionsWindow(pageName)
         ShowPage(currentPage)
     end
     window:Show()
+    window:Raise()
 end
 
 function ns.OpenFromOptions(open)
