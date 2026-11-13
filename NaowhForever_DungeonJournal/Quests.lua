@@ -20,6 +20,8 @@ local BOTH = "B"
 local FOLLOW_UP = "^Follow%-up from (.+)$"
 local SIDE_OF = { A = "Alliance", H = "Horde" }
 local PARTY = { "party1", "party2", "party3", "party4" }
+local RACE_ID = 3
+local RACE_BITS = { [1] = 0, [2] = 1, [3] = 2, [4] = 3, [5] = 4, [6] = 5, [7] = 6, [8] = 7, [95] = 32, [96] = 33 }
 
 local TEXT_QUEST_GIVER = ns.L(" (quest giver)")
 local TEXT_SPOT = " (%s)"
@@ -98,8 +100,14 @@ local function ForSide(side, faction)
     return side == BOTH or (own ~= nil and own == faction)
 end
 
-local function ForMe(quest, class, faction)
+local function ForRace(mask, unit)
+    local bit = RACE_BITS[select(RACE_ID, UnitRace(unit))]
+    return not bit or math.floor(mask / 2 ^ bit) % 2 == 1
+end
+
+local function ForMe(quest, class, faction, unit)
     if quest.class and quest.class ~= class then return false end
+    if quest.races and not ForRace(quest.races, unit or "player") then return false end
     return ForSide(quest[SIDE], faction)
 end
 
@@ -341,6 +349,13 @@ end
 function Q.ForMe(quest)
     local _, class = UnitClass("player")
     return ForMe(quest, class, UnitFactionGroup("player"))
+end
+
+function Q.ForUnit(quest, unit)
+    local need = Q.MinLevel(quest)
+    if need and UnitLevel(unit) < need then return false end
+    local _, class = UnitClass(unit)
+    return ForMe(quest, class, UnitFactionGroup(unit), unit)
 end
 
 function Q.Chain(quest)

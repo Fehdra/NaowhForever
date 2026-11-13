@@ -408,6 +408,7 @@ end
 Kinds.item = {
     New = function(view)
         local row = CreateFrame("Button", nil, view)
+        row.journalItem = true
         row.hover = Parts.CardBand(row, St.ITEM_HOVER)
         row.hover:Hide()
         row.stripe = Parts.CardBand(row, St.STRIPE)

@@ -30,7 +30,7 @@ NaowhForever_DungeonJournal/
   Kills.lua            this character's kills of each boss: when, how long, with whom, this run (J.Kills)
   Looted.lua           what this character has looted in the Journal's dungeons, with whom, the rolls (J.Looted)
   Sharing.lua          asking a group member with Naowh Forever to share a quest, and answering (J.Sharing)
-  ShareQuests.lua      Share All: a dungeon's quests in your log shared with your group, one at a time
+  ShareQuests.lua      Share All: a dungeon's quests in your log shared, one at a time, with the members who need them
   AcceptShared.lua     Accept Shared Dungeon Quests
   Quartermasters.lua   where each faction's quartermaster and your rank vendor stand, learned at the vendor
   ItemProbe.lua        /nf itemprobe: asks the server for every item listed, for Tools/sources/items_in_game.py
@@ -101,6 +101,7 @@ NaowhForever_DungeonJournal/
     MapWindow.lua      the map's own window: the map, the list, the picked boss's page
     MapOverlay.lua     the dungeon's map over the world map's picture, inside the dungeon
     MapTools.lua       /nf mappins (place the pins, Copy for Data/Maps.lua) and /nf mapcheck
+    ItemSource.lua     Where It Drops: the bosses that drop an item, with their dungeon and chance, on its tooltip anywhere
     SettingsPage.lua   its settings pages (Journal, Quest Tracker, Map), declared as cards
   Media/Maps/          local dungeon pictures as BLP, including 34 imported, 22 assembled and 21 of Santiago Reyes's downloads; selected by Data/Maps.lua
   README.md            this file
@@ -296,15 +297,17 @@ in the pull request it opens.
   Stronghold's 1.60.1.70862); it is nil where the
   client's Map table does not have the instance yet (still encrypted in 1.60.1), and those are
   found by the instance name `GetInstanceInfo` reports, so the name must be the client's own.
-- Each quest record is `{ questID, name, level, side ("A", "H" or "B"), shareable (true, false,
-  or "pre" for a prerequisite chain), where it starts, uiMapID, x, y }` (`J.C.QUEST` names the
-  fields), the last three only when its quest giver stands outside the dungeon, and `class` for
-  a class quest. Optional, from Wowhead's Forever quest database (2026-09-26), for the dungeons
-  up to level 20 so far: `alt` (the same quest's other versions, one per faction, either of which
-  counts), `steps` (the rest of its chain, all of which must be done for Done), `lead` (a lead-in
-  that only counts while you carry it) and `next` (`next[i] = { uiMapID, x, y, where }`, where
-  `steps[i]` is picked up). A step is a quest ID or a table of IDs (one per faction), any of
-  which counts.
+- Each quest record is `{ questID, name, level, side ("A", "H" or "B"), shareable (true, false, or
+  "pre" for a prerequisite chain), where it starts, uiMapID, x, y }` (`J.C.QUEST` names the
+  fields), the last three only when its quest giver stands outside the dungeon, `class` for a
+  class quest, and `races` for a quest only some races can take (a mask of their
+  `PlayableRaceBit`s, from the quest entity export; Compendium of the Fallen's also lets Horde
+  Skyborne in, whom the export's classic mask predates). Optional, from Wowhead's Forever quest
+  database (2026-09-26), for the dungeons up to level 20 so far: `alt` (the same quest's other
+  versions, one per faction, either of which counts), `steps` (the rest of its chain, all of which
+  must be done for Done), `lead` (a lead-in that only counts while you carry it) and `next`
+  (`next[i] = { uiMapID, x, y, where }`, where `steps[i]` is picked up). A step is a quest ID or a
+  table of IDs (one per faction), any of which counts.
 - The guide is Wowhead's Forever dungeon quest guide (patch 1.60.1, updated 2026-09-23).
   Positions on Stormwind, Mulgore, Redridge and the Eastern Plaguelands are converted to
   Forever's redrawn maps. The new dungeons' quests and all nine new dungeons' `levels` are by
@@ -353,6 +356,17 @@ in the pull request it opens.
   so they start at TBD with whom their quest text says to hand them in to. Blood and Thunder,
   filed under Blackrock Spire, is left out: it only sends you to Warlord Goretooth, and neither
   source says which wing it is for.
+- The quests ForeverChanges has since filed under Alcaz Prison, Krol'dok Stronghold, Razorfen
+  Downs, Zul'Farrak and Maraudon were added by hand from its quest list (2026-11-13), each
+  checked against EG Link's server data (build 1.60.1.70888), which gives the same levels and
+  is where shareable and the chains (`steps`) are from. The Coldbringer's Eye's Alliance giver is
+  ForeverChanges' pin, as is Twilight Mementos'; Commander Folkar and Mason Connery, inside the
+  prison, are the givers their quest text names. Five more that only the server's data has are in
+  too: Krol'dok No More! (the Alliance's; the Horde's version is unfinished there), Blackmaw
+  Reclamation, A Lost Memento, Digestible Research and The Broken Glaive. Left out: the other
+  versions of State Secrets and Blackmaw Pouches, which have no text, the City of Dalaran's
+  level 52 to 60 quests, which are the city's and not the dungeon's, and the Season of Discovery
+  quests the server also sent (Ever After, Nostro's Compendium).
 - Scarlet Monastery's four wings share one instance (189), each its own dungeon with classic's
   ranges. A quest goes under the wing it is done in: Hearts of Zeal (hearts from any wing) under
   the first, the two that kill Loksey, Herod, Mograine and Whitemane under the Cathedral.
@@ -426,6 +440,9 @@ in the pull request it opens.
   downloads of 2026-11-08, scaled the same way.
 - Shaper's Terrace (his 11/26 version) and the Prismatic Talus are his sreyesmaps.com
   downloads of 2026-11-09, scaled the same way.
+- Shaper's Terrace's portal stands north of the Un'Goro map's edge, so its entrance is the stairs up to it on
+  Un'Goro's northern rim, above Marshal's Refuge, where the world map shows it in Un'Goro. Krol'dok
+  Stronghold's, Alcaz Prison's and Blackmaw Hold's entrances are from an entrance guide (Nov 2026).
 - The Drowned City, Krol'dok Stronghold, Shaper's Terrace and Alcaz Prison have no pins yet:
   his maps mark no bosses and no source says where they stand. With no pins, every floor is
   offered.
@@ -470,6 +487,9 @@ in the pull request it opens.
 - The opacity was one setting (`windowAlpha`) before the tracker had its own: a player who set it
   keeps it on the tracker, copied once on the first login with it; the tracker's own setting, once
   set, is never written over. The Journal's windows have no opacity setting: they are always solid.
+- Where It Drops lists an item's three likeliest sources and counts the rest; the Journal's own item rows
+  (`journalItem`) skip it, as they already say where the item drops. The tooltip hook cannot be removed,
+  so it is added the first time the setting is on and checks the setting on every tooltip.
 - `J.OPTION_GROUPS` is the one list the Filters menu and the settings page are built from, so
   both offer the same switches in the same words, and either changes the other.
 - Dungeons sharing one instance (Scarlet Monastery's wings) are told apart by the subzone you
@@ -578,6 +598,10 @@ in the pull request it opens.
   `ANSWER_WAIT` 30 at most), and one that came back busy goes to the back of the queue
   (`RETRIES` 2). The push results come as system messages, or as UI messages with the text
   second. Sharing is blocked in combat: the queue waits for it to end.
+- Share All shares a quest only while a connected member is not on it and could take it (their
+  faction, class, race and the level it needs, read out of combat only, so in combat every quest
+  is queued and checked when sharing carries on). The game cannot say who has handed a quest in,
+  so a member it answers "has completed that quest" for is remembered for the session.
 - Accept Shared Dungeon Quests counts every ID the data knows (a quest, its versions, its
   chain's steps, its lead-in); QoL's skip key leaves one open to look at, and with QoL's Accept
   Quests on, that takes every quest already.

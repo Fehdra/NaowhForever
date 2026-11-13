@@ -92,6 +92,7 @@ local function Fixture(opts)
         -- opts.party: one set of quest IDs per group member, party1 first.
         GetNumSubgroupMembers = function() return opts.party and #opts.party or 0 end,
         UnitClass = function() return "Mage", opts.class or "MAGE" end,
+        UnitRace = function() return "Human", "Human", opts.race or 1 end,
         UnitFactionGroup = function() return opts.faction or "Alliance" end,
         QuestDifficultyColors = COLORS,
         GetQuestDifficultyColor = function(questLevel) return DifficultyColor(questLevel, level) end,
@@ -255,6 +256,21 @@ Case("only your faction's quests and your class's class quests", function()
     assert(EntryFor(Q, J, 600) == nil)
     J.QuestData[1].quests[3].class = "MAGE"
     assert(EntryFor(Q, J, 600))
+end)
+
+Case("a quest only some races can take is listed for those races", function()
+    local Q, _, _, J = Fixture({ faction = "Horde", race = 5, done = DEFIAS })
+    J.QuestData[1].quests[3].races = 162
+    assert(EntryFor(Q, J, 600) == nil, "Undead cannot take an Orc, Tauren and Troll quest")
+    Q, _, _, J = Fixture({ faction = "Horde", race = 6, done = DEFIAS })
+    J.QuestData[1].quests[3].races = 162
+    assert(EntryFor(Q, J, 600), "a Tauren can")
+    Q, _, _, J = Fixture({ faction = "Horde", race = 5, done = DEFIAS })
+    J.QuestData[1].quests[3].races = 16
+    assert(EntryFor(Q, J, 600), "an Undead-only quest is listed for Undead")
+    Q, _, _, J = Fixture({ faction = "Horde", race = 96, done = DEFIAS })
+    J.QuestData[1].quests[3].races = 162 + 2 ^ 33
+    assert(EntryFor(Q, J, 600), "Horde Skyborne's bit is past 32 and still read")
 end)
 
 Case("handed in quests are not listed", function()

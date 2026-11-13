@@ -12,6 +12,8 @@ local NAME_MARK = "\001"
 local FORMAT_NAME = "%%%d?%$?s"
 local MAGIC = "[%^%$%(%)%%%.%[%]%*%+%-%?]"
 local CAPTURE = "(.+)"
+local NAME_PART = "^([^%-]+)"
+local PARTY = { "party1", "party2", "party3", "party4" }
 
 local TEXT_BUSY = ns.L("Someone was busy for %s; sharing it again after the rest.")
 local TEXT_NO_GROUP = ns.L("Stopped sharing: you are not in a group.")
@@ -19,14 +21,18 @@ local TEXT_DONE = ns.L("Done sharing.")
 local TEXT_AFTER_COMBAT = ns.L("Sharing carries on after combat.")
 local TEXT_JOIN = ns.L("Join a group to share quests.")
 local TEXT_NONE = ns.L("None of your quests for this dungeon can be shared.")
+local TEXT_ALL_HAVE = ns.L("Your group has these quests already, or cannot take them.")
 local TEXT_ALREADY = ns.L("Those quests are being shared already.")
 local TEXT_SHARING = ns.L("Sharing %s. Each one waits until your group has answered the one before.")
 local TEXT_LIST = ", "
+local TEXT_QUESTS = "; "
+local TEXT_FOR = "%s (%s)"
 
 local EMPTY = {}
 local shareQueue, sharing = {}, nil
 local shareFrame
-local sentPattern, busyPattern, answerPatterns
+local sentPattern, busyPattern, donePattern, answerPatterns
+local questOf, doneBy, members = {}, {}, {}
 local NextShare
 
 local function QuestName(id)
@@ -48,6 +54,20 @@ local function PushPatterns()
     end
     sentPattern = ERR_QUEST_PUSH_SUCCESS_S and Pattern(ERR_QUEST_PUSH_SUCCESS_S)
     busyPattern = ERR_QUEST_PUSH_BUSY_S and Pattern(ERR_QUEST_PUSH_BUSY_S)
+    donePattern = ERR_QUEST_PUSH_ALREADY_DONE_S and Pattern(ERR_QUEST_PUSH_ALREADY_DONE_S)
+end
+
+local function Members(quest, id)
+    wipe(members)
+    for i = 1, math.min(GetNumSubgroupMembers(), #PARTY) do
+        local unit = PARTY[i]
+        local name = UnitName(unit)
+        if name and not issecretvalue(name) and UnitIsConnected(unit) and not (doneBy[name] and doneBy[name][id])
+                and not J.Quests.UnitOnQuest(unit, quest, id) and J.Quests.ForUnit(quest, unit) then
+            members[#members + 1] = name
+        end
+    end
+    return members
 end
 
 local function FinishShare()
@@ -88,7 +108,7 @@ function NextShare()
         return
     end
     local index = C_QuestLog.GetLogIndexForQuestID(cur.id)
-    if not index then return NextShare() end
+    if not index or #Members(cur.quest, cur.id) == 0 then return NextShare() end
     QuestLogPushQuest(index)
     sharing, cur.sent, cur.answered = cur, {}, {}
     WaitForAnswers(cur)
@@ -107,6 +127,11 @@ local function OnAnswer(cur, msg)
         if name then
             cur.answered[name] = true
             if busyPattern and msg:match(busyPattern) then cur.busy = true end
+            if donePattern and msg:match(donePattern) then
+                local short = name:match(NAME_PART) or name
+                doneBy[short] = doneBy[short] or {}
+                doneBy[short][cur.id] = true
+            end
             if AllAnswered(cur) then FinishShare() end
             return
         end
@@ -133,10 +158,12 @@ local function Queue(ids)
     local queued = { [sharing and sharing.id or 0] = true }
     for _, item in ipairs(shareQueue) do queued[item.id] = true end
     local names = {}
+    local combat = InCombatLockdown()
     for _, id in ipairs(ids) do
         if not queued[id] then
-            shareQueue[#shareQueue + 1] = { id = id, tries = 0 }
-            names[#names + 1] = QuestName(id)
+            shareQueue[#shareQueue + 1] = { id = id, quest = questOf[id], tries = 0 }
+            local name = QuestName(id)
+            names[#names + 1] = combat and name or TEXT_FOR:format(name, table.concat(Members(questOf[id], id), TEXT_LIST))
         end
     end
     return names
@@ -152,12 +179,17 @@ local function Listen()
 end
 
 function Sharing.Shareable(dungeon)
-    local ids = {}
+    local ids, pushable = {}, 0
+    local combat = InCombatLockdown()
     for _, quest in ipairs(dungeon.quests and dungeon.quests.quests or EMPTY) do
         local id = J.Quests.LoggedID(quest)
-        if id and C_QuestLog.IsPushableQuest(id) then ids[#ids + 1] = id end
+        if id and C_QuestLog.IsPushableQuest(id) then
+            pushable = pushable + 1
+            questOf[id] = quest
+            if combat or #Members(quest, id) > 0 then ids[#ids + 1] = id end
+        end
     end
-    return ids
+    return ids, pushable
 end
 
 function Sharing.ShareAll(dungeon)
@@ -165,9 +197,9 @@ function Sharing.ShareAll(dungeon)
         ns.Print(TEXT_JOIN)
         return
     end
-    local ids = Sharing.Shareable(dungeon)
+    local ids, pushable = Sharing.Shareable(dungeon)
     if #ids == 0 then
-        ns.Print(TEXT_NONE)
+        ns.Print(pushable > 0 and TEXT_ALL_HAVE or TEXT_NONE)
         return
     end
     local names = Queue(ids)
@@ -175,7 +207,7 @@ function Sharing.ShareAll(dungeon)
         ns.Print(TEXT_ALREADY)
         return
     end
-    ns.Print(TEXT_SHARING:format(table.concat(names, TEXT_LIST)))
+    ns.Print(TEXT_SHARING:format(table.concat(names, TEXT_QUESTS)))
     Listen()
     if not sharing then NextShare() end
 end

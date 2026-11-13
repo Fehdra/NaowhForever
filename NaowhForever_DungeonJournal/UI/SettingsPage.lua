@@ -205,6 +205,15 @@ local function DeclareJournal()
         rows = ListRows(),
     })
     page:Card({
+        id = "tooltips", name = "Item Tooltips", order = ORDER_THIRD,
+        help = "What the Journal adds to an item's tooltip anywhere in the game.",
+        search = "drops from source boss dungeon chance",
+        rows = {
+            Toggle("itemSources", "Where It Drops",
+                "Adds the bosses that drop an item, their dungeon and the chance, to its tooltip."),
+        },
+    })
+    page:Card({
         id = "keys", name = "Key Binding", order = ORDER_FOURTH,
         help = "The key that opens the Journal.",
         search = "up down arrow keys ctrl+f ctrl f search recent reset kills loot",

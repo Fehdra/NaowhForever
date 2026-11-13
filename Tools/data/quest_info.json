@@ -1280,6 +1280,11 @@
   "name": "Leaders of the Fang",
   "reqlevel": 10
  },
+ "92065": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "name": "Blackmaw Reclamation",
+  "reqlevel": 47
+ },
  "92066": {
   "from": "ForeverChanges",
   "name": "The Twin Bears",
@@ -1289,6 +1294,11 @@
   "from": "EG Link, the server's quest data (1.60.1.70862)",
   "name": "Claws That Rend, Tusks that Gore",
   "reqlevel": 45
+ },
+ "92070": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "name": "A Lost Memento",
+  "reqlevel": 47
  },
  "92343": {
   "from": "ForeverChanges",
@@ -1341,6 +1351,16 @@
   "name": "Destruction in Deadmines",
   "reqlevel": 9
  },
+ "93404": {
+  "from": "ForeverChanges",
+  "name": "Rot and Regret",
+  "reqlevel": 35
+ },
+ "93604": {
+  "from": "ForeverChanges",
+  "name": "Agamaggan's Blood",
+  "reqlevel": 35
+ },
  "93835": {
   "name": "Confront Lorthuna",
   "reqlevel": 7
@@ -1353,10 +1373,40 @@
   "name": "Call of Fire",
   "reqlevel": 10
  },
+ "94968": {
+  "from": "ForeverChanges",
+  "name": "Eye of Mugg",
+  "reqlevel": 40
+ },
+ "94969": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "name": "Krol'dok No More!",
+  "reqlevel": 40
+ },
+ "94973": {
+  "from": "ForeverChanges",
+  "name": "Krol'dok Moulding",
+  "reqlevel": 38
+ },
+ "94975": {
+  "from": "ForeverChanges",
+  "name": "A Token of Vengeance",
+  "reqlevel": 38
+ },
+ "94980": {
+  "from": "ForeverChanges",
+  "name": "Krol'dok Moulding",
+  "reqlevel": 38
+ },
  "94982": {
   "from": "EG Link, the server's quest data (1.60.1.70840)",
   "name": "Eye of Mugg",
   "reqlevel": 40
+ },
+ "94983": {
+  "from": "ForeverChanges",
+  "name": "Twilight Mementos",
+  "reqlevel": 38
  },
  "94984": {
   "from": "EG Link, the server's quest data (1.60.1.70840)",
@@ -1399,6 +1449,21 @@
   "from": "EG Link, the server's quest data (1.60.1.70840)",
   "name": "Abominable Creatures",
   "reqlevel": 15
+ },
+ "95262": {
+  "from": "ForeverChanges",
+  "name": "The Secret Prison",
+  "reqlevel": 48
+ },
+ "95309": {
+  "from": "ForeverChanges",
+  "name": "No Orc Left Behind",
+  "reqlevel": 48
+ },
+ "95454": {
+  "from": "ForeverChanges",
+  "name": "The Honor of the Kor'kron",
+  "reqlevel": 48
  },
  "95508": {
   "name": "Unwelcome Guests",
@@ -1474,6 +1539,11 @@
   "name": "Shady Saltseers",
   "reqlevel": 34
  },
+ "95790": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "name": "Digestible Research",
+  "reqlevel": 55
+ },
  "95791": {
   "from": "EG Link, the server's quest data (1.60.1.70840)",
   "name": "The Saltseer Captain",
@@ -1542,6 +1612,21 @@
   "name": "For Love Eternal",
   "reqlevel": 11
  },
+ "96332": {
+  "from": "ForeverChanges",
+  "name": "A Little Payback",
+  "reqlevel": 48
+ },
+ "96334": {
+  "from": "ForeverChanges",
+  "name": "Blood Red Bandanas",
+  "reqlevel": 48
+ },
+ "96335": {
+  "from": "ForeverChanges",
+  "name": "The Man in the Iron Chains",
+  "reqlevel": 48
+ },
  "96337": {
   "from": "EG Link, the server's quest data (1.60.1.70840)",
   "name": "More Valuable Than Gold",
@@ -1550,6 +1635,11 @@
  "96377": {
   "from": "EG Link, the server's quest data (1.60.1.70840)",
   "name": "State Secrets",
+  "reqlevel": 48
+ },
+ "96381": {
+  "from": "ForeverChanges",
+  "name": "A Bit of Wet Work",
   "reqlevel": 48
  },
  "96393": {
@@ -1568,6 +1658,11 @@
   "name": "Important Heirlooms",
   "reqlevel": 10
  },
+ "96770": {
+  "from": "ForeverChanges",
+  "name": "The Witch Doctor's Head",
+  "reqlevel": 39
+ },
  "96771": {
   "from": "EG Link, the server's quest data (1.60.1.70840)",
   "name": "Vengeance of the Highborne",
@@ -1578,10 +1673,20 @@
   "name": "The Dragon's Journal",
   "reqlevel": 46
  },
+ "96773": {
+  "from": "ForeverChanges",
+  "name": "The Coldbringer's Eye",
+  "reqlevel": 34
+ },
  "96774": {
   "from": "ForeverChanges",
   "name": "Ancient Gurubashi Idol",
   "reqlevel": 30
+ },
+ "96775": {
+  "from": "ForeverChanges",
+  "name": "Zum'rah's Head",
+  "reqlevel": 42
  },
  "96776": {
   "from": "EG Link, the server's quest data (1.60.1.70840)",
@@ -1728,6 +1833,11 @@
   "from": "ForeverChanges",
   "name": "Prehistoric Prism",
   "reqlevel": 24
+ },
+ "98830": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "name": "The Broken Glaive",
+  "reqlevel": 52
  },
  "994": {
   "name": "Escape Through Force",

@@ -385,7 +385,13 @@ local function fixture(settings, noBis, language)
             return member and member.name
         end,
         QuestLogPushQuest = function(index) state.pushed[#state.pushed + 1] = index end,
-        Enum = { SendAddonMessageResult = { Success = 0 }, PvPRanks = { Rank_1 = 5 }, UIMapType = { Zone = 3 } },
+        Enum = { SendAddonMessageResult = { Success = 0 }, PvPRanks = { Rank_1 = 5 }, UIMapType = { Zone = 3 },
+            TooltipDataType = { Item = 0 } },
+        -- Item tooltip post-calls, kept for a test to call.
+        TooltipDataProcessor = { AddTooltipPostCall = function(_, fn)
+            state.itemTips = state.itemTips or {}
+            state.itemTips[#state.itemTips + 1] = fn
+        end },
         Menu = { GetManager = function() return { IsAnyMenuOpen = function() return false end } end },
         C_ChatInfo = {
             InChatMessagingLockdown = function() return state.locked end,
@@ -695,7 +701,7 @@ do
     check("The Glowing Shard is listed", glowing ~= nil)
     check("and has a waypoint: the dungeon's entrance", glowing.canWaypoint)
     check("hundreds of bosses", bosses > 150)
-    check("the entrances with a source that matches Forever's map", entrances == 32)
+    check("the entrances with a source that matches Forever's map", entrances == 35)
     local boss, dungeon = J.Boss(639)
     check("the boss loot window finds a boss by its NPC ID", boss and boss.name == "Edwin VanCleef"
         and dungeon.key == "Deadmines")
@@ -4038,7 +4044,24 @@ do
     -- The pin itself: the dungeon's door, a raid's own, and a waypoint on a click.
     shownMap, state.onMap = 1445, nil   -- Dustwallow Marsh: Onyxia's Lair
     providers[1]:RefreshAllData()
-    check("Onyxia's Lair on its zone", #pins == 1 and pins[1].dungeons[1].raid ~= nil)
+    local onyxia, alcaz
+    for _, group in ipairs(pins) do
+        local key = group.dungeons[1].key
+        if key == "OnyxiasLair" then onyxia = group elseif key == "AlcazPrison" then alcaz = group end
+    end
+    check("Onyxia's Lair on its zone", #pins == 2 and onyxia ~= nil and onyxia.dungeons[1].raid ~= nil)
+    check("and Alcaz Prison beside it", alcaz ~= nil)
+    shownMap = 1449   -- Un'Goro Crater: Shaper's Terrace's stairs on its northern rim
+    providers[1]:RefreshAllData()
+    check("Shaper's Terrace on Un'Goro's map", #pins == 1 and pins[1].dungeons[1].key == "ShapersTerrace")
+    shownMap = 1445
+    providers[1]:RefreshAllData()
+    for _, group in ipairs(pins) do
+        if group.dungeons[1].key == "OnyxiasLair" then onyxia = group end
+    end
+    for i, group in ipairs(pins) do
+        if group == onyxia then table.remove(pins, i); table.insert(pins, 1, onyxia) end
+    end
     local Pin = state.env.NaowhForeverEntrancePinMixin
     local pin = state.worldMap:CreateTexture()
     pin.Icon = state.worldMap:CreateTexture()
@@ -4131,6 +4154,43 @@ do
     end
     turnOn.click()
     check("an item's menu turns the BiS List on", state.turnedOn == "NaowhForever_BiS")
+end
+
+-------------------------------------------------------------------------------
+--  Where It Drops: an item's bosses on its tooltip anywhere
+-------------------------------------------------------------------------------
+do
+    local ns, state, S = fixture({ enabled = true, itemSources = false })
+    ns.Apply()
+    check("Where It Drops is on by default", state.defaults.itemSources == true)
+    check("off, no tooltip is hooked", state.itemTips == nil)
+    S.Set("itemSources", true)
+    check("on, the item tooltip is hooked", state.itemTips and #state.itemTips == 1)
+    S.Set("itemSources", false)
+    S.Set("itemSources", true)
+    ns.Apply()
+    check("and only once", #state.itemTips == 1)
+    local lines, owner = {}, nil
+    local tooltip = {
+        AddLine = function(_, text) lines[#lines + 1] = text end,
+        GetOwner = function() return owner end,
+    }
+    local post = state.itemTips[1]
+    post(tooltip, { id = 5202 })
+    check("an item names its boss, dungeon and chance", lines[1] == "Drops from Edwin VanCleef, The Deadmines (24%)")
+    lines = {}
+    post(tooltip, { id = 1945 })
+    check("trash says so", lines[1] == "Drops from Trash, The Deadmines (6%)")
+    lines = {}
+    post(tooltip, { id = 6948 })
+    check("an item no boss drops adds nothing", #lines == 0)
+    owner = { journalItem = true }
+    post(tooltip, { id = 5202 })
+    check("the Journal's own item rows add nothing", #lines == 0)
+    owner = nil
+    S.Set("itemSources", false)
+    post(tooltip, { id = 5202 })
+    check("switched off, nothing", #lines == 0)
 end
 
 print(("test-dungeon-journal: %d checks passed"):format(checks))

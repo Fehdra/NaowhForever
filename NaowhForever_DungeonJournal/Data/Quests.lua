@@ -36,7 +36,7 @@ J.QuestData = {
         { 214, "Red Silk Bandanas", 14, "A", "pre", "Westfall, Sentinel Hill - Scout Riell Complete 6 quests, starting with The Defias Brotherhood, Gryan Stoutmantle, Sentinel Hill, Westfall (56.7, 47.4)", 1436, 56.7, 47.4 },
         { 166, "The Defias Brotherhood", 14, "A", "pre", "Westfall, Sentinel Hill - Gryan Stoutmantle Same prerequisites as Red Silk Bandanas (56.3, 47.5)", 1436, 56.3, 47.5 },
         { 1654, "The Test of Righteousness", 20, "A", "pre", "Paladin only - Ironforge, inside Gates - Jordan Stilwell Starts with Tome of Valor quest chains; starts in different places depending on race. See Paladin Quest guide below. (52.5, 36.9)", 1426, 52.5, 36.9, class = "PALADIN" },
-        { 95036, "A Moon-Kissed Blade", 20, "H", false, "Paladin only - Silverpine Forest, The Sepulcher - Lumina Windsinger (43.2, 40.8)", 1421, 43.2, 40.8, class = "PALADIN" },
+        { 95036, "A Moon-Kissed Blade", 20, "H", false, "Paladin only - Silverpine Forest, The Sepulcher - Lumina Windsinger (43.2, 40.8)", 1421, 43.2, 40.8, class = "PALADIN", races = 16 },
         { 92753, "Destruction in Deadmines", 9, "A", "pre", "Westfall - Alba Fairmoon Requires Explosive Consultation from Sprite Jumpsprocket in Stormwind (52.4, 53)", 1436, 52.4, 53.0 },
     } },
     { name = "Ruins of Lordaeron", map = 2999, levels = { 15, 20 }, quests = {
@@ -56,7 +56,7 @@ J.QuestData = {
         { 1014, "Arugal Must Die", 18, "H", true, "Silverpine Forest, Sepulcher - Dalar Dawnweaver (44.2, 39.8)", 1421, 44.2, 39.8 },
         { 1740, "The Orb of Soran'ruk", 20, "B", true, "Warlock only - The Barrens, Near Camp Taurajo - Doan Karhan (49.3, 57.2)", 1413, 49.3, 57.2, class = "WARLOCK" },
         { 1654, "The Test of Righteousness", 20, "A", "pre", "Paladin only - Ironforge, inside Gates - Jordan Stilwell Starts with Tome of Valor quest chains; starts in different places depending on race. See Paladin Quest guide below. (52.5, 36.9)", 1426, 52.5, 36.9, class = "PALADIN" },
-        { 95036, "A Moon-Kissed Blade", 20, "H", false, "Paladin only - Silverpine Forest, The Sepulcher - Lumina Windsinger (43.2, 40.8)", 1421, 43.2, 40.8, class = "PALADIN" },
+        { 95036, "A Moon-Kissed Blade", 20, "H", false, "Paladin only - Silverpine Forest, The Sepulcher - Lumina Windsinger (43.2, 40.8)", 1421, 43.2, 40.8, class = "PALADIN", races = 16 },
     } },
     { name = "Blackfathom Deeps", map = 48, levels = { 24, 32 }, quests = {
         { 6563, "The Essence of Aku'Mai", 17, "H", true, "Ashenvale, Zoram'gar Outpost - Je'neu Sancrea (11.6, 34.3)", 1440, 11.6, 34.3, lead = { 6562 } },
@@ -72,7 +72,7 @@ J.QuestData = {
         { 1200, "Blackfathom Villainy", 18, "A", "pre", "Blackfathom Deeps, Alcove SW of Ghamoo-ra - Argent Guard Thaelrid Requires In Search of Thaelrid" },
         { 1654, "The Test of Righteousness", 20, "A", "pre", "Paladin only - Ironforge, inside Gates - Jordan Stilwell Starts with Tome of Valor quest chains; starts in different places depending on race. See Paladin Quest guide below. (52.5, 36.9)", 1426, 52.5, 36.9, class = "PALADIN" },
         { 1442, "Seeking the Kor Gem", 20, "A", "pre", "Paladin only - Darkshore, Auberdine - Thundris Windweaver Part of The Test of Righteousness (37.4, 40.1)", 1439, 37.4, 40.1, class = "PALADIN" },
-        { 95036, "A Moon-Kissed Blade", 20, "H", false, "Paladin only - Silverpine Forest, The Sepulcher - Lumina Windsinger (43.2, 40.8)", 1421, 43.2, 40.8, class = "PALADIN" },
+        { 95036, "A Moon-Kissed Blade", 20, "H", false, "Paladin only - Silverpine Forest, The Sepulcher - Lumina Windsinger (43.2, 40.8)", 1421, 43.2, 40.8, class = "PALADIN", races = 16 },
         { 78916, "The Heart of the Void", 25, "A", false, "Blackfathom Deeps, the Blackfathom Pearl from Aku'mai; hand it in to Dawnwatcher Selgorm in Darnassus" },
     } },
     { name = "The Stockade", map = 34, levels = { 24, 32 }, quests = {
@@ -139,7 +139,7 @@ J.QuestData = {
         { 1113, "Hearts of Zeal", 30, "H", true, "Undercity, The Apothecarium - Master Apothecary Faranell Complete Going, Going, Guano!, Razorfen Kraul (48.8, 69.3)", 1458, 48.8, 69.3 },
     } },
     { name = "Scarlet Monastery - Library", map = 189, levels = { 29, 39 }, quests = {
-        { 1049, "Compendium of the Fallen", 28, "H", true, "Thunder Bluff, First Rise - Sage Truthseeker Undead cannot pick up this quest (34.4, 46.9)", 1456, 34.4, 46.9 },
+        { 1049, "Compendium of the Fallen", 28, "H", true, "Thunder Bluff, First Rise - Sage Truthseeker Undead cannot pick up this quest (34.4, 46.9)", 1456, 34.4, 46.9, races = 8589934754 },
         { 1160, "Test of Lore", 25, "H", "pre", "Undercity, The Apothecarium - Parqual Fintallas Complete 6 quests in chain, starting with Test of Faith (57.8, 65.4)", 1458, 57.8, 65.4 },
         { 1050, "Mythology of the Titans", 28, "A", true, "Ironforge, Hall of Explorers - Librarian Mae Paledust (75, 12.5)", 1455, 75.0, 12.5 },
         { 96800, "Past Due", 30, "A", true, "Alterac Mountains - Magus Olvek (9.8, 63)", 1416, 9.8, 63.0 },
@@ -158,6 +158,8 @@ J.QuestData = {
         { 3523, "Scourge of the Downs", 32, "B", false, "Razorfen Downs, Murder Pens - Belnistrasz Entire party should complete before picking up next quest" },
         { 3525, "Extinguishing the Idol", 32, "B", false, "Razorfen Downs, Murder Pens - Belnistrasz Make sure entire party has finished Scourge of the Downs first or they won't get credit!" },
         { 97196, "The Coldbringer's Eye", 34, "H", true, "Mulgore - Sutara Plainstalker (34.5, 22.9)", 1412, 34.5, 22.9 },
+        { 96773, "The Coldbringer's Eye", 34, "A", true, "Alterac Mountains - Archmage Lan'dalock (15.4, 73.8)", 1416, 15.4, 73.8 },
+        { 93604, "Agamaggan's Blood", 35, "B", true, "TBD; hand it in to Kog'thug the Brave at Bristleback Retreat in Desolace" },
     } },
     { name = "The Drowned City", map = 2970, levels = { 35, 40 }, quests = {
         { 95775, "The Drowned City", 30, "H", true, "Stranglethorn Vale, Grom'gol Base Camp - Kin'weelay (32.3, 27.7)", 1434, 32.3, 27.7 },
@@ -190,6 +192,12 @@ J.QuestData = {
         { 94982, "Eye of Mugg", 40, "A", true, "Riverglades - Demar Brant (66.6, 81)", 2548, 66.6, 81.0 },
         { 94984, "Tome of Twilight", 39, "B", true, "Riverglades - Ashe Amberhall for the Alliance (66.7, 81), Tran'gul for the Horde (59.4, 44.2)", alt = { 94972 } },
         { 96771, "Vengeance of the Highborne", 37, "A", true, "Alterac Mountains - Ranath Nightstride (17.9, 66)", 1416, 17.9, 66.0 },
+        { 94968, "Eye of Mugg", 40, "H", true, "TBD; hand it in to Krom'rosh" },
+        { 94975, "A Token of Vengeance", 38, "H", true, "TBD" },
+        { 94973, "Krol'dok Moulding", 38, "H", false, "Krol'dok Stronghold, starts from a Krol'dok Moulding", steps = { 94974 } },
+        { 94983, "Twilight Mementos", 38, "A", true, "Riverglades - Sergeant Riftan (30.6, 49.1)", 2548, 30.6, 49.1, steps = { 94997, 94998 } },
+        { 94980, "Krol'dok Moulding", 38, "A", false, "Krol'dok Stronghold, starts from a Krol'dok Moulding", steps = { 94981 } },
+        { 94969, "Krol'dok No More!", 40, "A", false, "Krol'dok Stronghold - Marcus Tilwell, an escort" },
     } },
     { name = "Zul'Farrak", map = 209, levels = { 44, 54 }, quests = {
         { 2936, "The Spider God", 40, "H", "pre", "Durotar, Sen'jin Village - Master Gadrin Complete 3 quests first, starting with Venom Bottles (56, 74.7)", 1411, 56.0, 74.7 },
@@ -200,6 +208,8 @@ J.QuestData = {
         { 2846, "Tiara of the Deep", 40, "B", true, "Dustwallow Marsh, N. of Stonemaul Ruins - Tabetha (46.1, 57.1)", 1445, 46.1, 57.1 },
         { 2770, "Gahz'rilla", 40, "B", true, "Thousand Needles, Shimmering Flats - Wizzle Brassbolts One group member must have Mallet of Zul'Farrak to summon Gahz'rilla - drop from Qiaga the Keeper in The Hinterlands (78.1, 77.1)", 1441, 78.1, 77.1 },
         { 3527, "The Prophecy of Mosh'aru", 40, "B", "pre", "Tanaris, Steamwheedle Port - Yeh'kinya Complete Screecher Spirits first (67, 22.4)", 1446, 67.0, 22.4 },
+        { 96775, "Zum'rah's Head", 42, "H", true, "TBD; hand it in to Mazu'kon in Mulgore" },
+        { 96770, "The Witch Doctor's Head", 39, "A", true, "TBD; hand it in to Archmage Lan'dalock in Dalaran" },
     } },
     { name = "Maraudon", map = 349, levels = { 46, 55 }, quests = {
         { 7068, "Shadowshard Fragments", 39, "H", true, "Orgrimmar, Valley of Spirits - Uthel'nay (39.2, 86.3)", 1454, 39.2, 86.3 },
@@ -214,6 +224,7 @@ J.QuestData = {
         { 7067, "The Pariah's Instructions", 39, "B", false, "Desolace, South of Mannoroc Coven - Centaur Pariah patrols around /way 48.4, 87.0 (50.4, 86.7)", 1443, 50.4, 86.7 },
         { 7046, "The Scepter of Celebras", 41, "B", "pre", "Maraudon, Purple side - Celebras the Redeemed Complete Legends of Maraudon first" },
         { 96776, "An'she's Radiance", 43, "H", true, "TBD" },
+        { 93404, "Rot and Regret", 35, "B", true, "TBD; hand it in to Woodwyrd at the Forlorn Gardens in Desolace" },
     } },
     { name = "Sunken Temple", map = 109, levels = { 50, 60 }, quests = {
         { 1445, "The Temple of Atal'Hakkar", 38, "H", "pre", "Swamp of Sorrows, Stonard - Fel'zerul Complete 3 quests first, starting with Pool of Tears (47.9, 54.8)", 1435, 47.9, 54.8 },
@@ -231,6 +242,13 @@ J.QuestData = {
         { 96337, "More Valuable Than Gold", 48, "B", false, "Alcaz Prison - Mason Connery, once you free him" },
         { 96377, "State Secrets", 48, "A", false, "TBD" },
         { 96772, "The Dragon's Journal", 46, "A", true, "TBD" },
+        { 95309, "No Orc Left Behind", 48, "H", true, "TBD" },
+        { 95454, "The Honor of the Kor'kron", 48, "H", true, "Alcaz Prison - Commander Folkar, once you find him", steps = { 96369, 95483 } },
+        { 96332, "A Little Payback", 48, "H", true, "TBD; hand it in to Sergeant Ulka" },
+        { 96334, "Blood Red Bandanas", 48, "H", true, "TBD" },
+        { 95262, "The Secret Prison", 48, "A", false, "TBD; its next step is handed in to Sully McCleary in Dustwallow Marsh", steps = { 95263 } },
+        { 96381, "A Bit of Wet Work", 48, "A", true, "TBD; hand it in to Sully McCleary in Dustwallow Marsh" },
+        { 96335, "The Man in the Iron Chains", 48, "B", false, "Alcaz Prison - Mason Connery" },
     } },
     { name = "Blackrock Depths", map = 230, levels = { 52, 60 }, quests = {
         { 4081, "KILL ON SIGHT: Dark Iron Dwarves", 48, "H", true, "Badlands, Kargath - the Wanted poster (4, 47)", 1418, 4.0, 47.0 },
@@ -279,6 +297,7 @@ J.QuestData = {
         { 5528, "The Gordok Taste Test", 56, "B", true, "Dire Maul, North - Stomper Kreeg Can only be picked up after completing a Tribute Run" },
         { 7703, "Unfinished Gordok Business", 56, "B", false, "Dire Maul, North - Captain Kromcrush Requires completing one Tribute Run first, and a second Tribute Run after killing Prince Tortheldrin and looting the Gauntlet of Gordok Might" },
         { 1193, "A Broken Trap", 56, "B", true, "Dire Maul - a Broken Trap, an object Repeatable" },
+        { 98830, "The Broken Glaive", 52, "B", false, "Dire Maul, starts from Tortheldrin's Broken Glaive, on Prince Tortheldrin's corpse" },
         { 7498, "Garona: A Study on Stealth and Treachery", 54, "B", false, "Rogue only - Dire Maul, starts from Garona: A Study on Stealth and Treachery", class = "ROGUE" },
         { 7499, "Codex of Defense", 54, "B", false, "Warrior only - Dire Maul, starts from Codex of Defense", class = "WARRIOR" },
         { 7500, "The Arcanist's Cookbook", 54, "B", false, "Mage only - Dire Maul, starts from The Arcanist's Cookbook", class = "MAGE" },
@@ -362,6 +381,8 @@ J.QuestData = {
         { 92066, "The Twin Bears", 47, "B", true, "TBD; hand them in to Lorekeeper Nok at Ursolan" },
         { 92069, "Claws That Rend, Tusks that Gore", 45, "B", true, "TBD; hand them in to Ogtinc in Azshara" },
         { 97327, "Blackmaw Pouches", 55, "B", true, "TBD; hand them in to Ekkal at the Ruins of Eldarath in Azshara" },
+        { 92065, "Blackmaw Reclamation", 47, "B", true, "TBD; hand it in to Gatekeeper Rageroar at Ursolan" },
+        { 92070, "A Lost Memento", 47, "B", false, "Blackmaw Hold, starts from the Feathered Charm Necklace" },
     } },
     { name = "Shaper's Terrace", map = 3001, levels = { 58, 60 }, quests = {
         { 95926, "The Dark Crystal", 55, "H", false, "TBD" },
@@ -369,6 +390,7 @@ J.QuestData = {
         { 97049, "Essence of Seeping Slimes", 55, "H", true, "TBD" },
         { 95924, "Panic at the Digsite", 55, "A", true, "TBD" },
         { 95925, "Mapping the Way Forward", 55, "A", false, "TBD" },
+        { 95790, "Digestible Research", 55, "A", false, "TBD" },
     } },
     { name = "Onyxia's Lair", map = 249, levels = { 60, 60 }, quests = {} },
     { name = "The Barrow Deeps", map = 3052, levels = { 60, 60 }, quests = {} },

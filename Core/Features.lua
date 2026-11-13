@@ -147,6 +147,7 @@ ns.FEATURES = {
         mapFactions = false,
         mapEntrances = false,
         entranceJournal = false,
+        itemSources = true,
     },
     statWeights = {
         enabled = false,
