@@ -4430,6 +4430,8 @@ L["The key that changes Accept Quests, Hand In Quests, Pick Quests From NPCs and
 L["The key that changes Auto Gossip for that NPC."] = "해당 NPC의 자동 대화 동작을 바꾸는 키."
 L["The key that opens the BiS List."] = "BiS 목록을 여는 키."
 L["The key that opens the Journal."] = "도감을 여는 키."
+L["What the Journal adds to an item's tooltip anywhere in the game."] = "도감이 게임 어디서나 아이템 툴팁에 추가하는 내용입니다."
+L["Adds the bosses that drop an item, their dungeon and the chance, to its tooltip."] = "아이템 툴팁에 그 아이템을 떨어뜨리는 우두머리와 던전, 확률을 추가합니다."
 L["The key that opens the Quest List window."] = "퀘스트 목록 창을 여는 키."
 L["The last %ds, scrolling %s%s"] = "최근 %d초, %s%s 방향으로 스크롤"
 L["The last fight's time stays on screen until the next one starts."] = "다음 전투가 시작될 때까지 마지막 전투 시간이 화면에 남습니다."

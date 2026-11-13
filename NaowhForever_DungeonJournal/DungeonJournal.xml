@@ -149,5 +149,6 @@
     <Script file="UI\MapWindow.lua"/>
     <Script file="UI\MapOverlay.lua"/>
     <Script file="UI\MapTools.lua"/>
+    <Script file="UI\ItemSource.lua"/>
     <Script file="UI\SettingsPage.lua"/>
 </Ui>

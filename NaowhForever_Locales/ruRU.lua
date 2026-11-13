@@ -4430,6 +4430,8 @@ L["The key that changes Accept Quests, Hand In Quests, Pick Quests From NPCs and
 L["The key that changes Auto Gossip for that NPC."] = "Клавиша, меняющая автодиалог для этого NPC."
 L["The key that opens the BiS List."] = "Клавиша, открывающая список BiS."
 L["The key that opens the Journal."] = "Клавиша, открывающая журнал."
+L["What the Journal adds to an item's tooltip anywhere in the game."] = "Что журнал добавляет в подсказку предмета в любом месте игры."
+L["Adds the bosses that drop an item, their dungeon and the chance, to its tooltip."] = "Добавляет в подсказку предмета боссов, с которых он падает, их подземелье и шанс."
 L["The key that opens the Quest List window."] = "Клавиша, открывающая окно списка заданий."
 L["The last %ds, scrolling %s%s"] = "Последние %d с, прокрутка %s%s"
 L["The last fight's time stays on screen until the next one starts."] = "Время последнего боя остается на экране до начала следующего."

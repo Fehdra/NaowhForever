@@ -4432,6 +4432,8 @@ L["The key that changes Accept Quests, Hand In Quests, Pick Quests From NPCs and
 L["The key that changes Auto Gossip for that NPC."] = "改變該 NPC 自動對話行為的按鍵。"
 L["The key that opens the BiS List."] = "開啟最佳裝備清單的按鍵。"
 L["The key that opens the Journal."] = "開啟手冊的按鍵。"
+L["What the Journal adds to an item's tooltip anywhere in the game."] = "手冊在遊戲中任何地方加到物品滑鼠提示的內容。"
+L["Adds the bosses that drop an item, their dungeon and the chance, to its tooltip."] = "在物品的滑鼠提示中加入掉落它的首領、所在地城和機率。"
 L["The key that opens the Quest List window."] = "開啟任務清單視窗的按鍵。"
 L["The last %ds, scrolling %s%s"] = "最近 %d 秒，向 %s 捲動%s"
 L["The last fight's time stays on screen until the next one starts."] = "上一場戰鬥的時間會保持在畫面上，直到下一場開始。"

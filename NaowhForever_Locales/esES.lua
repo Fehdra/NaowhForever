@@ -4430,6 +4430,8 @@ L["The key that changes Accept Quests, Hand In Quests, Pick Quests From NPCs and
 L["The key that changes Auto Gossip for that NPC."] = "La tecla que cambia la Conversación automática para ese PNJ."
 L["The key that opens the BiS List."] = "La tecla que abre la lista BiS."
 L["The key that opens the Journal."] = "La tecla que abre el Diario."
+L["What the Journal adds to an item's tooltip anywhere in the game."] = "Lo que el diario añade al tooltip de un objeto en cualquier parte del juego."
+L["Adds the bosses that drop an item, their dungeon and the chance, to its tooltip."] = "Añade al tooltip de un objeto los jefes que lo sueltan, su mazmorra y la probabilidad."
 L["The key that opens the Quest List window."] = "La tecla que abre la ventana de la lista de misiones."
 L["The last %ds, scrolling %s%s"] = "Los últimos %ds, desplazándose %s%s"
 L["The last fight's time stays on screen until the next one starts."] = "El tiempo del último combate permanece en pantalla hasta que empieza el siguiente."

@@ -101,6 +101,7 @@ NaowhForever_DungeonJournal/
     MapWindow.lua      the map's own window: the map, the list, the picked boss's page
     MapOverlay.lua     the dungeon's map over the world map's picture, inside the dungeon
     MapTools.lua       /nf mappins (place the pins, Copy for Data/Maps.lua) and /nf mapcheck
+    ItemSource.lua     Where It Drops: the bosses that drop an item, with their dungeon and chance, on its tooltip anywhere
     SettingsPage.lua   its settings pages (Journal, Quest Tracker, Map), declared as cards
   Media/Maps/          local dungeon pictures as BLP, including 34 imported, 22 assembled and 21 of Santiago Reyes's downloads; selected by Data/Maps.lua
   README.md            this file
@@ -470,6 +471,9 @@ in the pull request it opens.
 - The opacity was one setting (`windowAlpha`) before the tracker had its own: a player who set it
   keeps it on the tracker, copied once on the first login with it; the tracker's own setting, once
   set, is never written over. The Journal's windows have no opacity setting: they are always solid.
+- Where It Drops lists an item's three likeliest sources and counts the rest; the Journal's own item rows
+  (`journalItem`) skip it, as they already say where the item drops. The tooltip hook cannot be removed,
+  so it is added the first time the setting is on and checks the setting on every tooltip.
 - `J.OPTION_GROUPS` is the one list the Filters menu and the settings page are built from, so
   both offer the same switches in the same words, and either changes the other.
 - Dungeons sharing one instance (Scarlet Monastery's wings) are told apart by the subzone you
