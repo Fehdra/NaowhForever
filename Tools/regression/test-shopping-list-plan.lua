@@ -284,6 +284,29 @@ prices[ORE] = nil
 buy, made = Plan()
 check("own reagents: parts with no price are not planned", Only(buy, BAR, 5) and Empty(made))
 
+-- Own reagents stop at twice the buy price (Futz0r): 90 Heavy Leather at 2s21c are bought, not made from
+-- 5,400 Ruined Leather Scraps through Light and Medium, about 15g. Within it, the estimate says what making costs more.
+local SCRAP, LIGHT, MEDIUM, HEAVY = 21, 22, 23, 24
+Reset()
+prices[SCRAP], prices[LIGHT], prices[MEDIUM], prices[HEAVY] = 28, 100, 400, 221
+Learned({ [LIGHT] = { recipe = 300, made = 1, need = { [SCRAP] = 3 } },
+    [MEDIUM] = { recipe = 301, made = 1, need = { [LIGHT] = 4 } },
+    [HEAVY] = { recipe = 302, made = 1, need = { [MEDIUM] = 5 } } })
+Craft(10, { [HEAVY] = 90 })
+buy, made = Plan()
+check("own reagents: a chain over twice the buy price is bought", Only(buy, HEAVY, 90) and Empty(made))
+local leather = SL.Materials()
+check("and the estimate has no extra cost", not SL.Estimate(leather, "unpriced"):find("more than buying", 1, true))
+Reset(); Learned({ [BAR] = SMELT }); Craft(10, { [BAR] = 20 })
+prices[BAR] = 15
+local bars = SL.Materials()
+check("own reagents within the cap: the estimate names the extra 1s",
+    SL.Estimate(bars, "unpriced"):find(", ~1s more than buying", 1, true) ~= nil)
+profSettings.makeReagents = false
+check("made only where cheaper: no extra cost named",
+    not SL.Estimate(SL.Materials(), "unpriced"):find("more than buying", 1, true))
+profSettings.makeReagents = true
+
 -- Two items made from each other: one is made, its part bought, never round in a loop.
 local LESSER, GREATER = 8, 9
 local function Essences()

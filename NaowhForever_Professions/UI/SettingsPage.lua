@@ -309,7 +309,7 @@ page:Card({
           help = "Lists materials vendors sell under Buy from Vendor, with Buy buttons beside the merchant." },
         { key = "makeReagents", label = "Make Your Own Reagents", toggle = true, needs = ShoppingOn,
           why = "Needs Shopping List",
-          help = "Plans and prices every reagent you can craft as made from its parts, even when buying costs less." },
+          help = "Plans and prices every reagent you can craft as made from its parts, unless that costs over twice as much as buying it." },
         { key = "reagentUses", label = "Reagents", toggle = true, needs = ShoppingOn,
           why = "Needs Shopping List",
           help = "A Reagents button beside Shopping List: what each reagent makes, and whether to craft or sell it." },

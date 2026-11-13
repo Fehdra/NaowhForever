@@ -557,7 +557,9 @@ Each layer uses only the ones above it, or reads a later one's table at call tim
 - Make Your Own Reagents (`makeReagents`) is off by default and needs the Shopping List, whose recorded
   recipes (`profMakes`) it reads. On, a material you know the recipe for is made whenever its parts are
   priced, even when buying it costs less, with the extra cost on its Make First row; Buy there still buys
-  it. Crafting Profit prices each reagent from the same plan, marked "(made)", in a plan of its own that
+  it. It stops at twice the buy price (`MAKE_COST_CAP`): Futz0r was told to buy 5,400 Ruined Leather Scraps (15g)
+  for 90 Heavy Leather worth 2g. The estimate under the list adds what the made ones cost over buying them,
+  counted on the list's own materials only, as each one's cost already holds the parts made for it. Crafting Profit prices each reagent from the same plan, marked "(made)", in a plan of its own that
   is cleared with the profit cache. A part that leads back to the item being made (one made from what it
   makes) is bought at that step, so the plan never goes round in a loop.
 - Vendor Items on Shopping List is opt-in so the list stays as it was for everyone else: off, vendor

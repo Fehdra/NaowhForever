@@ -6,6 +6,7 @@ local C = P.C
 local Text = P.Text
 
 local MAX_DEPTH = 4
+local MAKE_COST_CAP = 2
 local SKILL_LINE_INDEX = C.SKILL_LINE_INDEX
 local NO_ITEM = 0
 local TEXT_ITEM = ns.L("item ")
@@ -16,11 +17,12 @@ local TEXT_ESTIMATE = ns.L("About %s at your last scan%s%s")
 local TEXT_AGO = ns.L(" ago")
 local TEXT_NO_SCAN = ns.L(" (none yet)")
 local TEXT_MISSING = ", %d %s"
+local TEXT_MORE = ns.L(", ~%s more than buying")
 local LEGACY_JOIN = "-"
 
 local EMPTY = {}
 local waiting = {}
-local shopPlan = { cost = {}, make = {}, craft = {}, busy = {}, planned = {}, saves = {} }
+local shopPlan = { cost = {}, make = {}, craft = {}, busy = {}, planned = {}, saves = {}, extra = 0 }
 local demand, nextDemand, toMake, buy, had = {}, {}, {}, {}, {}
 local trials = {}
 for depth = 0, MAX_DEPTH do trials[depth] = { left = {}, made = {} } end
@@ -148,6 +150,10 @@ end
 
 local Cheapest
 
+local function Worth(made, bought)
+    return not bought or made < bought or (MakeOwn() and made <= bought * MAKE_COST_CAP)
+end
+
 local function PartsCost(m, plan, depth)
     local total = 0
     for part, per in pairs(m.need) do
@@ -167,7 +173,7 @@ function Cheapest(item, plan, depth, ignoreKeep)
         plan.busy[item] = true
         local total = PartsCost(m, plan, depth)
         plan.busy[item] = nil
-        if total and (MakeOwn() or not bought or total / m.made < bought) then cost, make = total / m.made, true end
+        if total and Worth(total / m.made, bought) then cost, make = total / m.made, true end
         if make and not ignoreKeep then plan.craft[item] = total end
     end
     if not ignoreKeep then plan.cost[item], plan.make[item] = cost or false, make end
@@ -215,6 +221,7 @@ local function ResetPlan()
     local api = ns.ProfWindowAPI
     wipe(shopPlan.cost); wipe(shopPlan.make); wipe(shopPlan.craft)
     wipe(shopPlan.busy); wipe(shopPlan.planned); wipe(shopPlan.saves)
+    shopPlan.extra = 0
     shopPlan.owned = api and api.Owned() or {}
     shopPlan.makes = Makes()
     wipe(demand); wipe(toMake); wipe(buy); wipe(had)
@@ -232,14 +239,20 @@ local function PlanItem(item, qty, depth)
     local _, make = Cheapest(item, shopPlan, 0)
     local m, price, craft = shopPlan.makes[item], BuyPrice(item), shopPlan.craft[item]
     local crafts = m and math.ceil(qty / m.made)
-    if make and price and craft and crafts * craft >= qty * price and not MakeOwn() then make = false end
+    if make and price and craft and crafts * craft >= qty * price and not Worth(crafts * craft, qty * price) then
+        make = false
+    end
     if not (make and depth < MAX_DEPTH) then
         buy[item] = (buy[item] or 0) + qty
         return
     end
     toMake[item] = (toMake[item] or 0) + crafts * m.made
     shopPlan.planned[item] = true
-    if price and craft then shopPlan.saves[item] = (shopPlan.saves[item] or 0) + qty * price - crafts * craft end
+    if price and craft then
+        local saves = qty * price - crafts * craft
+        shopPlan.saves[item] = (shopPlan.saves[item] or 0) + saves
+        if depth == 0 and saves < 0 then shopPlan.extra = shopPlan.extra - saves end
+    end
     for part, per in pairs(m.need) do
         if Listed(part) then nextDemand[part] = (nextDemand[part] or 0) + per * crafts end
     end
@@ -357,6 +370,7 @@ local function Estimate(materials, unpriced, vendorMaterials)
     return TEXT_ESTIMATE:format(Text.Short(est),
         at and ns.AuctionAge and (", " .. ns.AuctionAge(GetServerTime() - at) .. TEXT_AGO) or TEXT_NO_SCAN,
         missing > 0 and TEXT_MISSING:format(missing, unpriced) or "")
+        .. (shopPlan.extra > 0 and TEXT_MORE:format(Text.Short(shopPlan.extra)) or "")
 end
 
 local function LiveReagents(recipeID)
