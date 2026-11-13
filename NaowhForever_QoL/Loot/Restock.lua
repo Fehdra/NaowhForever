@@ -94,6 +94,7 @@ local TEXT_HUNTER_OFF = "Turn on Hunter Ammo Reminder below to get it."
 
 local alert, flash
 local wasResting
+local atAuctionHouse = false
 local pendingItems = {}
 local restockRows, reagentRows, seenReagents = {}, {}, {}
 local events = CreateFrame("Frame")
@@ -321,7 +322,7 @@ end
 
 local function Check()
     if not On() or not IsResting() or InCombatLockdown() or IsInInstance()
-        or (MerchantFrame and MerchantFrame:IsShown()) then
+        or (MerchantFrame and MerchantFrame:IsShown()) or atAuctionHouse then
         HideAlert()
         return
     end
@@ -421,6 +422,12 @@ local function OnEvent(_, event, itemID)
         OnMerchantShow()
     elseif event == "MERCHANT_CLOSED" then
         C_Timer.After(SETTLE_DELAY, Check)
+    elseif event == "AUCTION_HOUSE_SHOW" then
+        atAuctionHouse = true
+        HideAlert()
+    elseif event == "AUCTION_HOUSE_CLOSED" then
+        atAuctionHouse = false
+        Check()
     elseif event == "PLAYER_REGEN_DISABLED" then
         HideAlert()
     elseif event == "BAG_UPDATE_DELAYED" or event == "PLAYER_REGEN_ENABLED"
@@ -445,6 +452,7 @@ local function Apply()
         events:RegisterEvent("MERCHANT_SHOW")
     end
     if not On() then
+        atAuctionHouse = false
         HideAlert()
         return
     end
@@ -454,6 +462,8 @@ local function Apply()
     events:RegisterEvent("PLAYER_REGEN_DISABLED")
     events:RegisterEvent("PLAYER_REGEN_ENABLED")
     events:RegisterEvent("MERCHANT_CLOSED")
+    events:RegisterEvent("AUCTION_HOUSE_SHOW")
+    events:RegisterEvent("AUCTION_HOUSE_CLOSED")
     events:RegisterEvent("BAG_UPDATE_DELAYED")
     if S.Get("restockAmmo") or HunterAmmoOn() then
         events:RegisterUnitEvent("UNIT_INVENTORY_CHANGED", "player")
