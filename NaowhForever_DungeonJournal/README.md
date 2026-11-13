@@ -427,6 +427,9 @@ in the pull request it opens.
   downloads of 2026-11-08, scaled the same way.
 - Shaper's Terrace (his 11/26 version) and the Prismatic Talus are his sreyesmaps.com
   downloads of 2026-11-09, scaled the same way.
+- Shaper's Terrace's portal stands north of the Un'Goro map's edge, so its entrance is the stairs up to it on
+  Un'Goro's northern rim, above Marshal's Refuge, where the world map shows it in Un'Goro. Krol'dok
+  Stronghold's, Alcaz Prison's and Blackmaw Hold's entrances are from an entrance guide (Nov 2026).
 - The Drowned City, Krol'dok Stronghold, Shaper's Terrace and Alcaz Prison have no pins yet:
   his maps mark no bosses and no source says where they stand. With no pins, every floor is
   offered.

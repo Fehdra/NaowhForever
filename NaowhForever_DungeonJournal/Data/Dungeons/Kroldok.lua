@@ -6,6 +6,7 @@ ns.Journal.AddDungeon("Kroldok", {
     instance = 3039,
     new = true,
     zone = "Riverglades", area = 16591, territory = "Contested",
+    entrance = { map = 2548, x = 37.5, y = 37.3 },
     wings = {
         { bosses = {
             { npc = 258966, name = "Slavecrusher Grox", encounters = { 3450 }, loot = { 274995, 274996, 274997 } },

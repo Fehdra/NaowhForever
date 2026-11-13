@@ -6,6 +6,7 @@ ns.Journal.AddDungeon("BlackmawHold", {
     instance = 2974,
     new = true,
     zone = "Azshara", area = 16, territory = "Contested",
+    entrance = { map = 1447, x = 38.6, y = 33.2 },
     wings = {
         { bosses = {
             { npc = 247195, name = "Withermaw", encounters = { 3315 }, loot = { 280062, 280064 } },

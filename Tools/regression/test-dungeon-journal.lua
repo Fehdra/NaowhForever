@@ -701,7 +701,7 @@ do
     check("The Glowing Shard is listed", glowing ~= nil)
     check("and has a waypoint: the dungeon's entrance", glowing.canWaypoint)
     check("hundreds of bosses", bosses > 150)
-    check("the entrances with a source that matches Forever's map", entrances == 32)
+    check("the entrances with a source that matches Forever's map", entrances == 35)
     local boss, dungeon = J.Boss(639)
     check("the boss loot window finds a boss by its NPC ID", boss and boss.name == "Edwin VanCleef"
         and dungeon.key == "Deadmines")
@@ -4044,7 +4044,24 @@ do
     -- The pin itself: the dungeon's door, a raid's own, and a waypoint on a click.
     shownMap, state.onMap = 1445, nil   -- Dustwallow Marsh: Onyxia's Lair
     providers[1]:RefreshAllData()
-    check("Onyxia's Lair on its zone", #pins == 1 and pins[1].dungeons[1].raid ~= nil)
+    local onyxia, alcaz
+    for _, group in ipairs(pins) do
+        local key = group.dungeons[1].key
+        if key == "OnyxiasLair" then onyxia = group elseif key == "AlcazPrison" then alcaz = group end
+    end
+    check("Onyxia's Lair on its zone", #pins == 2 and onyxia ~= nil and onyxia.dungeons[1].raid ~= nil)
+    check("and Alcaz Prison beside it", alcaz ~= nil)
+    shownMap = 1449   -- Un'Goro Crater: Shaper's Terrace's stairs on its northern rim
+    providers[1]:RefreshAllData()
+    check("Shaper's Terrace on Un'Goro's map", #pins == 1 and pins[1].dungeons[1].key == "ShapersTerrace")
+    shownMap = 1445
+    providers[1]:RefreshAllData()
+    for _, group in ipairs(pins) do
+        if group.dungeons[1].key == "OnyxiasLair" then onyxia = group end
+    end
+    for i, group in ipairs(pins) do
+        if group == onyxia then table.remove(pins, i); table.insert(pins, 1, onyxia) end
+    end
     local Pin = state.env.NaowhForeverEntrancePinMixin
     local pin = state.worldMap:CreateTexture()
     pin.Icon = state.worldMap:CreateTexture()

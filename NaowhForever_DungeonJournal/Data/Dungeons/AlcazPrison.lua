@@ -6,6 +6,7 @@ ns.Journal.AddDungeon("AlcazPrison", {
     instance = 2994,
     new = true,
     zone = "Dustwallow Marsh", area = 15, territory = "Contested",
+    entrance = { map = 1445, x = 75.3, y = 14.1 },
     wings = {
         { bosses = {
             { npc = 255391, name = "Overseer Wrex", encounters = { 3403 }, loot = { 276734, 276732, 276733 } },

@@ -7,7 +7,7 @@ ns.Journal.AddDungeon("ShapersTerrace", {
     new = true,
     closed = true,
     zone = "Un'Goro Crater", area = 490, territory = "Contested",
-    entrance = { map = 1441, x = 12.2, y = 66.7 },
+    entrance = { map = 1449, x = 48.1, y = 6.1 },
     wings = {
         { bosses = {
             { npc = 261809, name = "Nanaya", encounters = { 3502 } },
