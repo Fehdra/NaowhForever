@@ -112,7 +112,8 @@ the game's art comes back and ours hides.
 - A black ring outside the quality's edge (the house's border) makes the edge stand off the dark
   panel round it.
 - Your own score card is bare and centred, the score bigger and the best under it: the stats list
-  below it gets the bar's room. The inspect windows keep the bar, to compare at a glance.
+  below it gets the bar's room. The inspect window's card is bare too, with yours under it; Group
+  Inspect's cards keep the bar, to compare at a glance.
 - The score card is a child of the game's stats list (its fade ignored), so the game hides it with
   the list whenever its gear sets, titles or pet take that room, and it never sits over their rows.
 - Your spec's stats and their switch are children of the game's stats list too (its fade ignored),

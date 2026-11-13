@@ -33,7 +33,8 @@ local LABELS = { { key = "player", label = "Player" }, { key = "history", label 
 local NONE = {}
 
 IP.PANE_W, IP.EDGE, IP.CARD_GAP = PANE_W, EDGE, CARD_GAP
-IP.BODY_Y = CARD_GAP + CP.BADGE_H + BODY_GAP
+IP.CARD_H = CP.BARE_H + CP.LEGEND_GAP + CP.C.TEXT_SIZE
+IP.BODY_Y = CARD_GAP + IP.CARD_H + BODY_GAP
 IP.BODY_W = PANE_W - 2 * EDGE
 
 local rival = CP.Rival({ key = "inspectPanel", winKey = "inspect", dbKey = "themedInspectSheet",

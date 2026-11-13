@@ -469,7 +469,7 @@ SCORE.target, COMPLETE.target = 41.2, true
 IP.Refresh()
 check("their Gear Score once loaded, in its color, kept for their tooltip",
     card.value.text == "|cff1eff0041.2|r" and remembered[GUID_A] == 41.2)
-check("yours under the bar to compare", card.you.text == "You |cff1eff0026.4|r")
+check("yours under theirs to compare", card.you.text == "You |cff1eff0026.4|r")
 card.scripts.OnEnter(card)
 check("its hover card: theirs, yours and the best", tooltip.lines[2] == "Bob=|cff1eff0041.2|r"
     and tooltip.lines[3] == "You=|cff1eff0026.4|r")

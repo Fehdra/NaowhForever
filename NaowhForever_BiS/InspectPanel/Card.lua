@@ -84,10 +84,11 @@ local function Enter(self)
 end
 
 local function Build()
-    card = CP.ScoreCard(IP.pane)
+    card = CP.ScoreCard(IP.pane, nil, true)
     card:SetPoint("TOPLEFT", IP.EDGE, -IP.CARD_GAP)
-    card.you = ns.Font(card, CP.LEGEND_SIZE, nil, T.muted)
-    card.you:SetPoint("TOPLEFT", card.bar, "BOTTOMLEFT", 0, -CP.LEGEND_GAP)
+    card:SetHeight(IP.CARD_H)
+    card.you = ns.Font(card, CP.C.TEXT_SIZE, nil, T.muted)
+    card.you:SetPoint("BOTTOM")
     card:SetScript("OnEnter", Enter)
     card:SetScript("OnLeave", GameTooltip_Hide)
     IP.card = card
