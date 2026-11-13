@@ -124,8 +124,9 @@ local function BuySome(itemID, most, text)
     local entry, count = pane.focus(), tonumber(text)
     if not (entry and entry.itemID == itemID and count and count >= 1) or asking or Purchase.Busy() then return end
     count = math.min(most, math.floor(count))
-    if CostOf(count) > GetMoney() then return Note(entry, TEXT_NO_MONEY) end
-    Purchase.Quote(itemID, count)
+    local cost = CostOf(count)
+    if cost > GetMoney() then return Note(entry, TEXT_NO_MONEY) end
+    Purchase.Quote(itemID, count, math.ceil(cost / count))
     Note(entry, TEXT_QUOTING)
 end
 

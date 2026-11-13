@@ -168,7 +168,7 @@ lines[1].buy.click()
 check("Buy on the cheapest asks how many, up to what is listed there", #t.prompts == 1 and t.prompts[1].text == "3")
 t.prompts[1].accept("3")
 check("then asks the game for the price", #t.purchases == 1 and t.purchases[1].step == "start"
-    and t.purchases[1].quantity == 3)
+    and t.purchases[1].quantity == 3 and t.purchases[1].unitPrice == 40)
 t.Fire("COMMODITY_PRICE_UPDATED", 40, 120)
 check("and asks before it buys", #t.confirms > 0)
 t.confirms[#t.confirms].yes()

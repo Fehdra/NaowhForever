@@ -66,11 +66,11 @@ function Purchase.Busy()
     return buy.state ~= nil
 end
 
-function Purchase.Quote(itemID, quantity)
+function Purchase.Quote(itemID, quantity, unitPrice)
     if buy.state then return false end
     buy.itemID, buy.quantity, buy.auctionID = itemID, quantity, nil
     Begin("quoting")
-    C_AuctionHouse.StartCommoditiesPurchase(itemID, quantity)
+    C_AuctionHouse.StartCommoditiesPurchase(itemID, quantity, unitPrice)
     return true
 end
 

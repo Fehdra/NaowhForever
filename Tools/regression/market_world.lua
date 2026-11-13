@@ -175,8 +175,8 @@ local function Setup(opts)
             HasFullBrowseResults = function() return t.full end,
             RequestMoreBrowseResults = function() t.more = t.more + 1 end,
             GetBrowseResults = function() return t.browse end,
-            StartCommoditiesPurchase = function(id, quantity)
-                t.purchases[#t.purchases + 1] = { step = "start", itemID = id, quantity = quantity }
+            StartCommoditiesPurchase = function(id, quantity, unitPrice)
+                t.purchases[#t.purchases + 1] = { step = "start", itemID = id, quantity = quantity, unitPrice = unitPrice }
             end,
             ConfirmCommoditiesPurchase = function(id, quantity)
                 t.purchases[#t.purchases + 1] = { step = "confirm", itemID = id, quantity = quantity }

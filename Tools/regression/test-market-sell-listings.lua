@@ -125,6 +125,7 @@ BuyAll(lines[2])
 Check("Buy on a commodity asks the game for its price first, with no confirm yet", #t.purchases == 1
     and t.purchases[1].step == "start" and t.purchases[1].itemID == ORE and t.purchases[1].quantity == 25
     and pane.note.text == "Getting the price")
+Check("with the unit price expected, as Blizzard's own buy does", t.purchases[1].unitPrice == 496)
 local asked = #t.confirms
 BuyAll(lines[2])
 Check("a second Buy waits for the first", #t.purchases == 1)
@@ -177,7 +178,7 @@ prompt.accept("0")
 Check("a quantity that is not a number, or none, asks the game for nothing", #t.purchases == started)
 prompt.accept("7")
 Check("a smaller quantity is the one quoted", t.purchases[#t.purchases].step == "start"
-    and t.purchases[#t.purchases].quantity == 7)
+    and t.purchases[#t.purchases].quantity == 7 and t.purchases[#t.purchases].unitPrice == 486)
 t.Fire("COMMODITY_PRICE_UPDATED", 485, 3400)
 Check("and the one the confirm names", t.confirms[#t.confirms].text == "Buy 7 Item 2770 for 3400?")
 t.confirms[#t.confirms].no()
