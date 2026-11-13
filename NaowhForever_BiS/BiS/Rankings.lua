@@ -9,6 +9,7 @@ local Fits, Wearing = Items.Fits, Items.Wearing
 local OFF_HAND = C.OFF_HAND
 local FACT_CLASS, FACT_ITEM_LEVEL, FACT_REQUIRED, FACT_QUALITY = 1, 3, 4, 5
 local INFO_MIN_LEVEL = 5
+local INFO_CLASS = 6
 local WEAPON, ARMOR = 2, 4
 local MIN_QUALITY = 2
 local NEAR_LEVELS = 10
@@ -97,8 +98,8 @@ local function IsGear(item)
     return (class == WEAPON or class == ARMOR) and item[FACT_QUALITY] >= MIN_QUALITY
 end
 
-local function Wieldable(item, slot)
-    return not (slot == OFF_HAND and item[FACT_CLASS] == WEAPON and not DUAL_WIELD[playerClass])
+local function Wieldable(itemClass, slot)
+    return not (slot == OFF_HAND and itemClass == WEAPON and not DUAL_WIELD[playerClass])
 end
 
 local function Near(item, level, near)
@@ -209,7 +210,7 @@ function R.DungeonDrops(slot, ranked, near)
     for _, id in ipairs(dropIDs or EMPTY) do
         local item = Facts(id)
         if item and not skip[id] and IsGear(item) and R.Usable(playerClass, item) and Fits(id, slot)
-            and Wieldable(item, slot) and Near(item, level, near) then
+            and Wieldable(item[FACT_CLASS], slot) and Near(item, level, near) then
             ids[#ids + 1] = id
         end
     end
@@ -229,6 +230,10 @@ end
 function R.PlaceName(name)
     local J = ns.Journal
     return ns.L(J and J.PlaceName and J.PlaceName(name) or name)
+end
+
+function R.Wieldable(itemID, slot)
+    return Wieldable(select(INFO_CLASS, C_Item.GetItemInfoInstant(itemID)), slot)
 end
 
 function R.ReqLevel(itemID)

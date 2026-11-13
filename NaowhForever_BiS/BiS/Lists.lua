@@ -17,11 +17,13 @@ local TEXT_NOT_GEAR = ns.L("That is not an item you can equip.")
 local TEXT_ADDED = ns.L("Added %s to your BiS %s.")
 local TEXT_ADDED_AS = ns.L("Added %s to your BiS %s as #%d.")
 local TEXT_LEVEL_NAME = ns.L("Level %d %s")
+local TEXT_AUTO_NAME = ns.L("Auto %s")
 local FREE_NAME = "%s %d"
 local SPEC_SHORT = "^(.-)%s+%S+$"
 local NONE = {}
 
 local lookup
+local before = {}
 
 local function ClassLists()
     local account = ns.AccountSettings()
@@ -230,10 +232,23 @@ local function CleanName(name)
     return (name:sub(1, NAME_MAX):gsub("|", "||"))
 end
 
+local function SamePicks(a, b)
+    if #a ~= #b then return false end
+    for i = 1, #a do
+        if a[i] ~= b[i] then return false end
+    end
+    return true
+end
+
 local function Edit(list, slot, change, ...)
     local picks = Picks(list, slot)
+    if list.auto then Picks(list, slot, before) end
     change(picks, ...)
     Store(list, slot, picks)
+    if list.auto and not SamePicks(picks, before) then
+        list.kept = list.kept or {}
+        list.kept[slot] = true
+    end
 end
 
 local function IndexOf(picks, itemID)
@@ -269,6 +284,7 @@ local L = {}
 B.Lists = L
 L.FreeSlot = FreeSlot
 L.List = List
+L.Changed = Changed
 
 function L.CurrentSpec()
     local specs = R.ClassSpecs()
@@ -392,6 +408,26 @@ function ns.LoadBisLevel(level)
     list.slots, list.extra = {}, {}
     for slot, itemID in pairs(picks) do list.slots[slot] = itemID end
     Use(list)
+    Changed()
+end
+
+function L.IsAutoList(list, spec)
+    return list.auto == true and list.spec == spec.key and SpecOnly(list)
+end
+
+function ns.LoadBisAuto()
+    local spec = L.CurrentSpec()
+    if not spec then return end
+    local store = ClassLists()
+    local list
+    for _, l in ipairs(store.lists) do
+        if L.IsAutoList(l, spec) then list = l end
+    end
+    list = list or AddList(store, { spec = spec.key, specOnly = true, auto = true, slots = {}, extra = {},
+        name = FreeName(store, TEXT_AUTO_NAME:format(L.SpecShort(spec))) })
+    list.kept = nil
+    Use(list)
+    B.Auto.Fill(list)
     Changed()
 end
 

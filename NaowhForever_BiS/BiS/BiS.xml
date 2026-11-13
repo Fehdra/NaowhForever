@@ -10,6 +10,7 @@
     <Script file="Lists.lua"/>
     <Script file="Gains.lua"/>
     <Script file="Upgrades.lua"/>
+    <Script file="Auto.lua"/>
     <Script file="Enchants.lua"/>
     <Script file="Sharing.lua"/>
     <Script file="Marks.lua"/>

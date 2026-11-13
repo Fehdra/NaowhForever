@@ -78,6 +78,7 @@ local function ByHand(subclass)
 end
 
 Items.GEAR_SLOTS = GEAR_SLOTS
+Items.PAIR = PAIR
 Items.SLOT_NAME = {}
 local SLOT_KEY = {}
 for _, s in ipairs(GEAR_SLOTS) do Items.SLOT_NAME[s[1]], SLOT_KEY[s[1]] = s[2], s[3] or s[2] end

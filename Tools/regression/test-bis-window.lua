@@ -318,7 +318,7 @@ local Measure = dofile("Tools/regression/measure.lua")(check)
 -------------------------------------------------------------------------------
 local ns, state, S = Fixture()
 local B = ns.BiS
-check("BiS.xml loads its files", #TocFiles("^NaowhForever_BiS/BiS/.*%.lua$") == 38)
+check("BiS.xml loads its files", #TocFiles("^NaowhForever_BiS/BiS/.*%.lua$") == 39)
 
 ns.OpenBisWindow()
 local view = Views(state, B)[1]
@@ -907,8 +907,14 @@ do
     for _, level in ipairs(ns.BiSLeveling.levels) do
         for _ in pairs(B.Rankings.LevelPicks(spec.key, level)) do picked = picked + 1 end
     end
+    local auto = B.Auto.Build(spec)
+    for _, gear in ipairs(ns.Shared.Items.GEAR_SLOTS) do
+        if auto and auto[gear[1]][1] then picked = picked + 1 end
+    end
     window.pages.onPick("levels")
     local load = SectionIn(view, "Level " .. lowest)
+    local autoLoad = SectionIn(view, "For Your Level")
+    check("the Leveling page offers the Auto list first, a Load away", autoLoad and not autoLoad.link.disabled)
     local quiet = true
     for i = 1, view.pools.pick.used do
         local row = view.pools.pick[i]

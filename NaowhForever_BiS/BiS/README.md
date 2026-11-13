@@ -9,7 +9,8 @@ on the left, a card per slot with its picks on the right, where to run next (a w
 whoever has your BiS out in the world) and the best enchant for what you wear; and a Quests
 page, the quests that reward a pick you do not have yet, as the Dungeon Journal shows its own;
 and a Leveling page, your spec's best gear at levels 30, 40, 50 and 60 for your side, each one
-a Load away from being your list.
+a Load away from being your list, and an Auto list that keeps your best gear for your level as
+you level.
 Listed items say so on their tooltip, and call out when they drop. Lists are shared by every
 character of a class, and can be shared as a string.
 
@@ -37,6 +38,7 @@ BiS/
   Lists.lua           your lists, their old formats, loading a level's, and the ns calls that change them (B.Lists)
   Gains.lua           what your BiS gets you: Gear Score and stats over what you wear (B.Gains)
   Upgrades.lua        how much stronger each BiS makes you, in percent, by your spec's weights (B.Upgrades)
+  Auto.lua            the Auto list: your best gear for your level, refreshed as you level and gear up (B.Auto)
   Enchants.lua        the best enchant for what you wear, for your spec and the item's level (B.Enchants)
   Sharing.lua         export and import strings (ns.ExportBisList, ns.ImportBisList)
   Marks.lua           your list's rank on item tooltips, and Alt+Shift-click to add or take off an item
@@ -118,6 +120,27 @@ Other modules call in through `ns`: `ns.IsBisItem` (the Journal, Bag Space, the 
 - A level's picks are your side's (`UnitFactionGroup`), as many are quest rewards of one side. Lists
   are shared by every character of a class, so a level's list is one side's: an alt of the other
   side loading it gets a list of its own. The list is a copy: changing it never changes the data.
+- Load on the Leveling page's For Your Level makes a spec-only list marked `auto` ("Auto <Spec>")
+  and uses it. While it is the list you use, it is refilled when you level or change gear: each slot
+  gets the items worth most to your spec's weights, best first (`PICKS`, 3), from what you wear, the
+  spec's ranking, its leveling lists and the Journal's drops near your level, that your class can
+  use and that need no more than `LEVELS_AHEAD` (5) levels over yours. What you wear competes, so
+  the list never asks you to wear worse.
+- A slot you change on the Auto list (add, remove, move) is kept in `kept` and never refilled;
+  Reset on the page lets every slot go back to the Auto picks. To mix more freely, New List can
+  start from the Auto list.
+- The Auto list is shared by every character of a class, as every list is, and is refilled for
+  the character using it. Its refill waits `REFRESH_DELAY` (0.5 s) so a gear swap's burst of
+  events, and the level that `UnitLevel` returns late on `PLAYER_LEVEL_UP`, give one refill.
+- An item the client has not loaded, worn or not, is asked for, and the list (or the page's preview)
+  is built again when it arrives. Only the items it waits for wake it, and only when the server sends
+  them, so an item the server refuses never wakes it again. Level and gear changes are listened to only
+  while the module is on and an Auto list is the one in use; switching to another spec's Auto list
+  refills it for you.
+- The pool's items are scored by their base stats, as the upgrade percent is: a random suffix ("of the
+  Bear") is only known once you have the item, and what you wear is read by its link.
+- A one-hander's worth in the main hand counts the best off hand beside it, so a two-hander wins
+  only when it beats the pair. Ring 2 and Trinket 2 skip what Ring 1 and Trinket 1 took.
 - An item of a level's list that neither the Journal nor wowsrc and ForeverChanges place takes the
   leveling data's source, so its row still says where it comes from.
 - The Leveling page is drawn on the list's view, without the summary: the summary is about your list.
