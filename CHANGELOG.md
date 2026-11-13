@@ -2,6 +2,12 @@
 
 ## Unreleased
 
+### Changed
+- Dungeon map: Blackmaw Hold has Santiago Reyes's six-level map in place of the one drawn from
+  the game's files. Its bosses aren't placed on it yet.
+- Dungeon map: the Sunken Temple has four more floors from Santiago Reyes: Entrance, Hall of the
+  Cursed, The Pit of Refuse and Hall of Serpents.
+
 ## 1.2.30
 
 ### Added

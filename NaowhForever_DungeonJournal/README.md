@@ -102,7 +102,7 @@ NaowhForever_DungeonJournal/
     MapOverlay.lua     the dungeon's map over the world map's picture, inside the dungeon
     MapTools.lua       /nf mappins (place the pins, Copy for Data/Maps.lua) and /nf mapcheck
     SettingsPage.lua   its settings pages (Journal, Quest Tracker, Map), declared as cards
-  Media/Maps/          local dungeon pictures as BLP, including 34 imported, 22 assembled, 9 of Santiago Reyes's downloads and 4 drawn from the game's files; selected by Data/Maps.lua
+  Media/Maps/          local dungeon pictures as BLP, including 34 imported, 22 assembled and 21 of Santiago Reyes's downloads; selected by Data/Maps.lua
   README.md            this file
 ```
 
@@ -412,7 +412,8 @@ in the pull request it opens.
 - `Media/Maps` includes 34 pictures imported through the local
   ForeverInstanceMaps addon backup. No public repository URL for that addon is recorded.
 - The Hall of Thanes, Ruins of Lordaeron, Excavation Site, City of Dalaran, The Drowned City,
-  Krol'dok Stronghold, Shaper's Terrace and Alcaz Prison illustrations are by Santiago Reyes,
+  Krol'dok Stronghold, Shaper's Terrace, Alcaz Prison and Blackmaw Hold illustrations, and the
+  Sunken Temple's floors 2 to 5, are by Santiago Reyes,
   [Atlas de Azeroth: Forever](https://sreyesmaps.com/post/proyecto-atlas-de-azeroth-forever).
   He gave us permission to use his maps in the addon. His conditions ask that watermarks and
   credits remain intact, so each picture is his whole map, scaled, never cropped or edited.
@@ -428,13 +429,14 @@ in the pull request it opens.
 - The Drowned City, Krol'dok Stronghold, Shaper's Terrace and Alcaz Prison have no pins yet:
   his maps mark no bosses and no source says where they stand. With no pins, every floor is
   offered.
-- Blackmaw Hold's four pictures are drawn from the Forever client's own files (build
-  1.60.1.70862), as no map of it has been published. The first is the game's minimap pictures
-  of its 25 terrain tiles, stitched, with its five subzones named where the terrain's area IDs
-  put them. Upper, Middle and Lower Caverns are the floors of its cave building (WMO 7212893)
-  seen from above in its own textures, split by height. The game names no part of the cave, so
-  those three names are ours. The arrows mark where floors meet and the two ways in from the
-  hold: the overlook, and the passages under the plank funnel.
+- Blackmaw Hold's six levels are his sreyesmaps.com downloads of 2026-11-13, scaled the same
+  way. They replace the four pictures we had drawn from the game's files. The floor names are
+  the ones on his art; his first level's label misspells Blackmaw Grove.
+- The Sunken Temple's floors 2 to 5 (Entrance, Hall of the Cursed, The Pit of Refuse, Hall of
+  Serpents) are his sreyesmaps.com downloads of 2026-11-13, the levels Blizzard's map leaves
+  out. The Sunken Temple keeps the default square crop for its first floor, so each is his
+  whole 2100 by 1400 map scaled to 1024 by 683 at the top of the square. Floor 1 and its pins
+  are unchanged.
 - Blackmaw Hold has no pins yet: nobody has placed its bosses with `/nf mappins`, so its map shows
   only beside the world map, inside the dungeon.
 - The same folder contains 22 pictures assembled from map tiles in
