@@ -3049,6 +3049,7 @@ L["None of your BiS drops here"] = "Ни один ваш BiS здесь не в�
 L["None of your BiS is among its rewards"] = "Ни одного вашего BiS среди наград"
 L["None of your other characters has reached level %d yet."] = "Ни один другой ваш персонаж еще не достиг %d уровня."
 L["None of your quests for this dungeon can be shared."] = "Ни одним вашим заданием для этого подземелья нельзя поделиться."
+L["Your group has these quests already, or cannot take them."] = "У вашей группы уже есть эти задания, или она не может их взять."
 L["None of your quests here can be shared."] = "Ни одним вашим заданием здесь нельзя поделиться."
 L["None to pick up right now: the rest are not for your level yet."] = "Сейчас взять нечего: остальные пока не для вашего уровня."
 L["None with a buyout listed right now."] = "Сейчас нет лотов с выкупом."

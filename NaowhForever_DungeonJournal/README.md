@@ -30,7 +30,7 @@ NaowhForever_DungeonJournal/
   Kills.lua            this character's kills of each boss: when, how long, with whom, this run (J.Kills)
   Looted.lua           what this character has looted in the Journal's dungeons, with whom, the rolls (J.Looted)
   Sharing.lua          asking a group member with Naowh Forever to share a quest, and answering (J.Sharing)
-  ShareQuests.lua      Share All: a dungeon's quests in your log shared with your group, one at a time
+  ShareQuests.lua      Share All: a dungeon's quests in your log shared, one at a time, with the members who need them
   AcceptShared.lua     Accept Shared Dungeon Quests
   Quartermasters.lua   where each faction's quartermaster and your rank vendor stand, learned at the vendor
   ItemProbe.lua        /nf itemprobe: asks the server for every item listed, for Tools/sources/items_in_game.py
@@ -598,6 +598,10 @@ in the pull request it opens.
   `ANSWER_WAIT` 30 at most), and one that came back busy goes to the back of the queue
   (`RETRIES` 2). The push results come as system messages, or as UI messages with the text
   second. Sharing is blocked in combat: the queue waits for it to end.
+- Share All shares a quest only while a connected member is not on it and could take it (their
+  faction, class, race and the level it needs, read out of combat only, so in combat every quest
+  is queued and checked when sharing carries on). The game cannot say who has handed a quest in,
+  so a member it answers "has completed that quest" for is remembered for the session.
 - Accept Shared Dungeon Quests counts every ID the data knows (a quest, its versions, its
   chain's steps, its lead-in); QoL's skip key leaves one open to look at, and with QoL's Accept
   Quests on, that takes every quest already.

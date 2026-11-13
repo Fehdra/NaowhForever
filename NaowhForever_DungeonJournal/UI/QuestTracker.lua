@@ -25,6 +25,7 @@ local TEXT_SHARE = ns.L("Share Quests")
 local TEXT_SHARE_HELP = ns.L("Shares your quests for this dungeon with your group, one at a time.")
 local TEXT_NO_GROUP = ns.L("You are not in a group.")
 local TEXT_NONE = ns.L("None of your quests here can be shared.")
+local TEXT_ALL_HAVE = ns.L("Your group has these quests already, or cannot take them.")
 local TEXT_COUNT = ns.L("%d to share.")
 local TEXT_RANGE = "%s  %s"
 
@@ -137,11 +138,12 @@ local function ShareEnter(self)
     GameTooltip:SetOwner(self, "ANCHOR_LEFT")
     GameTooltip:SetText(TEXT_SHARE)
     GameTooltip:AddLine(TEXT_SHARE_HELP, 1, 1, 1, true)
-    local count = #J.Sharing.Shareable(shown)
+    local ids, pushable = J.Sharing.Shareable(shown)
+    local count = #ids
     if not IsInGroup() then
         GameTooltip:AddLine(TEXT_NO_GROUP, T.muted.r, T.muted.g, T.muted.b)
     elseif count == 0 then
-        GameTooltip:AddLine(TEXT_NONE, T.muted.r, T.muted.g, T.muted.b)
+        GameTooltip:AddLine(pushable > 0 and TEXT_ALL_HAVE or TEXT_NONE, T.muted.r, T.muted.g, T.muted.b)
     else
         GameTooltip:AddLine(TEXT_COUNT:format(count), T.accentSoft.r, T.accentSoft.g, T.accentSoft.b)
     end

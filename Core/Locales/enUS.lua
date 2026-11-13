@@ -3873,6 +3873,7 @@ L["None of your BiS drops here"] = true
 L["None of your BiS is among its rewards"] = true
 L["None of your other characters has reached level %d yet."] = true
 L["None of your quests for this dungeon can be shared."] = true
+L["Your group has these quests already, or cannot take them."] = true
 L["None of your quests here can be shared."] = true
 L["None to pick up right now: the rest are not for your level yet."] = true
 L["None with a buyout listed right now."] = true

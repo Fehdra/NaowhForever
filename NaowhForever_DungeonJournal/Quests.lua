@@ -100,14 +100,14 @@ local function ForSide(side, faction)
     return side == BOTH or (own ~= nil and own == faction)
 end
 
-local function ForRace(mask)
-    local bit = RACE_BITS[select(RACE_ID, UnitRace("player"))]
+local function ForRace(mask, unit)
+    local bit = RACE_BITS[select(RACE_ID, UnitRace(unit))]
     return not bit or math.floor(mask / 2 ^ bit) % 2 == 1
 end
 
-local function ForMe(quest, class, faction)
+local function ForMe(quest, class, faction, unit)
     if quest.class and quest.class ~= class then return false end
-    if quest.races and not ForRace(quest.races) then return false end
+    if quest.races and not ForRace(quest.races, unit or "player") then return false end
     return ForSide(quest[SIDE], faction)
 end
 
@@ -349,6 +349,13 @@ end
 function Q.ForMe(quest)
     local _, class = UnitClass("player")
     return ForMe(quest, class, UnitFactionGroup("player"))
+end
+
+function Q.ForUnit(quest, unit)
+    local need = Q.MinLevel(quest)
+    if need and UnitLevel(unit) < need then return false end
+    local _, class = UnitClass(unit)
+    return ForMe(quest, class, UnitFactionGroup(unit), unit)
 end
 
 function Q.Chain(quest)
