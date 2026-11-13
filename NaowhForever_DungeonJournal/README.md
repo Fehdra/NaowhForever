@@ -354,6 +354,17 @@ in the pull request it opens.
   so they start at TBD with whom their quest text says to hand them in to. Blood and Thunder,
   filed under Blackrock Spire, is left out: it only sends you to Warlord Goretooth, and neither
   source says which wing it is for.
+- The quests ForeverChanges has since filed under Alcaz Prison, Krol'dok Stronghold, Razorfen
+  Downs, Zul'Farrak and Maraudon were added by hand from its quest list (2026-11-13), each
+  checked against EG Link's server data (build 1.60.1.70888), which gives the same levels and
+  is where shareable and the chains (`steps`) are from. The Coldbringer's Eye's Alliance giver is
+  ForeverChanges' pin, as is Twilight Mementos'; Commander Folkar and Mason Connery, inside the
+  prison, are the givers their quest text names. Five more that only the server's data has are in
+  too: Krol'dok No More! (the Alliance's; the Horde's version is unfinished there), Blackmaw
+  Reclamation, A Lost Memento, Digestible Research and The Broken Glaive. Left out: the other
+  versions of State Secrets and Blackmaw Pouches, which have no text, the City of Dalaran's
+  level 52 to 60 quests, which are the city's and not the dungeon's, and the Season of Discovery
+  quests the server also sent (Ever After, Nostro's Compendium).
 - Scarlet Monastery's four wings share one instance (189), each its own dungeon with classic's
   ranges. A quest goes under the wing it is done in: Hearts of Zeal (hearts from any wing) under
   the first, the two that kill Loksey, Herod, Mograine and Whitemane under the Cathedral.

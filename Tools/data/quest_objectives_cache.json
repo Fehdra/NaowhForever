@@ -914,6 +914,16 @@
   "npcs": [],
   "text": "Bring the Gems of Cobrahn, Anacondra, Pythas and Serpentis to Nara Wildmane in Thunder Bluff. Gem of Cobrahn ( 1 ) Gem of Anacondra ( 1 ) Gem of Pythas ( 1 ) Gem of Serpentis ( 1 ) WH.ge('icon-list-icon1').appendChild(g_items.createIcon(9738, 0, 1, null, null)); WH.ge('icon-list-icon2').appendChild(g_items.createIcon(9739, 0, 1, null, null)); WH.ge('icon-list-icon3').appendChild(g_items.createIcon(9740, 0, 1, null, null)); WH.ge('icon-list-icon4').appendChild(g_items.createIcon(9741, 0, 1, null, null));"
  },
+ "92065": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Bring Varrox Bleakhoof's Head to Gatekeeper Rageroar at Ursolan."
+ },
+ "92070": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Find the owner of the Feathered Charm Necklace."
+ },
  "92401": {
   "npcs": [],
   "text": "Investigate the disappearance of Edward Heartweaver in the Ruins of Lordaeron. Investigate the disappearance of Edward Heartweaver in the Ruins of Lordaeron. ( 1 )"
@@ -961,15 +971,75 @@
   ],
   "text": "Find the forge hidden in the Deadmines, and plant the Extra-Destructive Explosives nearby. Then, meet up with Alba Fairmoon at the Deadmines exit."
  },
+ "93404": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Venture to Maraudon and recover a Vial of Earth Song Water and return it to Woodwyrd at the Forlorn Gardens in Desolace."
+ },
+ "93604": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Venture to Razorfen Downs and acquire Virulent Blood of Agamaggan, then return it to Kog'thug the Brave at Bristleback Retreat in the Desolace. Kog'thug felt it worth reminding that the Blood of Agamaggan inside Razorfen Kraul would not be sufficient."
+ },
+ "94968": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Infiltrate Krol'dok Stronghold and return to Krom'rosh with proof of their leader's demise."
+ },
+ "94969": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Escort Marcus Tilwell to safety."
+ },
+ "94973": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Find someone in Rog'mar who may know about the mould."
+ },
+ "94974": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Bring $1oa Thick Leather and $2oa Iron Bar to Kreza Darkthorn."
+ },
+ "94975": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Collect $1oa Cultist Ears from the Twilight's Hammer in Krol'dok Stronghold."
+ },
+ "94980": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Find someone in Farholde Keep who may know about the mould."
+ },
+ "94981": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Bring $1oa Thick Leather and $2oa Iron Bars to Alphonse Dumas."
+ },
  "94982": {
   "from": "EG Link, the server's quest data (1.60.1.70840)",
   "npcs": [],
   "text": "Infiltrate Krol'dok Stronghold and return to Commander Brant with proof of their leader's demise."
  },
+ "94983": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Collect $1oa Cultist Bangles from the Twilight's Hammer in Krol'dok Stronghold."
+ },
  "94984": {
   "from": "EG Link, the server's quest data (1.60.1.70840)",
   "npcs": [],
   "text": "Kill Nar'gurk within Krol'dok Stronghold and recover any valuable information."
+ },
+ "94997": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Bring the Satchel of Cursed Mementos to Ashe Amberhall in Farholde Keep."
+ },
+ "94998": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Bring the Satchel of Mementos to Melanie Sable."
  },
  "95036": {
   "from": "EG Link, the server's quest data (1.60.1.70840)",
@@ -991,6 +1061,31 @@
  "95250": {
   "npcs": [],
   "text": "Collect the Head of the Baron in the Ruins of Lordaeron and bring it back to Captain Truman. Head of the Baron ( 1 ) WH.ge('icon-list-icon1').appendChild(g_items.createIcon(268518, 0, 1, null, null));"
+ },
+ "95262": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Enter Alcaz Prison and learn what became of the King of Stormwind."
+ },
+ "95263": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Return to Sully McCleary in Dustwallow Marsh."
+ },
+ "95309": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Enter the Alcaz Prison and find Commander Folkar."
+ },
+ "95454": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Look for King Varian Wrynn in Alcaz Prison."
+ },
+ "95483": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Bring word of Varian Wrynn's fate to Thrall in Orgrimmar."
  },
  "95646": {
   "npcs": [],
@@ -1058,6 +1153,11 @@
   "npcs": [],
   "text": "Collect $1oa Voodoo Infused Artifacts from Saltseer pirates in the Drowned City."
  },
+ "95790": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Collect $1oa Partially Digested Journal Pages from the Shaper's Terrace."
+ },
  "95791": {
   "from": "EG Link, the server's quest data (1.60.1.70840)",
   "npcs": [
@@ -1082,10 +1182,35 @@
   "npcs": [],
   "text": "Apothecary Zamah in Thunder Bluff wants you to collect 10 Serpentbloom . Serpentbloom ( 10 ) WH.ge('icon-list-icon1').appendChild(g_items.createIcon(5339, 0, 10, null, null));"
  },
+ "96332": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Enter the Alcaz Prison and slay $1oa Strashasz Soldiers, $2oa Strashaz Enchantresses, and bring the head of Tidemistress Ca'zass to Sergeant Ulka."
+ },
+ "96334": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Enter Alcaz Prison and collect $1oa Blood Red Bandanas from the human guards there."
+ },
+ "96335": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Recover the Alcaz Shackle Key from The Questioner in Alcaz Prison."
+ },
  "96337": {
   "from": "EG Link, the server's quest data (1.60.1.70840)",
   "npcs": [],
   "text": "Use the note provided by Mason Connery to find his hidden treasure."
+ },
+ "96369": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Report back to Commander Folkar."
+ },
+ "96381": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Enter the Alcaz Prison and slay $1oa  Strashasz Soldiers, $2oa Strashaz Enchantresses, and bring the head of Tidemistress Ca'zass to Sully McCleary."
  },
  "96393": {
   "npcs": [],
@@ -1108,6 +1233,11 @@
   "npcs": [],
   "text": "Collect 8 Dwarven Heirlooms from the Hall of Thanes . Dwarven Heirloom ( 8 ) WH.ge('icon-list-icon1').appendChild(g_items.createIcon(274289, 0, 8, null, null));"
  },
+ "96770": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Slay Witch Doctor Zum'rah and bring Zum'rah's Head to Archmage Lan'dalock in Dalaran."
+ },
  "96771": {
   "from": "EG Link, the server's quest data (1.60.1.70840)",
   "npcs": [
@@ -1120,10 +1250,20 @@
   "npcs": [],
   "text": "Recover Zarla's Journal from the depths of Alcaz Prison."
  },
+ "96773": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Recover The Coldbringer's Eye from Razorfen Downs."
+ },
  "96774": {
   "from": "EG Link, the server's quest data (1.60.1.70840)",
   "npcs": [],
   "text": "Recover an Ancient Gurubashi Idol from the Drowned City."
+ },
+ "96775": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Slay Witch Doctor Zum'rah and bring Zum'rah's Head to Mazu'kon in Mulgore."
  },
  "96776": {
   "from": "EG Link, the server's quest data (1.60.1.70840)",
@@ -1209,5 +1349,10 @@
  "98824": {
   "npcs": [],
   "text": "Bring the Titan Relic to High Explorer Magellas in Ironforge's Hall of Explorers. Titan Relic ( 1 ) WH.ge('icon-list-icon1').appendChild(g_items.createIcon(270865, 0, 1, null, null));"
+ },
+ "98830": {
+  "from": "EG Link, the server's quest data (1.60.1.70888)",
+  "npcs": [],
+  "text": "Deliver Tortheldrin's Broken Glaive to the Shen'dralar Ancient in Dire Maul."
  }
 }
