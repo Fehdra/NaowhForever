@@ -317,7 +317,13 @@ end
 
 function Drag.Place()
     win:ClearAllPoints()
-    win:SetPoint("TOPLEFT", ProfessionsFrame, "TOPLEFT", 0, 0)
+    local pos = S.Get("windowPos")
+    if pos then
+        local scale = win:GetEffectiveScale() / UIParent:GetEffectiveScale()
+        win:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", pos.x * scale, pos.y * scale)
+    else
+        win:SetPoint("TOPLEFT", ProfessionsFrame, "TOPLEFT", 0, 0)
+    end
 end
 
 function Drag.Save()
@@ -340,6 +346,9 @@ local function Shift(low, high, size)
 end
 
 function Drag.Fit()
+    -- A saved position is the user's choice. Fitting the attached tabs after a drag would
+    -- override that choice and make the window jump back when the drag ends or it reopens.
+    if S.Get("windowPos") then return end
     if not (win and win:IsShown() and savedTabPoints) or Drag.pending then return end
     local winLeft, winTop = win:GetLeft(), win:GetTop()
     if not (winLeft and winTop) then return end
@@ -362,8 +371,9 @@ end
 local function OnDragStart(self)
     if InCombatLockdown() then return end
     local x, y = self:GetLeft(), self:GetTop()
+    local scale = self:GetEffectiveScale() / UIParent:GetEffectiveScale()
     self:ClearAllPoints()
-    self:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x, y)
+    self:SetPoint("TOPLEFT", UIParent, "BOTTOMLEFT", x * scale, y * scale)
     self:StartMoving()
     Drag.moving = true
 end
