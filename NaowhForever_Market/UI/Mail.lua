@@ -47,4 +47,4 @@ end
 S.OnChange(function(key)
     if key == "enabled" or key == "tooltip" or key == "tooltipMail" then Apply() end
 end)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)

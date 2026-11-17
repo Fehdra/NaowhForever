@@ -121,8 +121,36 @@ local function Hours(yards, work)
 end
 
 local function PerHour(gain, yards, work)
-    local hours = Hours(yards, work)
+    local hours = math.max(Hours(yards, work), C.LOOP_MIN_SECONDS / SECONDS_PER_HOUR)
     return hours > 0 and math.floor(gain / hours) or 0
+end
+
+local function Distance(width, height, a, b)
+    local dx, dy = (a.x - b.x) * width, (a.y - b.y) * height
+    return math.sqrt(dx * dx + dy * dy)
+end
+
+local function Richest(a, b)
+    if a.gain ~= b.gain then return a.gain > b.gain end
+    if a.x ~= b.x then return a.x < b.x end
+    return a.y < b.y
+end
+
+local function Route(left, width, height, route)
+    local current = table.remove(left, 1)
+    route[#route + 1] = current
+    local yards = 0
+    while #left > 0 do
+        local best, pick
+        for i, spot in ipairs(left) do
+            local d = Distance(width, height, current, spot)
+            if not best or d < best then best, pick = d, i end
+        end
+        yards = yards + best
+        current = table.remove(left, pick)
+        route[#route + 1] = current
+    end
+    return yards + Distance(width, height, current, route[1])
 end
 
 local function Tally(zone, item, value)
@@ -174,27 +202,28 @@ local function Add(zone, item, value, gain, work)
     if item and value > 0 then Tally(zone, item, value) end
 end
 
-local found, foundPool = {}, {}
+local found, foundPool, kept, route = {}, {}, {}, {}
 
-local function Found(item, value, gain, work)
+local function Found(item, value, gain, work, x, y)
     local stop = table.remove(foundPool) or {}
-    stop.item, stop.value, stop.gain, stop.work = item, value, gain, work
+    stop.item, stop.value, stop.gain, stop.work, stop.x, stop.y = item, value, gain, work, x, y
     found[#found + 1] = stop
 end
 
-local function MoreGain(a, b)
-    if a.gain ~= b.gain then return a.gain > b.gain end
-    return (a.item or 0) < (b.item or 0)
-end
-
 -- A zone is rated on the stops its loop would take: its richest LOOP_STOPS.
-local function KeepRichest(zone)
-    if #found > C.LOOP_STOPS then table.sort(found, MoreGain) end
+local function KeepRichest(zone, width, height)
+    table.sort(found, Richest)
     for i, stop in ipairs(found) do
-        if i <= C.LOOP_STOPS then Add(zone, stop.item, stop.value, stop.gain, stop.work) end
+        if i <= C.LOOP_STOPS then
+            Add(zone, stop.item, stop.value, stop.gain, stop.work)
+            kept[#kept + 1] = stop
+        end
         foundPool[#foundPool + 1] = stop
     end
     wipe(found)
+    local yards = kept[1] and Route(kept, width, height, route) or 0
+    wipe(route)
+    return yards
 end
 
 local function ReadZone(G, mapID, all, camps, skill)
@@ -202,13 +231,15 @@ local function ReadZone(G, mapID, all, camps, skill)
     wipe(zone.items)
     zone.map, zone.kind, zone.rate = mapID, "gather", nil
     zone.stops, zone.value, zone.gain, zone.work = 0, 0, 0, 0
+    local scale = G.C.SPOT_SCALE
     for i = 1, #all, 3 do
         local node = G.NODES[all[i]]
         local kind = node and node[KIND]
         if kind and Wanted(kind) and skill[kind] >= node[NEED] then
             local item = Item(all[i], node)
             local value = Value(all[i], kind, item)
-            Found(item, value, value * C.OCCUPANCY, C.OCCUPANCY * C.GATHER_SECONDS)
+            Found(item, value, value * C.OCCUPANCY, C.OCCUPANCY * C.GATHER_SECONDS, all[i + 1] / scale,
+                all[i + 2] / scale)
         end
     end
     if Wanted("skin") then
@@ -217,17 +248,16 @@ local function ReadZone(G, mapID, all, camps, skill)
             if creature and skill.skin >= SkinNeed(creature[MAX_LEVEL]) then
                 local each, item = Skin(camps[i])
                 local value = each * camps[i + 3]
-                Found(item, value, value, camps[i + 3] * C.SKIN_SECONDS)
+                Found(item, value, value, camps[i + 3] * C.SKIN_SECONDS, camps[i + 1] / scale, camps[i + 2] / scale)
             end
         end
     end
-    KeepRichest(zone)
+    local width, height = C_Map.GetMapWorldSize(mapID)
+    local yards = KeepRichest(zone, width, height)
     if zone.stops == 0 then
         zonePool[#zonePool + 1] = zone
         return
     end
-    local width, height = C_Map.GetMapWorldSize(mapID)
-    local yards = C.TOUR_FACTOR * math.sqrt(zone.stops * width * height)
     zone.minutes = Hours(yards, zone.work) * MINUTES_PER_HOUR
     zone.perHour = PerHour(zone.gain, yards, zone.work)
     zone.measured = Runs.PerHour(mapID)
@@ -297,11 +327,6 @@ local function Gathered(G, mapID)
     return picked
 end
 
-local function Distance(width, height, a, b)
-    local dx, dy = (a.x - b.x) * width, (a.y - b.y) * height
-    return math.sqrt(dx * dx + dy * dy)
-end
-
 local function Here(mapID)
     local map = C_Map.GetBestMapForUnit("player")
     if not map or ns.Shared.Places.SameMap(map) ~= mapID then return end
@@ -311,12 +336,6 @@ local function Here(mapID)
     return { x = x, y = y }
 end
 
-local function Richest(a, b)
-    if a.gain ~= b.gain then return a.gain > b.gain end
-    if a.x ~= b.x then return a.x < b.x end
-    return a.y < b.y
-end
-
 local function Tour(mapID, width, height)
     wipe(loop)
     local left = {}
@@ -324,32 +343,20 @@ local function Tour(mapID, width, height)
         if spot.reach and spot.wanted then left[#left + 1] = spot end
     end
     if #left == 0 then return 0 end
-    if #left > C.LOOP_STOPS then
-        table.sort(left, Richest)
-        for i = #left, C.LOOP_STOPS + 1, -1 do left[i] = nil end
+    table.sort(left, Richest)
+    for i = #left, C.LOOP_STOPS + 1, -1 do left[i] = nil end
+    local yards = Route(left, width, height, loop)
+    local at = Here(mapID)
+    if not at then return yards end
+    local first, best = 1, nil
+    for i, spot in ipairs(loop) do
+        local d = Distance(width, height, at, spot)
+        if not best or d < best then best, first = d, i end
     end
-    local at, yards = Here(mapID), 0
-    local first = 1
-    if at then
-        local best
-        for i, spot in ipairs(left) do
-            local d = Distance(width, height, at, spot)
-            if not best or d < best then best, first = d, i end
-        end
-    end
-    local current = table.remove(left, first)
-    loop[1] = current
-    while #left > 0 do
-        local best, pick
-        for i, spot in ipairs(left) do
-            local d = Distance(width, height, current, spot)
-            if not best or d < best then best, pick = d, i end
-        end
-        yards = yards + best
-        current = table.remove(left, pick)
-        loop[#loop + 1] = current
-    end
-    return yards + Distance(width, height, current, loop[1])
+    local count = #loop
+    for i = 1, count do left[i] = loop[(first + i - 2) % count + 1] end
+    for i = 1, count do loop[i] = left[i] end
+    return yards
 end
 
 local function GatherZone(mapID)

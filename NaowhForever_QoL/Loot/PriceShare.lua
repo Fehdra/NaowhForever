@@ -140,5 +140,5 @@ end
 hooksecurefunc(S, "Set", function(key)
     if key == "ahShare" then Apply() end
 end)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 Apply()

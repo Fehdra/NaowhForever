@@ -62,6 +62,7 @@ local wakeAt
 local lastImbue
 local leveledTo
 local hidden = {}
+local custom, customText = {}, ""
 
 local function Secret(v)
     return issecretvalue and issecretvalue(v)
@@ -83,6 +84,13 @@ local function Find(buffs, ids, own)
     for _, id in ipairs(ids) do
         local aura = buffs[id]
         if aura and (not own or Secret(aura.sourceUnit) or aura.sourceUnit == "player") then return aura end
+    end
+end
+
+local function Named(buffs, name)
+    if not name then return nil end
+    for _, aura in pairs(buffs) do
+        if aura.name == name then return aura end
     end
 end
 
@@ -183,6 +191,10 @@ local function Carried(category)
     return on
 end
 
+local function ConsumablePicked(category)
+    return S.Get("consumablePicks")[category] ~= false
+end
+
 local function Consumable(list, buffs, group, item, icon, last, onlyCarried)
     local aura = Find(buffs, group.auras) or group.wellFed and WellFed(buffs)
     local left = aura and Left(aura)
@@ -276,35 +288,39 @@ local function Elixirs(list, buffs, last, carriedItems)
     end
 end
 
+local function ConsumableKind(list, buffs, category)
+    local onlyCarried = Carried(category)
+    local builtIn = D.DEFAULT_GROUPS[category]
+    local group, item
+    if onlyCarried or builtIn.carried then
+        group, item = CarriedBuiltIn(category, builtIn)
+        if item and category == "scroll" then
+            group, item = FamilyGroup(group.items, buffs, D.SCROLL_AURAS)
+            if Outranked(item, buffs) then group = nil end
+        elseif item and category == "battle" then
+            Elixirs(list, buffs, LastIcon(category), group.items)
+            group = nil
+        end
+    elseif category == "food" then
+        group, item = CarriedBuiltIn(category, builtIn)
+        group = group or builtIn
+    else
+        group, item = builtIn, FirstCarried(builtIn.items)
+    end
+    if group then
+        local before = #list
+        local icon = group.items[1] and ItemIcon(group.items[1])
+        if category == "food" then
+            icon = ns.AccountSettings().lastFoodIcon or icon or C_Spell.GetSpellTexture(D.WELL_FED[1])
+        end
+        Consumable(list, buffs, group, item, icon, LastIcon(category), onlyCarried)
+        if #list > before then list[#list].items, list[#list].key = group.items, category end
+    end
+end
+
 local function Consumables(list, buffs)
     for _, category in ipairs(CATEGORY_ORDER) do
-        local onlyCarried = Carried(category)
-        local builtIn = D.DEFAULT_GROUPS[category]
-        local group, item
-        if onlyCarried or builtIn.carried then
-            group, item = CarriedBuiltIn(category, builtIn)
-            if item and category == "scroll" then
-                group, item = FamilyGroup(group.items, buffs, D.SCROLL_AURAS)
-                if Outranked(item, buffs) then group = nil end
-            elseif item and category == "battle" then
-                Elixirs(list, buffs, LastIcon(category), group.items)
-                group = nil
-            end
-        elseif category == "food" then
-            group, item = CarriedBuiltIn(category, builtIn)
-            group = group or builtIn
-        else
-            group, item = builtIn, FirstCarried(builtIn.items)
-        end
-        if group then
-            local before = #list
-            local icon = group.items[1] and ItemIcon(group.items[1])
-            if category == "food" then
-                icon = ns.AccountSettings().lastFoodIcon or icon or C_Spell.GetSpellTexture(D.WELL_FED[1])
-            end
-            Consumable(list, buffs, group, item, icon, LastIcon(category), onlyCarried)
-            if #list > before then list[#list].items, list[#list].key = group.items, category end
-        end
+        if ConsumablePicked(category) then ConsumableKind(list, buffs, category) end
     end
 end
 
@@ -507,6 +523,7 @@ local function Has(family, buffs, warn)
     if family.weapons then return MissingSlot(family.weapons, warn, IMBUE) == nil end
     if family.target then return not EliteTarget() or TargetHas(family.spells) end
     local aura = Find(buffs, family.spells, family.own)
+        or family.custom and Named(buffs, C_Spell.GetSpellName(family.spells[1]))
     local duration = aura and not Secret(aura.duration) and aura.duration or nil
     return aura and Lasts(Left(aura), warn, duration), aura
 end
@@ -544,6 +561,21 @@ local function OnTanks(list, family, buffs, warn, spell)
     end
 end
 
+local function CustomBuffs()
+    local text = S.Get("personalBuffExtra")
+    if text == customText then return custom end
+    customText, custom = text, {}
+    local seen = {}
+    for id in tostring(text or ""):gmatch("%d+") do
+        id = tonumber(id)
+        if not seen[id] then
+            seen[id] = true
+            custom[#custom + 1] = { spells = { id }, custom = true }
+        end
+    end
+    return custom
+end
+
 local function PersonalBuffs(list, buffs)
     if UnitIsDeadOrGhost("player") or S.Get("hideResting") and IsResting() then return end
     local _, class = UnitClass("player")
@@ -571,6 +603,16 @@ local function PersonalBuffs(list, buffs)
             end
         end
     end
+    for _, family in ipairs(CustomBuffs()) do
+        local spell = Knows(family.spells)
+        if spell then
+            local has, aura = Has(family, buffs, warn)
+            if not has then
+                list[#list + 1] = { icon = C_Spell.GetSpellTexture(spell), aura = aura, key = family,
+                    spell = spell, unit = "player" }
+            end
+        end
+    end
 end
 
 local Reminders = {}
@@ -578,10 +620,12 @@ A.Buffs = Reminders
 
 Reminders.GROUP_UNIT = GROUP_UNIT
 Reminders.Carried = Carried
+Reminders.ConsumablePicked = ConsumablePicked
 Reminders.Left = Left
 Reminders.Picked = Picked
 Reminders.PersonalPicked = PersonalPicked
 Reminders.PersonalWarn = PersonalWarn
+Reminders.CustomBuffs = CustomBuffs
 Reminders.Secret = Secret
 Reminders.ShowsHere = ShowsHere
 
@@ -660,6 +704,9 @@ function Reminders.CastCovers(key, spellID, onSelf)
         if family == key then
             return not family.weapons and (onSelf or not family.others) and Casts(family, spellID)
         end
+    end
+    for _, family in ipairs(custom) do
+        if family == key then return Casts(family, spellID) end
     end
     for _, family in ipairs(D.RAID) do
         if family == key then return onSelf == true and Casts(family, spellID) end

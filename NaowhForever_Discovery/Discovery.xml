@@ -4,9 +4,11 @@
     <Script file="Constants.lua"/>
     <Script file="Data\Books.lua"/>
     <Script file="Data\SleepingBag.lua"/>
+    <Script file="Data\Attunements.lua"/>
     <Script file="Data\FieldJournal.lua"/>
     <Script file="Library.lua"/>
     <Script file="SleepingBag.lua"/>
+    <Script file="Attunements.lua"/>
     <Script file="Field.lua"/>
     <Script file="Nearby.lua"/>
     <Script file="View\Style.lua"/>
@@ -15,15 +17,19 @@
     <Script file="View\BookRow.lua"/>
     <Script file="View\BagHero.lua"/>
     <Script file="View\StepRow.lua"/>
+    <Script file="View\AttuneRow.lua"/>
     <Script file="View\FieldHero.lua"/>
     <Script file="View\FieldRow.lua"/>
     <Script file="UI\Window.lua"/>
     <Script file="UI\BookTracker.lua"/>
     <Script file="UI\BagTracker.lua"/>
+    <Script file="UI\AttuneTracker.lua"/>
     <Include file="UI\BookPins.xml"/>
     <Include file="UI\BagPins.xml"/>
+    <Include file="UI\AttunePins.xml"/>
     <Script file="UI\BooksSettings.lua"/>
     <Script file="UI\BagSettings.lua"/>
+    <Script file="UI\AttuneSettings.lua"/>
     <Script file="UI\FieldSettings.lua"/>
     <Include file="QuestList\QuestList.xml"/>
 </Ui>

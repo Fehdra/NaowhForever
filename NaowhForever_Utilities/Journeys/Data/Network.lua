@@ -384,7 +384,7 @@ ns.JourneyNetwork = {
         { "Zeppelin", "H", { 1, 1318.1, -4658.0, 1411, "Orgrimmar", 60, 3300 }, { 0, 2062.4, 293.0, 1420, "Undercity", 60, 2389 } },
     },
     links = {
-        { "Portal", "AH", 5, { 1, 8799.4, 969.8, "Rut'theran Village", 30.2 }, { 1, 9947.5, 2630.0, "Darnassus", 1318.6 } },
-        { "Tram", "AH", 150, { 0, -4833.8, -1284.1, "Ironforge", 502.3 }, { 0, -8393.2, 572.2, "Stormwind", 92.4 } },
+        { "Portal", "A", 5, { 1, 8799.4, 969.8, "Rut'theran Village", 30.2 }, { 1, 9947.5, 2630.0, "Darnassus", 1318.6 } },
+        { "Tram", "A", 150, { 0, -4833.8, -1284.1, "Ironforge", 502.3 }, { 0, -8393.2, 572.2, "Stormwind", 92.4 } },
     },
 }

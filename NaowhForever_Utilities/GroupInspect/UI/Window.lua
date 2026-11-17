@@ -181,4 +181,4 @@ local function OnApply()
 end
 
 S.OnChange(OnSettingChanged)
-hooksecurefunc(ns, "Apply", OnApply)
+ns.OnApply(OnApply)

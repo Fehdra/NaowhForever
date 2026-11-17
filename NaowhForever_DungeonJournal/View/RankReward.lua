@@ -3,6 +3,7 @@ local ns = _G.NaowhForever
 
 local T = ns.THEME
 local J = ns.Journal
+local Rep = J.Reputation
 local Kinds, Parts = J.View.Kinds, J.View.Parts
 local Tip = Parts.Tip
 local KEPT_CODE = ns.Shared.Items.KEPT_CODE
@@ -19,6 +20,7 @@ local FIRST_LINE = "^[^\n]+"
 
 local TEXT_REWARD = ns.L("Reward")
 local TEXT_COLLECTED = ns.L("   %sCollected|r")
+local TEXT_VENDOR_IN = ns.L("Rank vendor in ")
 local KIND_WORDS = {
     { "mountID", ns.L("Mount") }, { "titleMaskID", ns.L("Title") }, { "transmogSetID", ns.L("Appearance set") },
     { "transmogID", ns.L("Appearance") }, { "transmogIllusionSourceID", ns.L("Illusion") }, { "spellID", ns.L("Spell") },
@@ -57,6 +59,8 @@ local function RewardEnter(row)
     else
         GameTooltip:SetText(reward.name or RewardKind(reward) or TEXT_REWARD, 1, 1, 1)
         if reward.description then GameTooltip:AddLine(reward.description, nil, nil, nil, true) end
+        local city = Rep.RankCity()
+        if city then GameTooltip:AddLine(TEXT_VENDOR_IN .. city, T.muted.r, T.muted.g, T.muted.b) end
     end
     GameTooltip:Show()
 end

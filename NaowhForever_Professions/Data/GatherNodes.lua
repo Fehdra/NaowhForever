@@ -45,6 +45,7 @@ ns.Professions.GatherNodes = {
     ["Plaguebloom"] = { "herb", 285, 13466 },
     ["Icecap"] = { "herb", 290, 13467 },
     ["Black Lotus"] = { "herb", 300, 13468 },
+    ["Demonsage"] = { "herb", 300 },
     ["Copper Vein"] = { "ore", 1, 2770 },
     ["Poor Copper Vein"] = { "ore", 1, 2770 },
     ["Chunk of Amber"] = { "ore", 1 },

@@ -23,9 +23,9 @@ local KEYS = {
     raidBuffsWorld = true, raidBuffsDungeon = true, raidBuffsRaid = true,
     personalBuffsWorld = true, personalBuffsDungeon = true, personalBuffsRaid = true, personalBuffsSeconds = true, battleShoutSeconds = true,
     consumablesMaxHide = true, raidBuffsMaxHide = true, personalBuffsMaxHide = true,
-    onlyIfCarried = true, carriedPicks = true, hideResting = true, raidBuffs = true, raidBuffsOwn = true, raidBuffPicks = true, iconSize = true,
+    onlyIfCarried = true, carriedPicks = true, consumablePicks = true, hideResting = true, raidBuffs = true, raidBuffsOwn = true, raidBuffPicks = true, iconSize = true,
     buffIconMode = true, raidBuffRange = true, raidBuffRangeHide = true, hideBlessingsOnPaladin = true,
-    personalBuffs = true, personalBuffPicks = true, thornsTankOnly = true, weaponEnhancements = true, leftClickMainHand = true, sleepingBag = true,
+    personalBuffs = true, personalBuffPicks = true, personalBuffExtra = true, thornsTankOnly = true, weaponEnhancements = true, leftClickMainHand = true, sleepingBag = true,
     elementalAttractor = true,
     otherBuffs = true,
     buffsFont = true, buffsFontSize = true, buffsOutline = true, buffsBorderColor = true,
@@ -33,8 +33,9 @@ local KEYS = {
     buffGlowSpeed = true,
 }
 local PREVIEW = {
-    { spell = D.WELL_FED[1] }, { item = D.FLASKS.items[1] }, { item = ELIXIR_ICON },
-    { item = D.SCROLLS[4].items[4], count = 2 }, { raid = true, count = 3 },
+    { spell = D.WELL_FED[1], kind = "food" }, { item = D.FLASKS.items[1], kind = "flask" },
+    { item = ELIXIR_ICON, kind = "battle" },
+    { item = D.SCROLLS[4].items[4], count = 2, kind = "scroll" }, { raid = true, count = 3 },
 }
 
 local frame, unlocked, pending, held, bagShown
@@ -330,7 +331,8 @@ local function Listen()
         events:RegisterEvent("WEAPON_ENCHANT_CHANGED")
     end
     if S.Get("personalBuffs") or S.Get("raidBuffs") then events:RegisterUnitEvent("UNIT_SPELLCAST_SENT", "player") end
-    if S.Get("personalBuffs") or S.Get("raidBuffs") or R.WatchesImbue() or not R.Carried("food")
+    if S.Get("personalBuffs") or S.Get("raidBuffs") or R.WatchesImbue()
+        or not R.Carried("food") and R.ConsumablePicked("food")
         or S.Get("buffIconMode") == "last" then
         events:RegisterUnitEvent("UNIT_SPELLCAST_SUCCEEDED", "player")
     end
@@ -395,7 +397,7 @@ A.BuffPreview = PREVIEW
 
 events:SetScript("OnEvent", OnEvent)
 hooksecurefunc(S, "Set", OnSet)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 hooksecurefunc(ns, "ShowUnlockMode", OnUnlock)
 hooksecurefunc(ns, "HideUnlockMode", OnLock)
 

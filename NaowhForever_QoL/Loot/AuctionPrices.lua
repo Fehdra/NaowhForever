@@ -61,6 +61,8 @@ local MINUTES, HOURS, DAYS = "m", "h", "d"
 local TEXT_FEED_LINE = ns.L("Prices from %s ago: %s items priced")
 local TEXT_FEED_AGE = ns.L("Prices from %s ago")
 local TEXT_TOOLTIP_TAG = ns.L("Market Price")
+local TEXT_VENDOR_TAG = ns.L("Sold by Vendors")
+local TEXT_VENDOR_LIMITED = ns.L("Sold by Vendors (limited stock)")
 local FEED_ADDON = "NaowhForever_AuctionData"
 local FEED_BASE = 36
 -- tonumber with a base goes through strtoul, which is 32-bit on Windows, so longer numbers are read in two parts.
@@ -69,7 +71,7 @@ local MATCH_MIN = 20
 local MATCH_SPREAD = 0.01
 
 local button, scanning, scanGen = nil, nil, 0
-local ownScan, houseOpen, hooked
+local ownScan, houseOpen, hooked, earlyAt
 local browsing, browseHooked, browseSent, browseSending, browseWaiting
 local browseCount = 0
 local tooltipHooked
@@ -506,7 +508,13 @@ local function OnBrowsed(added)
 end
 
 local function OnOtherBrowse()
-    if browsing and not browseSending then Stop(TEXT_REPLACED) end
+    if browseSending then return end
+    browseSent = nil
+    if browsing then Stop(TEXT_REPLACED) end
+end
+
+function ns.AuctionScanBrowsed()
+    return browseSent == true
 end
 
 local function Browse(message)
@@ -514,6 +522,7 @@ local function Browse(message)
         browseHooked = true
         hooksecurefunc(C_AuctionHouse, "SendBrowseQuery", OnOtherBrowse)
         hooksecurefunc(C_AuctionHouse, "SearchForFavorites", OnOtherBrowse)
+        hooksecurefunc(C_AuctionHouse, "SearchForItemKeys", OnOtherBrowse)
     end
     scanning, ownScan, browsing = true, true, true
     browseSent, browseCount = nil, 0
@@ -549,7 +558,11 @@ end
 ns.AuctionScan = Scan
 
 local function OnReplicate()
-    if scanning and not browsing or not (houseOpen and S.Get("ahCapture")) then return end
+    if scanning and not browsing or not S.Get("ahCapture") then return end
+    if not houseOpen then
+        earlyAt = GetTime()
+        return
+    end
     House(true).requested = GetServerTime()
     events:RegisterEvent("REPLICATE_ITEM_LIST_UPDATE")
     if browsing then return end
@@ -627,7 +640,7 @@ local function Visit(neutral)
 end
 
 local function OnClosed()
-    houseOpen = nil
+    houseOpen, browseSent = nil, nil
     Stop(scanning and TEXT_CLOSED)
     Visit(false)
     if ageTicker then
@@ -641,6 +654,8 @@ local function OnEvent(_, event, added)
         houseOpen = true
         Visit(UnitExists("npc") and UnitFactionGroup("npc") ~= UnitFactionGroup("player")
             and C_PvP.GetZonePVPInfo() ~= FRIENDLY)
+        if earlyAt == GetTime() then OnReplicate() end
+        earlyAt = nil
         ShowButton()
         if S.Get("ahAutoScan") then C_Timer.After(AUTO_DELAY, AutoScan) end
     elseif event == "AUCTION_HOUSE_CLOSED" then
@@ -682,11 +697,9 @@ local function AddBundles(tooltip, bundles, cheapest)
     end
 end
 
-local function OnItemTooltip(tooltip, data)
+local function AddPrices(tooltip, id)
     local own, crates, writs = S.Get("ahTooltip"), S.Get("ahCrates"), S.Get("ahWrits")
     if not (own or crates or writs) then return end
-    local id = data and data.id
-    if not id or (issecretvalue and issecretvalue(id)) then return end
     local price, priceAt
     local market = ns.Market
     if own and not (market and market.ShowsPrice(tooltip, id)) then price, priceAt = ns.AuctionPrice(id) end
@@ -715,8 +728,26 @@ local function OnItemTooltip(tooltip, data)
     end
 end
 
+local function AddVendor(tooltip, id)
+    local price = S.Get("ahVendor") and ns.VendorSold[id]
+    if not price then return end
+    local side = ns.VendorSoldSide[id]
+    faction = faction or UnitFactionGroup("player")
+    if side and side ~= faction then return end
+    local tag = ns.VendorSoldLimited[id] and TEXT_VENDOR_LIMITED or TEXT_VENDOR_TAG
+    tooltip:AddDoubleLine(ns.Color("accent", tag), C_CurrencyInfo.GetCoinTextureString(price, COIN_SIZE),
+        WHITE.r, WHITE.g, WHITE.b, WHITE.r, WHITE.g, WHITE.b)
+end
+
+local function OnItemTooltip(tooltip, data)
+    local id = data and data.id
+    if not id or (issecretvalue and issecretvalue(id)) then return end
+    AddPrices(tooltip, id)
+    AddVendor(tooltip, id)
+end
+
 local function HookTooltip()
-    if tooltipHooked or not (S.Get("ahTooltip") or S.Get("ahCrates") or S.Get("ahWrits")) then return end
+    if tooltipHooked or not (S.Get("ahTooltip") or S.Get("ahCrates") or S.Get("ahWrits") or S.Get("ahVendor")) then return end
     tooltipHooked = true
     TooltipDataProcessor.AddTooltipPostCall(Enum.TooltipDataType.Item, OnItemTooltip)
 end
@@ -724,7 +755,7 @@ end
 local function OnSettingChanged(key)
     if key == "ahPrices" and button then button:SetShown(S.Get("ahPrices")) end
     if key == "ahCapture" then HookReplicate() end
-    if key == "ahTooltip" or key == "ahCrates" or key == "ahWrits" then HookTooltip() end
+    if key == "ahTooltip" or key == "ahCrates" or key == "ahWrits" or key == "ahVendor" then HookTooltip() end
     if key == "ahTsm" then
         if ns.ProfWindowRefresh then ns.ProfWindowRefresh() end
         if ns.MarketRefresh then ns.MarketRefresh() end
@@ -736,7 +767,7 @@ events:SetScript("OnEvent", OnEvent)
 events:RegisterEvent("AUCTION_HOUSE_SHOW")
 events:RegisterEvent("AUCTION_HOUSE_CLOSED")
 hooksecurefunc(S, "Set", OnSettingChanged)
-hooksecurefunc(ns, "Apply", HookTooltip)
+ns.OnApply(HookTooltip)
 HookReplicate()
 HookTooltip()
 
@@ -755,9 +786,11 @@ ns.Shared.Settings.Page("QoL/Loot & Items", S):Card({
           help = "Waylaid Crate tooltips show what each filling costs on the auction house." },
         { key = "ahWrits", label = "Craftsman's Writ Prices", toggle = true,
           help = "Craftsman's Writ tooltips show the item the writ asks for and what one costs on the auction house." },
+        { key = "ahVendor", label = "Sold by Vendors", toggle = true,
+          help = "Item tooltips say when a vendor sells the item, and what one costs there." },
         { key = "ahCapture", label = "Capture Other Addons' Scans", toggle = true,
-          help = "Also keeps the prices from full auction house scans that other addons start, "
-              .. "such as Auctionator or TSM." },
+          help = "Also keeps auction house prices from scans other addons start, such as Auctionator or TSM, "
+              .. "full or summary, and from the searches you run and the items you post." },
         { key = "ahAutoScan", label = "Scan on Opening", toggle = true,
           needs = ns.GamepadFree, why = ns.GamepadWhy,
           help = "Scans by itself when you open the auction house and your last scan is old." },

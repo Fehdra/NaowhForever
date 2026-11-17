@@ -16,6 +16,7 @@ local TITLE_HEIGHT = 22
 local TITLE_BUTTONS = 80
 local HANDLE_LEVEL = 80
 local KEEP_ON_SCREEN = 60
+local OPEN_MAP = "OpenMap"
 
 local TEXT_TITLE = "Map Window"
 local TEXT_TIP = ns.L("Drag to make the map bigger or smaller.\nRight-click: back to 100%.")
@@ -28,7 +29,7 @@ local home
 
 local function On()
     local eui = _G.EllesmereUIDB
-    return S.Get("enabled") and not (eui and eui.shifterEnabled)
+    return S.Get("enabled") and not (eui and eui.shifterEnabled) and not C_AddOns.IsAddOnLoaded(OPEN_MAP)
 end
 
 local function Wanted()
@@ -258,7 +259,7 @@ end
 hooksecurefunc(S, "Set", function(key)
     if key == "enabled" or key == "mapSizePercent" or key == "mapSizePos" then Setup() end
 end)
-hooksecurefunc(ns, "Apply", Setup)
+ns.OnApply(Setup)
 
 local boot = CreateFrame("Frame")
 boot:RegisterEvent("PLAYER_LOGIN")

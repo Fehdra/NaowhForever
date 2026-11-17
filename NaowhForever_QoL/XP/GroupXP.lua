@@ -333,7 +333,7 @@ local function OnLogin()
 end
 
 hooksecurefunc(S, "Set", OnSettingChanged)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 hooksecurefunc(ns, "ShowUnlockMode", function()
     unlocked = On() == true
     Apply()

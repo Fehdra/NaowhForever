@@ -23,7 +23,7 @@ local TEXT_EMPTY = ns.L("No listings: yours would be the only one.")
 local TEXT_BUY = ns.L("Buy")
 local TEXT_CANCEL = ns.L("Cancel")
 local TEXT_TIP_TAKE = ns.L("Click to take this price.")
-local TEXT_TIP_BUY = ns.L("Buy takes the %d listed up to this price, about %s.")
+local TEXT_TIP_BUY = ns.L("Buy asks how many to take, up to %d at this price or less.")
 local TEXT_TIP_BUY_ITEM = ns.L("Buy takes this auction for %s.")
 local TEXT_TIP_CANCEL = ns.L("Cancel takes your auction down.")
 local TEXT_BUY_ASK = ns.L("Buy %d %s for %s?")
@@ -140,15 +140,15 @@ local function Buy(index)
         if CostOf(1) > GetMoney() then return Note(entry, TEXT_NO_MONEY) end
         if count == 1 then return BuySome(entry.itemID, 1, 1) end
         local itemID = entry.itemID
-        return ns.PromptText(TEXT_BUY_MANY:format(count), tostring(count), QUANTITY_LETTERS,
-            function(text) BuySome(itemID, count, text) end, TEXT_BUY)
+        return ns.PromptText(TEXT_BUY_MANY:format(count), "1", QUANTITY_LETTERS,
+            function(text) BuySome(itemID, count, text) end, TEXT_BUY, true)
     end
     if cost > GetMoney() then return Note(entry, TEXT_NO_MONEY) end
     local auctionID = row.auctionID
     local _, dimmer = ns.Confirm(TEXT_BUY_ASK:format(count, Name(entry, row.link), Coins(cost)), function()
         asking = nil
         Purchase.Item(auctionID, cost)
-    end, AskClosed, TEXT_BUY, TEXT_CANCEL)
+    end, AskClosed, TEXT_BUY, TEXT_CANCEL, true)
     asking = dimmer
 end
 
@@ -162,7 +162,7 @@ local function Cancel(index)
     local _, dimmer = ns.Confirm(text, function()
         asking = nil
         Market.Auctions.Cancel(auctionID)
-    end, AskClosed)
+    end, AskClosed, nil, nil, true)
     asking = dimmer
 end
 
@@ -207,8 +207,8 @@ local function ShowTip(line)
     if pane.take then GameTooltip:AddLine(TEXT_TIP_TAKE, T.fg.r, T.fg.g, T.fg.b) end
     if CanBuy(row) then
         if pane.entry.commodity then
-            local count, cost = Listings.Others(line.index)
-            GameTooltip:AddLine(TEXT_TIP_BUY:format(count, Coins(cost)), m.r, m.g, m.b)
+            local count = Listings.Others(line.index)
+            GameTooltip:AddLine(TEXT_TIP_BUY:format(count), m.r, m.g, m.b)
         else
             GameTooltip:AddLine(TEXT_TIP_BUY_ITEM:format(Coins(row.price)), m.r, m.g, m.b)
         end

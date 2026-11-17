@@ -453,5 +453,5 @@ end
 
 World.OnLearned(OnLearned)
 Jy.Settings.OnChange(Apply)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 Apply()

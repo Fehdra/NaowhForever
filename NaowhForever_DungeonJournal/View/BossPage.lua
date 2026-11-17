@@ -1,4 +1,4 @@
--- BossPage.lua: a boss's own page: stacked in sections (Boss Loot at Cursor), or compact beside its abilities (the dungeon map).
+-- BossPage.lua: a boss's own page: stacked in sections (Boss Loot at Cursor), or compact beside its abilities (the dungeon map); what calls a boss.
 local ns = _G.NaowhForever
 
 local J = ns.Journal
@@ -19,6 +19,7 @@ local TEXT_TIP = "Naowh's Tip"
 local TEXT_LOOT = "Loot"
 local TEXT_QUESTS = "Quests"
 local TEXT_ABILITIES = "Abilities"
+local TEXT_SUMMON = ns.L("Summon")
 
 local EMPTY = {}
 
@@ -38,8 +39,15 @@ function ViewMixin:DrawBossLoot(boss, dungeon)
     self:Begin(dungeon, boss)
     local tip = self.showTips and J.Tip(boss)
     self.showTips = false
-    self:DrawBossName(boss)
-    if tip and self:OpenDetailCard(TEXT_TIP) then
+    local new = self.lootDense == true
+    self.dense = new
+    if new then
+        self:Add("bossBust", boss)
+    else
+        self:DrawBossName(boss)
+    end
+    self:DrawSummons(boss, SECTION_SPACE)
+    if tip and not new and self:OpenDetailCard(TEXT_TIP) then
         self:Add("tip", boss, tip)
         self:CloseCard(self.detailCard, self.detailTop)
     end
@@ -75,8 +83,9 @@ function ViewMixin:DrawBossPageRows(boss, dungeon)
     self:Add("bossTitle", boss)
     local tip = self.showTips and J.Tip(boss)
     if tip then self:DrawTipCard(boss, tip) end
+    self:DrawSummons(boss, PAGE_GAP)
     local quests = self:BossQuests(boss)
-    local loot = boss.loot or EMPTY
+    local loot = not self.noLoot and boss.loot or EMPTY
     local spells = boss.npc and J.Abilities[boss.npc] or EMPTY
     if quests and #loot == 0 then
         self:Space(PAGE_GAP)
@@ -85,13 +94,40 @@ function ViewMixin:DrawBossPageRows(boss, dungeon)
     self:Space(PAGE_GAP)
     if #loot > 0 or #spells > 0 then
         self:DrawBossColumns(boss, loot, spells)
-    else
+    elseif not self.noLoot then
         self:Note(View.Parts.BossEmptyText(0, boss))
     end
     if quests and #loot > 0 then
         self:Space(PAGE_GAP)
         self:Add("questChips", quests)
     end
+end
+
+function ViewMixin:DrawBossInfo(boss, dungeon)
+    self.bossPage = true
+    self:Begin(dungeon, boss)
+    self.dense, self.tightTitles = true, true
+    self.abilityLines = ROOMY_LINES
+    self:Add("bossBust", boss)
+    self:DrawSummons(boss, PAGE_GAP)
+    local quests = self:BossQuests(boss)
+    if quests then
+        self:Space(PAGE_GAP)
+        self:Add("questChips", quests)
+    end
+    local spells = boss.npc and J.Abilities[boss.npc] or EMPTY
+    if #spells > 0 then
+        self:Space(PAGE_GAP)
+        self:DrawAbilityColumn(spells, true, self:GetWidth(), self:GetWidth(), self.cursor)
+    end
+    self:Space(PAGE_GAP)
+    self.historyTop = self.cursor
+    View.BossPanel.DrawInto(self, boss, dungeon)
+    self:Finish()
+end
+
+function ViewMixin:RedrawInfo(dungeon)
+    if self.boss then self:DrawBossInfo(self.boss, dungeon) end
 end
 
 function ViewMixin:Column(x, w, top)
@@ -213,6 +249,13 @@ function ViewMixin:BossQuests(boss)
     if #list == 0 then return nil end
     self.watchQuestLog = true
     return list
+end
+
+function ViewMixin:DrawSummons(boss, gap)
+    local summons = boss.npc and S.Get("questHelp") and J.Summons[boss.npc]
+    if not summons then return end
+    if gap then self:Space(gap) end
+    self:Add("keys", summons, TEXT_SUMMON)
 end
 
 function ViewMixin:DrawBossDetails(boss)

@@ -13,7 +13,7 @@ ns.Journal.AddDungeon("ExcavationSite", {
             { npc = 260325, name = "Shadetooth", model = 144210, encounters = { 3481 }, loot = { 273027, 273026, 273025, 273106 }, chance = { 34, 32, 27, 0 } },
             { npc = 260808, name = "Highland Horror", model = 9010, quest = true, encounters = { 3644 } },
             { npc = 260326, name = "Relic Guardian", model = 144224, encounters = { 3482 }, loot = { 273028, 273029, 273030, 273097 }, chance = { 34, 31, 29, 0 } },
-            { npc = nil, name = "Trash", trash = true, loot = { 286983, 287068 } },
+            { npc = nil, name = "Trash", trash = true, loot = { 286983, 287068, 286982, 286984, 286985, 286986 } },
         } },
     },
 })

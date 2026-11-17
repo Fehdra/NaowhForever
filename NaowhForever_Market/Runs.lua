@@ -253,4 +253,4 @@ end
 Market.Settings.OnChange(function(key)
     if key == "enabled" then Apply() end
 end)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)

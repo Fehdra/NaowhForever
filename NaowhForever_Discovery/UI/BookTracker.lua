@@ -416,7 +416,7 @@ local function OnLogin(self)
 end
 
 hooksecurefunc(S, "Set", OnSet)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 hooksecurefunc(ns, "ShowUnlockMode", ShowMover)
 hooksecurefunc(ns, "HideUnlockMode", HideMover)
 

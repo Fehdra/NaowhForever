@@ -155,19 +155,27 @@ end
 
 local function WhoPattern(fmt)
     if type(fmt) ~= "string" then return nil end
-    local out = fmt:gsub("([%^%$%(%)%.%[%]%*%+%-%?])", "%%%1")
-    out = out:gsub("%%d", "(%%d+)"):gsub("%%s", "(.-)")
-    return "^" .. out .. "$"
+    -- Some locales (ruRU) use positional specifiers such as %3$d, which put the captures out of order.
+    local order = {}
+    local out = fmt:gsub("%%(%d*)%$?([ds])", function(pos, kind)
+        order[#order + 1] = tonumber(pos) or #order + 1
+        return "\1" .. kind
+    end)
+    out = out:gsub("([%^%$%(%)%.%[%]%*%+%-%?])", "%%%1")
+    out = out:gsub("\1d", "(%%d+)"):gsub("\1s", "(.-)")
+    return { pattern = "^" .. out .. "$", order = order }
 end
 
 local function ReadWhoLine(msg)
     if not msg or Secret(msg) or not msg:find("|Hplayer:", 1, true) then return end
     whoPatterns = whoPatterns or { WhoPattern(WHO_LIST_GUILD_FORMAT), WhoPattern(WHO_LIST_FORMAT) }
-    for _, pattern in ipairs(whoPatterns) do
-        local caps = { msg:match(pattern) }
+    for _, who in ipairs(whoPatterns) do
+        local caps = { msg:match(who.pattern) }
         if #caps >= WHO_CAPTURES then
-            Remember(caps[1], caps[#caps], caps[3])
-            local key = Key(caps[1])
+            local args = {}
+            for i, pos in ipairs(who.order) do args[pos] = caps[i] end
+            Remember(args[1], args[#who.order], args[3])
+            local key = Key(args[1])
             if key then looking[key] = nil end
             return
         end
@@ -512,7 +520,7 @@ local function OnSettingChanged(key)
 end
 
 hooksecurefunc(S, "Set", OnSettingChanged)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 
 local boot = CreateFrame("Frame")
 boot:RegisterEvent("PLAYER_LOGIN")

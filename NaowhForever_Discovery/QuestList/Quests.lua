@@ -2,6 +2,7 @@
 local ns = _G.NaowhForever
 
 local Completo = ns.Completo
+local Holidays = Completo.Holidays
 local D = ns.CompletoQuestData
 local SameMap = ns.Shared.Places.SameMap
 
@@ -15,6 +16,7 @@ local CLASSIC_GREEN_RANGE = 8
 local MISSES_HELD = 2
 local NOT_OFFERED_STORE, TURN_INS_STORE = "completoNotOffered", "completoTurnIns"
 local OPENED_STORE, MINE_STORE, REOPENED_STORE = "completoOpened", "completoMine", "completoReopened"
+local HIDDEN_STORE = "completoHidden"
 local NONE = {}
 
 local mine, zoneOf, chains, chainOf, closers, recipes, needs, teaches
@@ -244,14 +246,22 @@ local function Matches(quest, text)
     return quest[GIVER] ~= nil and quest[GIVER]:lower():find(text, 1, true) ~= nil
 end
 
+local function AddToMap(map, id)
+    byMap[map] = byMap[map] or {}
+    table.insert(byMap[map], id)
+end
+
 local function Index()
     if byMap then return end
     byMap = {}
     for id, quest in pairs(D.Quests) do
         local map = quest[MAP]
-        if map and mine[id] then
-            byMap[map] = byMap[map] or {}
-            table.insert(byMap[map], id)
+        if map and mine[id] then AddToMap(map, id) end
+    end
+    for id, spots in pairs(D.FaireSpots) do
+        local map = D.Quests[id][MAP]
+        for _, spot in pairs(spots) do
+            if mine[id] and spot[1] ~= map then AddToMap(spot[1], id) end
         end
     end
 end
@@ -266,12 +276,12 @@ local function RecycleGivers()
     wipe(giverAt)
 end
 
-local function GiverEntry(quest)
-    local key = quest[X] .. ":" .. quest[Y]
+local function GiverEntry(x, y)
+    local key = x .. ":" .. y
     local entry = giverAt[key]
     if entry then return entry end
     entry = table.remove(spare) or { quests = {} }
-    entry.x, entry.y, entry.grey, entry.repeatable, entry.dungeon = quest[X], quest[Y], true, true, false
+    entry.x, entry.y, entry.grey, entry.repeatable, entry.dungeon = x, y, true, true, false
     giverAt[key] = entry
     givers[#givers + 1] = entry
     return entry
@@ -292,8 +302,8 @@ local function Wanted(id, chainsOnly)
     return Q.Available(id) and (chainOf[id] ~= nil or not chainsOnly or Q.Dungeon(id))
 end
 
-local function AddToGiver(id, trivial)
-    local entry = GiverEntry(D.Quests[id])
+local function AddToGiver(id, trivial, x, y)
+    local entry = GiverEntry(x, y)
     table.insert(entry.quests, id)
     if not trivial then entry.grey = false end
     if not Q.Repeatable(id) then entry.repeatable = false end
@@ -301,6 +311,7 @@ local function AddToGiver(id, trivial)
 end
 
 function Q.Refresh()
+    Holidays.Read()
     Prepare()
     opened, reopened = CharStore(OPENED_STORE), CharStore(REOPENED_STORE)
     ReadKnown()
@@ -349,12 +360,30 @@ function Q.Chain(id) return chainOf[id] end
 function Q.Zones() return D.Zones end
 function Q.Giver(id) return D.Quests[id][GIVER] end
 function Q.Item(id) return D.Quests[id][ITEM] end
+function Q.Requires(id) return D.Requires[id] or NONE end
 function Q.Repeatable(id) return D.Repeatable ~= nil and D.Repeatable[id] == true end
 function Q.Dungeon(id) return D.Dungeon ~= nil and D.Dungeon[id] == true end
 function Q.Battleground(id) return D.Battleground ~= nil and D.Battleground[id] == true end
 function Q.Elsewhere(id) return D.Elsewhere ~= nil and D.Elsewhere[id] == true end
 
+function Q.Event(id) return D.Events[id] end
+
+function Q.EventOn(id)
+    for _, holiday in ipairs(D.Events[id] or NONE) do
+        if Holidays.On(holiday) then return true end
+    end
+    return false
+end
+
+function Q.Holiday(id)
+    local ids = D.Events[id]
+    return ids and D.Holidays[ids[1]]
+end
+
 function Q.Spot(id)
+    for holiday, spot in pairs(D.FaireSpots[id] or NONE) do
+        if Holidays.On(holiday) then return spot[1], spot[2], spot[3] end
+    end
     local quest = D.Quests[id]
     if quest[MAP] then return quest[MAP], quest[X], quest[Y] end
 end
@@ -467,6 +496,7 @@ end
 function Q.Expected(id)
     if done[id] then return "done" end
     if Q.InLog(id) then return "log" end
+    if D.Events[id] and not Q.EventOn(id) then return "event" end
     local closed = Closed(id)
     if closed then return closed end
     if not Q.Opened(id) then return "later" end
@@ -477,7 +507,7 @@ end
 function Q.ZoneProgress(zone)
     local n, total, low, high = 0, 0, nil, nil
     for _, id in ipairs(zone.quests) do
-        if mine[id] and not Q.Repeatable(id) and not Q.Dungeon(id) and not Q.Elsewhere(id)
+        if mine[id] and not Q.Repeatable(id) and not Q.Dungeon(id) and not Q.Elsewhere(id) and not D.Events[id]
             and (done[id] or not Closed(id) or Q.InLog(id)) then
             total = total + 1
             if done[id] then n = n + 1 end
@@ -585,14 +615,35 @@ function Q.GiverQuests(name, mapID)
     return named
 end
 
+function Q.Hidden(id)
+    return CharStore(HIDDEN_STORE)[id] == true
+end
+
+function Q.SetHidden(id, hidden)
+    CharStore(HIDDEN_STORE)[id] = hidden or nil
+end
+
+function Q.HiddenCount()
+    local n = 0
+    for _ in pairs(CharStore(HIDDEN_STORE)) do n = n + 1 end
+    return n
+end
+
+function Q.ShowHidden()
+    wipe(CharStore(HIDDEN_STORE))
+end
+
 function Q.Givers(mapID, grey, chainsOnly)
     Prepare()
     Index()
     RecycleGivers()
-    for _, id in ipairs(byMap[SameMap(mapID)] or NONE) do
-        if Wanted(id, chainsOnly) then
+    local hidden = CharStore(HIDDEN_STORE)
+    local here = SameMap(mapID)
+    for _, id in ipairs(byMap[here] or NONE) do
+        if not hidden[id] and Wanted(id, chainsOnly) then
             local trivial = Q.Trivial(id)
-            if grey or not trivial then AddToGiver(id, trivial) end
+            local map, x, y = Q.Spot(id)
+            if (grey or not trivial) and SameMap(map) == here then AddToGiver(id, trivial, x, y) end
         end
     end
     return givers

@@ -43,4 +43,4 @@ end
 S.OnChange(function(key)
     if key == "enabled" or key == "gameKey" then Apply() end
 end)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)

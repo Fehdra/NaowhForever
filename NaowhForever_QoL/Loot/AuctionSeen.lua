@@ -12,7 +12,7 @@ local postID, postPrice
 
 local function On()
     local market = ns.Market
-    return S.Get("ahPrices") or market ~= nil and market.On()
+    return S.Get("ahPrices") or S.Get("ahCapture") or market ~= nil and market.On()
 end
 
 local function SeeBrowse(results)
@@ -96,10 +96,10 @@ local function Apply()
 end
 
 local function OnSettingChanged(key)
-    if key == "ahPrices" then Apply() end
+    if key == "ahPrices" or key == "ahCapture" then Apply() end
 end
 
 hooksecurefunc(S, "Set", OnSettingChanged)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 if ns.MarketSettings then ns.MarketSettings.OnChange(Apply) end
 Apply()

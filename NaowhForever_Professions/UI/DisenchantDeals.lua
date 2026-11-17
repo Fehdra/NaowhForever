@@ -726,5 +726,5 @@ local function ApplySettings()
     Apply()
     InstallTooltip()
 end
-hooksecurefunc(ns, "Apply", ApplySettings)
+ns.OnApply(ApplySettings)
 ApplySettings()

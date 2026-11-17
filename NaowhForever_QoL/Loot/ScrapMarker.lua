@@ -737,7 +737,7 @@ end
 S.OnChange(function(key)
     if key == "enabled" or key:find("^scrap") or key:find("^bankMarker") then Apply() end
 end)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 
 local Group = Shared.Settings.Group
 

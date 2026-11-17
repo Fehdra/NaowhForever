@@ -101,4 +101,4 @@ end
 S.OnChange(function(key)
     if key == "enabled" or key == "bagWorth" or key == "bagWorthBank" then Apply() end
 end)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)

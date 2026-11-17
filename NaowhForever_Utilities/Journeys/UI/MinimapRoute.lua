@@ -117,5 +117,5 @@ end
 
 Guide.OnChange(Refresh)
 S.OnChange(Refresh)
-hooksecurefunc(ns, "Apply", Refresh)
+ns.OnApply(Refresh)
 Refresh()

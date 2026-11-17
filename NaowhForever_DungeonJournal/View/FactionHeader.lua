@@ -21,7 +21,9 @@ local CURRENCY_H = 16
 local STAT_ICON_GAP = 2
 local LOOK_DROP = -1
 local FOREVER_SIZE = 12
-local RANK_CITY = { Alliance = "Stormwind", Horde = "Orgrimmar" }
+local VENDOR_NAME_H, VENDOR_PLACE_H, VENDOR_GAP, VENDOR_PAD = 18, 16, 6, 4
+local WAYPOINT_W, WAYPOINT_H = 96, 22
+local COORDS = "%s %d, %d"
 
 local TEXT_CODE_END = "|r"
 local TEXT_QUARTERMASTER_IN = ns.L("Quartermaster in ")
@@ -32,13 +34,14 @@ local TEXT_ENDS_IN = ns.L("Ends in ")
 local TEXT_VENDOR_IN = ns.L("Rank vendor in ")
 local TEXT_CURRENCY = "|T%d:%d:%d:0:0|t %s %s"
 local TEXT_RANK_SELLS = ns.L("PvP rank rewards")
-local TEXT_QUARTERMASTER = " quartermaster"
+local TEXT_QUARTERMASTER = ns.L(" quartermaster")
 local TEXT_NOTE = " (%s)"
 local TEXT_SHARE_VENDOR = ns.L("Share the rank vendor")
 local TEXT_SHARE_QUARTERMASTER = ns.L("Share the quartermaster")
 local TEXT_SHOW_QUARTERMASTER = ns.L("Show the quartermaster on your map")
 local TEXT_SHOW_VENDOR = ns.L("Show where your side's rank rewards are sold on your map")
 local TEXT_SHARE_HINT = ns.L("Right-click to share it in chat, or copy it.")
+local TEXT_WAYPOINT = "Waypoint"
 
 local whereLines = {}
 
@@ -65,7 +68,7 @@ local function RankWhere(info)
     local line = TEXT_RANK .. ns.Color("fg", info.renownLevel)
     if season > 0 then line = line .. PLACE_DOT .. TEXT_SEASON .. ns.Color("fg", season) end
     if left > 0 then line = line .. PLACE_DOT .. TEXT_ENDS_IN .. ns.Color("fg", Rep.Duration(left)) end
-    local city = RANK_CITY[UnitFactionGroup("player")]
+    local city = Rep.RankCity()
     if city then line = line .. PLACE_DOT .. TEXT_VENDOR_IN .. ns.Color("fg", city) end
     return line
 end
@@ -124,6 +127,44 @@ local function PinClicked(pin, mouse)
     ns.PlaceWaypoint(name, spot.map, spot.x, spot.y, note)
     ns.Shared.Places.ShowMap(spot.map)
 end
+
+local function WaypointEnter(button)
+    if not Tip(button, "ANCHOR_BOTTOM") then return end
+    GameTooltip:SetText(button.page.rank and TEXT_SHOW_VENDOR or TEXT_SHOW_QUARTERMASTER, 1, 1, 1)
+    GameTooltip:AddLine(TEXT_SHARE_HINT, T.muted.r, T.muted.g, T.muted.b)
+    GameTooltip:Show()
+end
+
+Kinds.vendor = {
+    New = function(view)
+        local row = CreateFrame("Frame", nil, view)
+        row.name = ns.Font(row, TEXT_SIZE, nil, T.fg)
+        row.name:SetPoint("TOPLEFT")
+        row.name:SetPoint("RIGHT")
+        row.name:SetJustifyH("LEFT")
+        row.name:SetWordWrap(false)
+        row.place = ns.Font(row, St.SMALL_SIZE, nil, T.muted)
+        row.place:SetPoint("TOPLEFT", 0, -VENDOR_NAME_H)
+        row.place:SetPoint("RIGHT")
+        row.place:SetJustifyH("LEFT")
+        row.place:SetWordWrap(false)
+        row.button = ns.Button(row, TEXT_WAYPOINT, WAYPOINT_W, WAYPOINT_H, nil)
+        row.button:SetPoint("TOPLEFT", 0, -(VENDOR_NAME_H + VENDOR_PLACE_H + VENDOR_GAP))
+        row.button:RegisterForClicks("LeftButtonUp", "RightButtonUp")
+        row.button:SetScript("OnClick", PinClicked)
+        row.button:HookScript("OnEnter", WaypointEnter)
+        row.button:HookScript("OnLeave", GameTooltip_Hide)
+        return row
+    end,
+    Set = function(row, page)
+        local spot, name = PinSpot(page)
+        local map = C_Map.GetMapInfo(spot.map)
+        row.button.page = page
+        row.name:SetText(name)
+        row.place:SetText(map and COORDS:format(map.name, spot.x + J.C.ROUND_HALF, spot.y + J.C.ROUND_HALF) or "")
+        return VENDOR_NAME_H + VENDOR_PLACE_H + VENDOR_GAP + WAYPOINT_H + VENDOR_PAD
+    end,
+}
 
 local function PlaceStats(row, stats)
     local middle = -(TITLE_H + TITLE_GAP + WHERE_H / 2)

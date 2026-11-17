@@ -20,6 +20,7 @@ local STATE = {
     later = { ns.L("Needs an earlier quest"), "muted" }, open = { ns.L("Not done"), "fg" },
     held = { ns.L("Not offered yet"), "muted" }, closed = { ns.L("Not offered any more"), "muted" },
     skill = { ns.L("Needs a profession"), "muted" }, rep = { ns.L("Needs reputation"), "muted" },
+    event = { ns.L("Only during its holiday"), "muted" },
 }
 local TEXT_REPEATABLE = ns.L("Repeatable")
 local TEXT_PIN_HINT = ns.L("To who gives the quest.")
@@ -191,6 +192,8 @@ local function SubLine(id, part, shown, state)
     local home = Q.Zone(id)
     if shown and home and home ~= shown then sub = V.Join(sub, home.name) end
     if state == "later" then sub = V.Join(sub, TEXT_NEEDS_LINE:format(BlockerLine(id))) end
+    local holiday = Q.Holiday(id)
+    if holiday then sub = V.Join(sub, holiday) end
     return sub
 end
 

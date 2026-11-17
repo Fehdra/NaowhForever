@@ -25,7 +25,7 @@ local UNLOCK_TEXT = ns.L("+Rested\n+Crit")
 local DISMISS_TIP = ns.L("Right-click to dismiss until you leave the campfire.")
 local TEXT_MOVER = "Campfire"
 local TEXT_NEARBY = "Camp Nearby"
-local TEXT_TITLE = "Camp Benefits"
+local TEXT_TITLE = ns.L("Camp Benefits")
 local TEXT_SIT_TIP = ns.L("Click to sit at the campfire.")
 local TEXT_UPCOMING = ns.L("You'll get:")
 local TEXT_RESTING = ns.L("Resting at a campfire")
@@ -659,7 +659,7 @@ Camp.Refresh = Refresh
 
 events:SetScript("OnEvent", OnEvent)
 hooksecurefunc(S, "Set", OnSet)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 hooksecurefunc(ns, "ShowUnlockMode", OnUnlock)
 hooksecurefunc(ns, "HideUnlockMode", OnLock)
 

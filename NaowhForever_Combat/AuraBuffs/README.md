@@ -22,9 +22,10 @@ defaults come from `ns.FEATURES.auraBuffs`.
   fire lights up, the words say Click to sit, and a click on the fire or its words performs the
   /sit emote (Round: the icon and the label under it; Simple: the whole bar); it glows brighter
   under the mouse. Camp Nearby's fire does the same. With Round, while you carry the Cozy Sleeping
-  Bag and a campfire is in range (or you sit at one), a smaller round Sleeping Bag icon sits at the
-  fire's lower right (lower left while the buffs show on the right); a click uses the bag. It stays
-  while the fire itself is hidden (Show Only Under, Show When Missing off). The HUD Editor moves it
+  Bag and a campfire is in range (or you sit at one, or Always Show Sleeping Bag is on), a smaller
+  round Sleeping Bag icon sits at the fire's lower right (lower left while the buffs show on the
+  right); a click uses the bag. It hides with the fire (Show Only When Low, Show When Missing off)
+  unless Always Show Sleeping Bag is on. The HUD Editor moves it
   on its own (Campfire Bag); Sleeping Bag Position on the card puts it back. While the
   bag is on cooldown its icon is grey with a countdown. While its Well-Rested buff is on you, the
   bag wears the fire's ring, in the accent blue, running down with the buff's time left, the time
@@ -192,6 +193,15 @@ NaowhForever_Combat/AuraBuffs/
   known spell, so families list the best first. Forever adds its own IDs: Trueshot Aura 1299346 and
   1299348, Water Shield 408510 (the TBC IDs do not exist), Fel Armor 403619 (Wowhead dataEnv=16,
   2026-10-11; not yet checked in the client).
+- Spell IDs (`personalBuffExtra`, empty by default) is ian's ask: Soul Link and Burning Shadow had no
+  reminder. Each ID is a personal buff of its own, read from the text as the PvP card's Spell IDs are, and it
+  reminds only once that spell is known, so a profile shared with another class shows nothing there. Its buff
+  counts as up by its ID or by the spell's name (`C_Spell.GetSpellName`): a spell's buff can carry an ID of its
+  own, and the name is the client's, in its language. A click casts it on you; a cast of it fades the icon in
+  combat. It follows the personal buffs' switches, Hide While Resting and Warn With Seconds Left. Under the
+  box, each typed spell has its own Your Spell row with its name and ID and a Remove button, so a number no
+  longer recognised can be taken out without reading the box; the card's rows are fixed when it is built, so
+  there are `MAX_TYPED` (8) of them, hidden while unused, and any past the eighth is edited in the box.
 - Poisons and imbues are weapon enchants (`C_Item.GetWeaponEnchantInfo`, which lists
   several per weapon with the empty ones first: Windfury is its second entry, where the old
   `GetWeaponEnchantInfo` global reads only the first). A weapon holds a poison or imbue (`Imbue`) and a
@@ -274,9 +284,13 @@ NaowhForever_Combat/AuraBuffs/
   classic; Forever's stacking is unconfirmed. Juju Ember and Chill (ten minutes of resistance for one fight) and
   the Permanent Zanzas (no known source) are left out. It is outside `CATEGORY_ORDER`, so it has no Only If I
   Carry One pick and no Last Used icon: it always needs one carried, and its families mix.
-- Only If I Carry One is set per kind (`carriedPicks`: food, flask, scroll, battle, weapon): Drjay
+- Only If I Carry One is set per kind (`carriedPicks`: food, flask, battle, weapon): Drjay
   wanted buff food to remind him with none in his bags, without flasks and elixirs showing all the time too. A kind
   with no pick follows the old single switch (`onlyIfCarried`), so profiles from before keep what they did.
+  Scroll has no row: it always needs one carried, so its switch did nothing.
+- Consumables to Remind switches a kind off (`consumablePicks`: food, flask, scroll, battle): Kali wanted the
+  other reminders without the scroll one, and a middle-click hides it only until a reload. The HUD Editor's
+  sample keeps every kind, so the row can be placed with all of them off.
 - Icon (Default or Last Used): Last Used shows the icon of the flask, elixir, scroll or weapon item
   used last (`lastIcons` in the account settings, food's is `lastFoodIcon`), taken from the item whose
   use spell `UNIT_SPELLCAST_SUCCEEDED` reports; a spell no built-in item uses is ignored, and
@@ -369,7 +383,11 @@ NaowhForever_Combat/AuraBuffs/
   `ns.Shared.Items.SLEEPING_BAG`, the one Discovery's chain uses, since either addon can load
   without the other. It shows only out of combat, with Round, in the open world, while the bag
   is carried (`C_Item.GetItemCount`, read again on `BAG_UPDATE_DELAYED`) and Campfire Nearby or
-  Welcoming Campfire is on you.
+  Welcoming Campfire is on you. Always Show Sleeping Bag (`campBagAlways`, off) drops the campfire
+  condition, for Scofield (2026-11-15): players want the Well-Rested time after leaving the fire.
+  Near a campfire, with Always Show off, the bag follows the fire's own visibility (Show Only When
+  Low, Show When Missing), for Vorda (2026-11-16): it stayed on screen beside a deployed camp while
+  the fire waited for its 2 minutes.
 - The Sleeping Bag button is secure (`type1 = "item"`) so a click uses the bag. It is parented to
   UIParent and placed at screen coordinates worked out from the fire's centre, never anchored to
   the fire: a secure child or anchor would make the fire a protected frame, and the fire is shown,

@@ -10,8 +10,8 @@ price step) once Post With Keys is on. Under the form it lists the item's listin
 your price lands among them: a click takes a listing's price, and a row's Buy or Cancel buys it or takes
 yours down. My Auctions checks each of your auctions against the listings,
 undercut ones first, filtered by name, and cancels them one press at a time, of its button or of a key you bind. Shopping List, with Professions loaded, lists
-what your Shopping List and your alts' still need, and counts what you buy in Blizzard's window on that
-character's list. Farm, Price Graph and Reagents tabs, after Blizzard's Auctions tab and drawn like it,
+what your Shopping List and your alts' still need; a row clicked there shows its listings with Buy, and what you
+buy there or in Blizzard's window counts on that character's list. Farm, Price Graph and Reagents tabs, after Blizzard's Auctions tab and drawn like it,
 dock The Market's own window in the panel's place; the same tab again or the window's X brings the panel
 back. Shift + drag moves the auction house with whatever is docked. Away from it, `/market` (or
 `/nfmarket`) or its key binding open that window, anywhere, with three tabs along the
@@ -49,7 +49,7 @@ NaowhForever_Market/
   Auctions.lua       your auctions, each checked against the listings, and cancelling (Market.Auctions)
   History.lua        each item's lowest price per day and how many were listed, from your scans and the listings you see, two weeks of them, and the items whose price moved most (Market.History)
   Watch.lua          the items you watch for a price, and the chat line when one is at or under it (Market.Watch)
-  Results.lua        what the auction house's last browse search found, however it was sent, and more as you scroll (Market.Results)
+  Results.lua        what the auction house's last browse search found, however it was sent bar a price scan's, and more as you scroll (Market.Results)
   Searches.lua       your searches in named lists and the last ones you ran, run in Blizzard's Buy tab, and a list as a string to share (Market.Searches)
   Worth.lua          what your bags would fetch, their most valuable items, and the best way to sell an item (Market.Worth)
   Bank.lua           what your bank held when you last had it open, kept for each character, and what it would fetch (Market.Bank)
@@ -78,7 +78,7 @@ NaowhForever_Market/
     Prices.lua       the Price Graph page: any item in your scans by name, from your bags, a writ filter or the movers, and its price chart
     Searches.lua     the Buy page's Searches view: a saved list or Recent, run with a click, kept and edited from menus (Market.SearchView)
     Buy.lua          the Buy page: your Watch List with any item in your scans to add to it, or your saved searches, and in the full window Browse beside them
-    Shopping.lua     the Shopping List page: yours and your alts' materials still to buy, counted when bought, and in the full window the picked one's listings
+    Shopping.lua     the Shopping List page: yours and your alts' materials still to buy, counted when bought, and the picked one's listings with Buy
     Move.lua         Shift + drag moving Blizzard's auction house, and keeping it there (Market.Move)
     HouseTabs.lua    the Farm, Price Graph and Reagents tabs under Blizzard's window, drawn as its own tabs (Market.HouseTabs)
     Dock.lua         the panel docked beside Blizzard's auction house, the tabs that dock the window there instead, or with Full Window on the window over it (Market.Dock)
@@ -114,6 +114,12 @@ NaowhForever_Market/
   the picked item instead of Sell's; with no price of yours they have no "Your price" mark and a click takes no
   price. A commodity bought there from the Shopping List counts on the list of the row it was picked from, as one
   bought in Blizzard's buy dialog does beside the panel.
+- Browse builds only the rows in view and moves them as you scroll: a category can find thousands of items, and a
+  row frame for each froze the game. Every item found answers with its own `ITEM_KEY_ITEM_INFO_RECEIVED`,
+  hundreds in a frame, so they repaint the rows in view once on the next frame, and sort again only under the
+  Item column. QoL's page by page price scan is a browse of the whole auction house, not a search of yours, so
+  Results leaves it out (`ns.AuctionScanBrowsed`) and clears the list when one starts: the game's browse results
+  are the scan's from then until the next search, and scrolling asks for no more of them.
 - Docked, the panel and the window are raised to the top of that strata each time they dock. Left at their
   default frame level, they tied with other addons' on-screen frames on `MEDIUM` (a guide's arrow and
   quest-item button), which could draw over them.
@@ -224,10 +230,13 @@ NaowhForever_Market/
   them is a slip; an expensive item often has one or two listings far apart and is undercut hard on
   purpose. A dropped digit is a tenth of the price, under every share.
 - It asks with `ns.Confirm`, whose Yes runs the post inside its own click, so `PostItem` and
-  `PostCommodity` still have their hardware event. It posts the item, count and price it asked about, even
-  if the form changed behind it. With Post With Keys on, Space opens it and Enter accepts it from the
-  panel's OnKeyDown: the confirm passes keys on, and the panel claims Enter for that press. Space, S, Up
-  and Down are claimed and do nothing while it asks. Escape, Cancel or leaving Sell closes it unposted.
+  `PostCommodity` still have their hardware event. The post runs before the confirm hides (its `acceptFirst`),
+  for Enter too: Forever blocks a restricted call once the clicked button is hidden, as the Buy prompt found
+  with `StartCommoditiesPurchase`, and a blocked post sat on Posting until `POST_TIMEOUT`. It posts the item,
+  count and price it asked about, even if the form changed behind it. With Post With Keys on, Space opens it
+  and Enter accepts it from the panel's OnKeyDown: the confirm passes keys on, and the panel claims Enter for
+  that press. Space, S, Up and Down are claimed and do nothing while it asks. Escape, Cancel or leaving Sell
+  closes it unposted.
 - A post's duration is the index `PostItem` and `PostCommodity` take, 1 to 3, labelled with the game's
   own `AUCTION_DURATION_ONE` to `_THREE` as Blizzard's sell frame does. On Forever they read 2, 8 and
   24 Hours, not retail's 12, 24 and 48. Until you pick one it is the default of Blizzard's own
@@ -235,7 +244,8 @@ NaowhForever_Market/
 - When the game asks to confirm a post (`needsConfirmation`), it shows Blizzard's own
   `AUCTION_HOUSE_POST_WARNING`, whose Accept confirms only Blizzard's pending post. The Market hooks
   that dialog's OnAccept with `hooksecurefunc`: the hook runs inside the same click, so it can confirm
-  ours. Closing the dialog without Accept counts as not posted.
+  ours. Closing the dialog without Accept counts as not posted, and so does `AUCTION_HOUSE_POST_ERROR` while
+  it waits: the confirm has no timeout, so an error left unanswered would hold Posting.
 - A commodity searches with `SendSearchQuery` sorted by price, an item by buyout then bid, as
   Blizzard's sell frame does; equipment searches with `SendSellSearchQuery` and its item level and
   suffix cleared, so similar items compare.
@@ -269,6 +279,15 @@ NaowhForever_Market/
   step on an item) or nothing (Match the Cheapest). Up and Down step to the same distance under each
   listing; one that is all yours is matched. A price that lands on the cheapest listing, chosen or
   because a step under it would go under one step, says it matches.
+- Match the Cheapest on an item whose cheapest listing is not on whole silver (2s 15c) goes down to the
+  silver (2s), the nearest price the item can post at that is not over it, and the line under the price
+  says items post in whole silver rather than calling it an undercut (Blaksheep, 2026-11-16).
+- The price The Market suggests passes over a few listings far under the rest, as people often list one
+  item well under everyone else: listings of others that come before a jump to a price they are under
+  `OUTLIER_SHARE` (70%) of, as long as together they are no more than `OUTLIER_QUANTITY` (a tenth) of the
+  others' quantity listed, or one item. The line under the price says how many it passed over. Ask Before a
+  Bad Post weighs a price against that listing too. Up, Down and a click on a listing still reach the ones
+  passed over. Robin asked for this.
 - Percent goes Undercut Percent (`undercutPercent`, 1 to 50, 5 until changed) of each listing's own price
   under it, rounded down, and never less than one step; Fixed Amount goes Undercut Amount
   (`undercutAmount`, saved in copper, set in whole silver from 1 to 500) under it. Both go through the same
@@ -439,9 +458,13 @@ NaowhForever_Market/
   `POOLS_PER_MAP` (60) a map, the one seen longest ago going first. One within `POOL_MERGE` (1.5 map
   percent) of a known pool is that pool again. A fish row's loop runs through its pools, `POOL_SECONDS`
   (72, about four catches) at each; with none learned, its map has no pins and says to fish anywhere.
-- Ranking every zone with a full tour would stall a frame, so the zone list estimates each tour's
-  length as `TOUR_FACTOR` (0.92) times the square root of its spots times its area, the
-  nearest-neighbour length for scattered points; the zone you pick gets its real tour.
+- The zone list rates each zone on the same loop its map gets: its richest `LOOP_STOPS` (25) toured
+  nearest-neighbour from the richest, so a zone's row and its map always agree. An estimate from the
+  zone's area alone read the richest spots as spread over the whole map, when they bunch together, and
+  put the hour at a third of the loop's. At 25 stops a tour is a few hundred distances, cheap enough
+  for every zone. The map's loop is then turned to start at the stop nearest you, which keeps its length.
+- A loop shorter than `LOOP_MIN_SECONDS` (two minutes), a zone with a stop or two, would only wait on
+  respawns, so its hour is rated as if it took that long.
 - Start Loop hands the loop to the shared waypoint route (`ns.PlaceWaypointRoute`), which places the
   next stop as you reach each, so the loop is followed by the game's own waypoint arrow. Open Map opens
   the world map on the zone (`Shared.Places.ShowMap`).
@@ -566,7 +589,11 @@ NaowhForever_Market/
 - It is the Watch List's search list and Watch box (`Market.Finder`); a row says "N more" or "N more for <alt>"
   where a scan price would be. The same item can be on two lists, so a row is picked by its place in the list
   (`finder.at`) as well as its item.
-- The Shopping List page never buys. A post-hook on Blizzard's buy dialog's `BuyNow` notes the item and amount when it is the
+- Docked, a clicked row shows its listings under the list in the page's own `Market.Listed`, as Sell's docked page
+  does, so Buy there is The Market's purchase (`Market.Purchase`), counted on the row's list. It searches with
+  `C_AuctionHouse` alone, never through Blizzard's window (its search bar, `SendBrowseQuery`,
+  `SelectBrowseResult`), whose state an addon's call would taint for Blizzard's own Buy Now after it.
+- A post-hook on Blizzard's buy dialog's `BuyNow` notes the item and amount when it is the
   picked row's, and `COMMODITY_PURCHASE_SUCCEEDED`, listened to only while that purchase waits, counts it on that
   row's list: yours with `Shopping.Bought`, an alt's with `Shopping.BoughtFor`. Professions' own Buy All buys
   without that dialog and counts its own, so nothing is counted twice. A purchase that fails, of another item, or
@@ -1055,8 +1082,8 @@ The listings on Sell, at an auctioneer:
 101. Post one of the item, then pick it again: its row has a green Yours pill. Hovering it swaps the pill for
      Cancel; Cancel asks as My Auctions does, Yes takes the auction down with no blocked action, and the
      list reads again without it.
-102. Hover a row that is not yours: Buy shows at its right edge and the tooltip says how many it buys and for
-     about how much. Press Buy on a commodity's second row and accept how many (step 116): the head reads
+102. Hover a row that is not yours: Buy shows at its right edge and the tooltip says it asks how many, up to
+     how many are listed at that price or less. Press Buy on a commodity's second row and accept how many (step 116): the head reads
      Getting the price, then a confirm names the quantity, the item and the total. Cancel buys nothing. Buy
      buys it, with no blocked action and no Lua error, the head reads Bought N and the list reads again.
 103. On a piece of gear someone else sells, Buy asks with its buyout, and the confirm's Buy buys that auction.
@@ -1096,8 +1123,8 @@ Shift on a stack's tooltip, away from the auction house too:
 
 Buying part of a commodity row, on Sell at an auctioneer:
 
-116. Buy on a commodity row with several listed asks how many, filled in with all of them up to that row.
-     Typing a smaller number and pressing Buy gets the price for that many, and the confirm names that
+116. Buy on a commodity row with several listed asks how many, up to all of them to that row, filled in with 1.
+     Typing a number and pressing Buy gets the price for that many, and the confirm names that
      number and its total; a number over the row's count buys the row's count. With one listed, it goes
      straight to the price.
 
@@ -1216,3 +1243,11 @@ The price chart in the full window:
 153. On Buy, pick a search result: its price chart is beside its listings, and the listings' buttons still fit.
      Hover the chart: the day and price. Do the same on Shopping List.
 154. Turn Full Window off: the panel's Sell, widened or narrow, has no chart, and Price Graph is as before.
+155. With Full Window on, on Buy, press Scan Prices inside the fast scan's 15 minutes: the list goes back to its
+     hint and stays there while the scan reads its pages, with no freeze and no Lua warning. Search a category
+     with thousands of items and scroll to its end: more rows load and the game stays smooth.
+156. With Full Window off, on Shopping List, pick a row: its listings show under the list, and the list
+     shortens to make room. Buy some of a commodity there: it is bought, the row's count drops on your list
+     or on the alt's, and no Lua error, taint or blocked action. Then buy in Blizzard's own window: its Buy
+     Now still works. Pick another row: the listings follow it. Switch tabs and back: no listings until you
+     click a row again, and opening the tab sends no search.

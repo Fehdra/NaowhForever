@@ -17,7 +17,7 @@ local S = ns.UI.ModuleSettings("groupFinder", {
 })
 ns.GroupFinderSettings = S
 
-if not C_AddOns.IsAddOnLoaded(BIS_ADDON) then return end
+if not (ns.FEATURE_GROUP_FINDER and C_AddOns.IsAddOnLoaded(BIS_ADDON)) then return end
 
 local GF = { Settings = S, PREFIX = "NaowhLFG", PAGE = "Group Finder/Settings" }
 ns.GroupFinder = GF

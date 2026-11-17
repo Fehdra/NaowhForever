@@ -1813,7 +1813,7 @@ S.OnChange(function(key)
         UpdateFrame()
     elseif key == "hourlyWarn" then WarnHour() end
 end)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 hooksecurefunc(ns, "ShowUnlockMode", function()
     unlocked = On() and S.Get("showFrame") and true or false
     UpdateFrame()

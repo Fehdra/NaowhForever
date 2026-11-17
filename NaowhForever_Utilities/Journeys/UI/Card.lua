@@ -293,6 +293,6 @@ end
 
 Guide.OnChange(Refresh)
 hooksecurefunc(S, "Set", OnSet)
-hooksecurefunc(ns, "Apply", Refresh)
+ns.OnApply(Refresh)
 hooksecurefunc(ns, "ShowUnlockMode", ShowMover)
 hooksecurefunc(ns, "HideUnlockMode", HideMover)

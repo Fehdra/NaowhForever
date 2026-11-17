@@ -139,7 +139,7 @@ end
 
 local function NewSlot(i)
     local slot = TRINKET_SLOTS[i]
-    local button = CreateFrame("Button", nil, trinkets, "SecureActionButtonTemplate")
+    local button = CreateFrame("Button", "NaowhForeverTrinket" .. i, trinkets, "SecureActionButtonTemplate")
     button:RegisterForClicks("AnyUp", "AnyDown")
     Parts.Press(button)
     button:SetAttribute("item1", tostring(slot))
@@ -225,6 +225,6 @@ end
 watcher:RegisterEvent("PLAYER_LOGIN")
 watcher:SetScript("OnEvent", OnEvent)
 hooksecurefunc(S, "Set", OnSet)
-hooksecurefunc(ns, "Apply", ApplyTrinkets)
+ns.OnApply(ApplyTrinkets)
 hooksecurefunc(ns, "ShowUnlockMode", OnUnlock)
 hooksecurefunc(ns, "HideUnlockMode", OnLock)

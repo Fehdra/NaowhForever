@@ -174,8 +174,10 @@ local function DockTabs(on)
         head:ClearAllPoints()
         head:SetPoint(point, win, relPoint, 0, TABS_DROP)
     elseif savedTabPoints then
+        placing = true
         head:ClearAllPoints()
         for _, pt in ipairs(savedTabPoints) do head:SetPoint(unpack(pt)) end
+        placing = false
         savedTabPoints = nil
         Unmirror()
     end
@@ -186,6 +188,12 @@ local function DockTabs(on)
         if tab.SetIgnoreParentAlpha then tab:SetIgnoreParentAlpha(on) end
         OutlineTab(tab, outline)
     end
+end
+
+local function OnHeadTabPlaced(head)
+    if placing or not savedTabPoints then return end
+    local _, rel = head:GetPoint(1)
+    if rel ~= win or head:GetNumPoints() ~= 1 then DockTabs(true) end
 end
 
 local function Place(frame, place, level)
@@ -511,6 +519,8 @@ local function HookBlizzard()
     ProfessionsFrame:HookScript("OnHide", OnBlizzardHide)
     ProfessionsFrame:HookScript("OnSizeChanged", Queue)
     hooksecurefunc(ProfessionsFrame, "SetPoint", OnBlizzardPlaced)
+    local head = ProfessionsFrame.ProfessionsOverviewTab
+    if head then hooksecurefunc(head, "SetPoint", OnHeadTabPlaced) end
     local book = ProfessionsFrame.BookPage
     if not book then return end
     book:HookScript("OnShow", Queue)
@@ -566,7 +576,7 @@ ns.ProfWindowFit = Drag.Fit
 
 events:SetScript("OnEvent", OnEvent)
 hooksecurefunc(S, "Set", OnSettingChanged)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 
 local boot = CreateFrame("Frame")
 boot:RegisterEvent("PLAYER_LOGIN")

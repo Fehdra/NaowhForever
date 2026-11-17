@@ -46,6 +46,7 @@ NaowhForever_QoL/
                         (ns.OpenConsoleVariables), to change, export and import (ns.ImportConsoleVariables),
                         and the pinned ones put back at login
     ChatZones.lua       Chat Zones
+    TradeFilter.lua     Trade Spam Filter: hides spam in Trade chat, and the last hidden messages on a button
     ScoutData.lua       Scout's creature abilities, tameable beasts and what they teach (packed), armor by level
                         and pet ability ranks, generated
     Scout.lua           Scout: abilities, armor, pet family and what a beast teaches on a creature's tooltip,
@@ -67,6 +68,7 @@ NaowhForever_QoL/
     ZoneLevels.lua      Zone Levels and Fishing Levels on the world map
     ZoneInfo/           Model.lua (zone details), View.lua (panels), Runtime.lua (map and HUD lifecycle),
                         SettingsPage.lua (Map & Pins card), loaded by ZoneInfo.xml
+    Find.lua            the Find window (/nf find): town services, mailboxes, spirit healers, quests and rares, nearest first
     SkyborneData.lua    the Skyborne spots every player starts with (ns.SkyborneSpots), MIT notice inside
     SkyborneSpots.xml   the Skyborne pin template, then SkyborneSpots.lua
     SkyborneSpots.lua   Skyborne Spots on the world map
@@ -101,6 +103,8 @@ NaowhForever_QoL/
     LayerRequests.lua   Layer Tracker's swaps: asking the layer channel for an invite, other players'
                         requests with an Invite button, leaving a swap that did not move you
     QuestProgress.lua   Announce Quest Progress, your quest objective updates said in party chat
+    QuestLinks.lua      Quest Levels in Chat, the level on quest links said in chat
+    QuestItems.lua      Quest Item Info, the quests an item is for on its tooltip, learned from your quest log
     FinderRoles.lua     Group Finder Roles, the role buttons on the Group Finder
     TalentPoints.lua    the unspent talent points reminder
     LegacyPoints.lua    the optional unspent Legacy points reminder
@@ -120,15 +124,21 @@ NaowhForever_QoL/
     DeleteConfirm.lua   Type DELETE For You, and the Looting card
     LockboxData.lua     the Lockpicking skill each lockbox needs (ns.LockboxSkills), generated
     Lockboxes.lua       Lockpicking Skill on lockbox tooltips
+    QuestSellPrice.lua  Quest Reward Sell Price on quest reward tooltips
     Durability.lua      the low durability warning
     LootConfirm.lua     the retired loot confirmation skip, inert
     WaylaidCratesData.lua what each Waylaid Crate can be filled with (ns.WaylaidCrates), generated
     WritRequestsData.lua the item each Craftsman's Writ asks for (ns.WritRequests), generated
+    VendorSoldData.lua  the items vendors sell for copper and what one costs there (ns.VendorSold, ns.VendorSoldLimited, ns.VendorSoldSide), generated
     PriceShare.lua      Prices for Other Addons: Auctionator's price API (`Auctionator.API.v1`) answered from Auction Prices
-    AuctionPrices.lua   Auction Prices (ns.AuctionPrice, ns.AuctionListed, ns.AuctionOtherPrice, ns.AuctionAge, ns.AuctionScanSummary, ns.AuctionScan), from your scans (fast, or page by page), the listings you see (ns.AuctionSeen) or the release's prices, Scan on Opening, Waylaid Crate Prices, Craftsman's Writ Prices
+    AuctionPrices.lua   Auction Prices (ns.AuctionPrice, ns.AuctionListed, ns.AuctionOtherPrice, ns.AuctionAge, ns.AuctionScanSummary, ns.AuctionScan), from your scans (fast, or page by page), the listings you see (ns.AuctionSeen) or the release's prices, Scan on Opening, Waylaid Crate Prices, Craftsman's Writ Prices, Sold by Vendors
     AuctionSeen.lua     Auction Prices kept as you go: the browse list, an item's listings and your own posts, read as the game sends them
     FoodBar.lua         the Food & Drink Bar (its food and potion lists are Shared/Game/Consumables.lua)
     BagSpace.lua        Bag Space (ns.BagSpaceRescan; ns.BagSpace for its ignore list)
+    DestroyCheapest.lua the bags-full offer, the state the scan, the popup and the delete share (ns.DestroyCheapest)
+    DestroyCheapestScan.lua which bag and loot items are safe to offer, and what they are worth
+    DestroyCheapestDestroy.lua the click that picks a bag item up and deletes it
+    DestroyCheapestPopup.lua the bags-full popup, its ignore list and its settings card
     BagSpaceIgnore.lua  Bag Space's Ignore List window (ns.ShowBagSpaceIgnoreList)
     Alts.lua            your characters per realm and faction (ns.AltRealm, ns.AltList, ns.OpenForgetAltMenu)
     LootFeed.lua        the Loot Feed, gold per hour and quick loot (ns.ResetLootFeedSession)
@@ -642,11 +652,19 @@ NaowhForever_QoL/
   `quest_entity_catalog.json`: each writ starts its quest, whose item objectives are the writ itself and the
   requested item. The catalog has no counts, so the line prices one; how many a writ asks for is only known
   once its quest is accepted, and has not been checked in game.
+- Sold by Vendors (`ahVendor`) adds a line to the tooltip of an item a vendor sells for copper, with what one
+  costs there, so an auction is not bought for more than the vendor asks. It needs no scan and shows with
+  Auction House Price off. The items are `VendorSoldData.lua`, generated by `Tools/build/vendor_sold.py`:
+  `ns.VendorSold` is item ID to copper for one, `ns.VendorSoldLimited` the items no vendor has without limit,
+  whose line says limited stock, and `ns.VendorSoldSide` the items only one faction's vendors sell, whose line
+  the other faction does not get. The price is the game's own (ItemSparse), before any reputation discount.
+  The list is Wowhead Classic's vendor-sold trade goods, recipes, consumables, miscellaneous items and bags, so
+  an item Forever added is not in it.
 - Auction House Price, Waylaid Crate Prices and Craftsman's Writ Prices share one item tooltip post-call, so a
   crate or a writ gets one Market Price line: its own price when it has one and Auction House Price is on, else
   the prices' age, with the bundles or the requested item under it. The post-call goes on the first time any of
   them is on, at load, from a click or from a profile with one on (`ns.Apply`), and stays inert while all are off
-  (TooltipDataProcessor has no removal).
+  (TooltipDataProcessor has no removal). Sold by Vendors shares it, adding its line under theirs.
 - Auction House Price leaves its line off while The Market's tooltip carries the item's price itself (its
   Compact style, or Whole Stack on a stack), asked through `ns.Market.ShowsPrice` only when The Market is
   loaded, so the price shows once. A crate then keeps its bundles, under the prices' age.
@@ -743,6 +761,19 @@ NaowhForever_QoL/
   wide (155, 2 in). Forever's rows differ from Classic Era's, so the zone takes the activity
   line's font and stops short of the role icons, measured on screen (the icons are scaled).
   The game sends only the leader's zone; other members show one if it is known elsewhere.
+- Trade Spam Filter: a chat filter runs once per chat frame that shows the channel, so the
+  decision is kept for the message's line ID; otherwise a second chat tab would see every message
+  as a repeat. Trade is told apart by its zone channel ID (2), with the channel's base name as a
+  fallback; General (1) and LookingForGroup (26) only with Also General and LFG.
+- Trade Spam Filter keywords match whole words on the message with colors and links stripped,
+  so a "port" inside "report" or an item named like a keyword does not hide it. Your own words
+  and repeats are matched with link names kept, so an item name can be listed. "Dark Portal" and
+  "have summons" are taken out before the portal words are looked for, so a group post that has a
+  warlock still shows. A guild message needs the word guild plus a word only recruiters use; words
+  a player looking for a guild uses too (looking for, LF, social, join) do not count, and "sum" is
+  not a summon. Tools/regression/test-trade-filter.lua holds the lines that must show. Friends,
+  Battle.net friends, your guild, your group and yourself are never
+  hidden. The repeat table is wiped past 500 entries rather than aged out one by one.
 - Chat Zones' sources can come back secret in an instance: a chat author, a search result's
   fields, its players' names and zones, and the measurements of a row or the member tooltip once
   the game has drawn secret text or icons in it, which can outlast the data's own secrecy. Each
@@ -977,7 +1008,8 @@ NaowhForever_QoL/
   lists the items with a `TotemCategoryID` in Forever's ItemSparse (build 70888): picks, skinning
   knives, blacksmith hammers, engineering tools, runed rods and the alchemy stones; the shaman
   totems sell for nothing and are never offered anyway. Tiif asked for this after nearly
-  deleting a Mining Pick.
+  deleting a Mining Pick. Enchanting materials (trade goods subclass 12: dusts, essences, shards,
+  Nexus Crystals, rods and wizard oils) are kept too, after a row filled with nothing else.
 - An item's worth is its vendor price, or its auction price when higher (the last Scan Prices,
   else TradeSkillMaster), so an item worth listing sorts behind ones only a vendor wants.
   Anything an unfinished quest in your log still asks for goes last, matched by item name from
@@ -1026,6 +1058,67 @@ NaowhForever_QoL/
   through `ns.BagSpace`. Its search box is `ns.NewSearchBox` and its list scrolls in
   `UI.SlimScroll`, like the options window.
 
+### Destroy Cheapest Item
+- The switch is off until turned on. While it is off, nothing is registered and the popup is not
+  built. While it is on, the only standing event is `UI_ERROR_MESSAGE`. Bag, loot and item-data
+  events are registered only while the popup is open or a delete is waiting on the game.
+- A full-bag error opens the popup while the loot window is open and every plain bag has no free
+  slot. Bank, mail, trade, vendor and quest-reward transfers do the same only when Bank and Other
+  Transfers is on, so loot detection stays on by itself. A full profession bag does not open it,
+  and neither does a loot that still fits. It does not hook looting, so auto-loot is left alone.
+- The offer is the cheapest stack by vendor price times count, from plain bags. Market Prices,
+  off until turned on, also shows the auction house price from the last scan or the release's
+  prices. No price leaves that line off. Rank by Market Value, also off, sorts by auction price
+  times the stack, cheapest first. A missing auction price stays on the vendor total, and that
+  total orders the list, picks the item, and decides the not-worth warning. Ignore Old Scans
+  starts off. While it is on, a price older than Older Than is shown muted and left out of that
+  order, and Older Than starts at seven days. With it off, an old price is still used. Turning
+  the rank or the age on or off rebuilds the list at once.
+  Destroy Anyway, off until turned on, adds a smaller button
+  next to the not-worth warning. It still takes a click, and the same second click and delete
+  window as Destroy. A bag that reports
+  no family is treated as plain, which is how the backpack is counted when that return is missing.
+  Each quality has its own switch: Poor through Rare start on, and Epic, Legendary, Artifact and
+  Heirloom start off. Several can be on at once. Left out, whatever the quality: quest items and
+  keys, recipes, quivers and ammo, soulbound armor and weapons, item-set pieces,
+  equipment-set items, BiS items, library books (item ids Discovery copies onto ns.LibraryBookItems), profession tools and
+  the hearthstone, anything with no vendor price other than a consumable while Consumables is
+  on, and anything on this feature's ignore list. Bags, consumables, reagents, trade goods,
+  miscellaneous items and unbound gear are offered when their quality is on and they have a
+  vendor price. Consumables
+  starts on and also offers ones a vendor will not buy. All Items starts off. While it is on,
+  every item in your bags is offered except ones on this ignore list. An item whose price is not
+  loaded yet is asked for once and added when it arrives. Bag Space does not have to be on.
+  Nothing is destroyed on its own.
+- Every quality, including poor and common, asks for a second click on that same button. The
+  first click prepares the delete and the button names that item ("Click again to destroy"
+  plus its link). A different item, or moving to another one, clears that confirmation. The
+  second click is the one the game accepts: on this
+  client `DeleteCursorItem` only runs from that hardware click, and a later confirm button cannot
+  run it. If the game still opens its own delete window, it is left for the player and never
+  accepted or typed for here. If the delete does not take and no window is open, the item is put
+  back in its slot, so it is not left on the cursor. The addon says it was destroyed only after a
+  bag update shows that stack gone and the count dropped by that stack. The slot is read again at
+  the click. If it changed, nothing is deleted.
+- After the stack is gone, the loot is taken only when its window is still open, the slot still
+  has the item, and the player is out of combat. Otherwise the message says to loot it again. A
+  bank, mail, trade, vendor or quest window says "Loot it again after making room." on the
+  popup, because that item has to be clicked again. A loot window that closed before the delete
+  finished has nothing left to loot; the message says room was made. A bag change while the
+  popup is open rebuilds the list.
+- Closing the loot window closes the popup and drops the loot it was holding, unless a delete is
+  still waiting on the game or a transfer window is still open. The You get card is drawn only
+  when an item is waiting in that window, so it is never an empty section. Closing the bank,
+  mail, trade, vendor or quest window closes the popup when loot is not open and no delete is
+  waiting. Those closes are the frames' own hide events, not a timer.
+- Ignore Item is the red pass icon in the corner of the Destroy card. It stores that item id
+  on this feature's own list and refreshes the candidates. The list is viewed, searched and
+  cleared on the same card. The popup anchors to the
+  chosen side of the loot window (Top, Right, Bottom or Left) with a gap, and moves when that
+  window moves. Dragging is off until Movable is on. A dragged place is kept with the profile
+  until Reset Position, and it wins over the side until then. While a transfer or a delete keeps
+  an undragged popup up with no loot window, it sits in the middle of the screen.
+
 ### Trainer
 - Closing a non-profession trainer checks the current spellbook for lower ranks even without a learned-ability notification. The trainer type is captured while its window is open. A fresh visit drops the previous popup list; kept-only rank offers stay silent automatically but remain available through Check Bars. Combat deferral is unchanged.
 - The new-ability glow is LibCustomGlow's on the action buttons, never Blizzard's own new-ability highlight: that marks table is read from secure code, and a write from an addon taints it.
@@ -1061,6 +1154,7 @@ NaowhForever_QoL/
 
 ### Pet Tracker
 - Demonic Sacrifice leaves one of `SACRIFICE_BUFFS` on the warlock in place of the demon, so a warlock who sacrificed theirs is left alone.
+- Demonic Pact (`DEMONIC_PACT`, 425464) keeps that buff while a different demon is out, so with it known the buff skips nothing: Pet Missing still shows with no demon out. 425464 is the talent node's spell, from the in-game tooltip; whether the client reports it known is untested (for Lone Wolf it reported the taught spell instead).
 - The pet's health is secret in combat, so a step curve (`UnitHealthPercent` with `curve`) turns it straight into the warning's alpha. `STEP_EDGE` puts the step just under the threshold.
 - The low health warning stays shown at alpha 0, as a secret value cannot hide it, so it sits on top of the alert stack (`STACK_ORDER` 5), where it leaves no gap between the others.
 - The sacrifice aura is read out of combat only: in combat the client hides the player's own auras from addons, so the last answer from before the fight stands.
@@ -1463,6 +1557,14 @@ NaowhForever_QoL/
 - The drawer ends on Town Pin Size, a copy of the card's slider in smaller text (`FOOT_SIZE`), so the pins can be sized while looking at them.
 - `MapOverlays.lua`, `TownMailboxes.lua`, `TownSpiritHealers.lua`, `TownTravel.lua` and `ZoneExits.lua` are generated (`Tools/build/map_overlays.py`, `mailboxes.py`, `spirit_healers.py`, `travel.py`, `zone_exits.py`): change the builder and run it, never the file.
 
+### Find
+- No switch and no saved data of its own: it is built the first time it opens, and nothing runs while it is closed. Open, it redraws on entering a zone and when you stop moving, so the distances keep up.
+- It searches the town map's data (`ns.TownNPCs`, `ns.TownMailboxes`, `ns.TownSpiritHealers`) by the town map's rules: your faction's, your class's trainers, stable masters for hunters. `TownMap.lua` shares its `CATEGORIES` as `ns.TownCategories` for each service's label and icon, so typing a service finds every one of it.
+- A name is the town data's, in English; a service's label is translated.
+- Distances are straight lines on your continent, from `UnitPosition` and each map's world corners, worked out once per map as `Parts.MinimapLayer` does. The other continent's come last, with no distance. In an instance there is nowhere to measure from, so nothing typed shows only the hint.
+- Quests and rares are Discovery's (`ns.FindQuestsAndRares`, in its `QuestList/Find.lua`), less the quests you have done: the same matches as the Quest List's search box, so the first search loads `NaowhForever_DiscoveryData` as opening the Quest List does. With Discovery off, it offers to turn it on.
+- A click is `ns.PlaceWaypoint`, so with Journeys on it is a route there.
+
 ### Map Window
 - Always on while QoL is: no switch and no Map Scale slider, the grip is the setting. A map you can size and move is how the addon's map works, not an option; `mapSizePercent` and `mapSizePos` keep what the grip and title bar set.
 - Only the map frame's scale changes, so its pins, the Town Pins drawer and the quest log scale with it. An anchor's offsets are in the frame's own scale, so they are corrected to keep its top left corner where it was on screen.
@@ -1510,6 +1612,29 @@ NaowhForever_QoL/
 - A lockbox already picked keeps its item ID, so it still shows the line.
 - Not yet checked in the client: that Forever still ranks Lockpicking as a skill rogues raise by picking locks,
   not by level.
+
+### Quest Item Info
+- No table in the game or the addon says which quest an item is for, so the links are learned while the quest is in
+  your log: its item objectives (an objective's text holds the item's name), its usable item
+  (`GetQuestLogSpecialItemInfo`), the quest an item starts (`C_Container.GetContainerItemQuestInfo`), and the
+  items that land in your bags within a few seconds of `QUEST_ACCEPTED` (the items a quest hands you). They are
+  kept account-wide in `questItemLinks`, so an item left in your bags after the hand-in still names its quest.
+- Each linked quest is a line: in your log, handed in, or not in your log. Once every linked quest is handed in,
+  a green line says so.
+- An item with no learned quest gets no line at all. The game abandons a quest whose given item is destroyed, so
+  a "not needed" guess for an unknown quest item is never shown.
+- The tooltip post-call is added the first time the switch is on and returns at once while it is off: a post-call
+  cannot be taken back.
+
+### Quest Reward Sell Price
+- Forever's quest reward tooltips (`C_TooltipInfo.GetQuestLogItem` in the quest log, `GetQuestItem` at the quest
+  giver) come without the Sell Price line a bag item's tooltip has. The line is added from `C_Item.GetItemInfo`'s
+  sell price times the reward's count, through the game's own `GameTooltip_OnTooltipAddMoney`, so it reads like
+  the bag tooltip's.
+- It is left out when the tooltip already has a Sell Price line, so a server fix never shows it twice, and on
+  items with no sell price.
+- The tooltip post-call is added the first time the switch is on and returns at once while it is off: a post-call
+  cannot be taken back.
 
 ### Gear Reminders
 - Worn Gear Reminder and Fishing Pole Reminder were part of AuraBuffs' Buffs & Consumables row until they
@@ -1690,6 +1815,14 @@ NaowhForever_QoL/
 - The type and the line are checked with `issecretvalue` before anything reads them: `GetGameMessageInfo`
   and `SendChatMessage` refuse a secret from addon code. The API docs do not mark the event secret, but the
   Journal's quest sharing guards the same event.
+
+### Quest Levels in Chat
+- Forever's quest log, tracker and map tooltips put the level before a quest's title already (the Camelot
+  `QuestUtilsOverrides.GetQuestTitlePrefix`, "[12] " or "[12+] " for an elite quest); only a quest link said in
+  chat does not, so that is all this adds. A link's level is its second field (`|Hquest:id:level|h`); one of 0 or
+  less (a scaling quest) is left as it is, as is a title that has a level already.
+- It filters through `ChatFrameUtil.AddMessageEventFilter`: `ChatFrame_AddMessageEventFilter` is a deprecated
+  shim Forever does not load. The filters are added only while it is on, and a secret message passes unread.
 
 ### Layer Tracker
 - A layer is the server and zone copy parts of an NPC's GUID, `Creature-0-server-map-zoneUID-id-spawn`

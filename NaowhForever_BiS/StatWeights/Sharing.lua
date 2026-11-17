@@ -37,10 +37,12 @@ local PER_POINT_RATINGS = {
     critrating = "ITEM_MOD_CRIT_RATING_SHORT", spellcritrating = "ITEM_MOD_CRIT_SPELL_RATING_SHORT",
     hitrating = "ITEM_MOD_HIT_RATING_SHORT", spellhitrating = "ITEM_MOD_HIT_SPELL_RATING_SHORT",
 }
+local HEALER_STATS = { crit = "scrit", hit = "shit" }
 
-local function SimStat(stat, class)
+local function SimStat(stat, class, healer)
     if stat == RANGED_DPS then return class == HUNTER and "dps" end
-    return SIM_KEYS[stat]
+    local mine = SIM_KEYS[stat]
+    return healer and HEALER_STATS[mine] or mine
 end
 
 local function PerPoint(body)
@@ -51,7 +53,7 @@ local function PerPoint(body)
     return false
 end
 
-local function ReadSim(body, class, read)
+local function ReadSim(body, class, healer, read)
     local count = 0
     local perPoint = PerPoint(body)
     for part in body:gmatch("[^,]+") do
@@ -62,7 +64,7 @@ local function ReadSim(body, class, read)
                 return nil, TEXT_OTHER_CLASS:format(ns.Shared.Decode.Text(value, MAX_NAME))
             end
         else
-            local mine = SimStat(stat, class)
+            local mine = SimStat(stat, class, healer)
             local worth = tonumber(value)
             local rating = perPoint and PER_POINT_RATINGS[stat]
             if worth and rating then worth = worth * SW.PER_PERCENT[rating] end
@@ -80,7 +82,7 @@ local function ImportSim(name, body, key)
     if not spec then return false, TEXT_PICK_SPEC end
     local _, class = UnitClass("player")
     local read = {}
-    local count, err = ReadSim(body, class, read)
+    local count, err = ReadSim(body, class, spec.healer, read)
     if not count then return false, err end
     if count == 0 then return false, TEXT_NO_STAT end
     for _, stat in ipairs(SW.STATS) do SW.Set(key, stat[1], read[stat[1]] or 0) end

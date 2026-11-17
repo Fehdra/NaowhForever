@@ -16,6 +16,7 @@ local NAME_SIZE, NAME_H, LISTED_H, CHART_W = 15, 22, 110, 280
 local DETAIL_H = NAME_H + SUB_GAP + LISTED_H
 local ALL = "all"
 local PATH_JOIN = "."
+local NEXT_FRAME = 0
 local TOKEN_FLAG = "WOW_TOKEN_FLAG"
 local TEXT_SEARCH = ns.L("Search the auction house")
 local TEXT_HINT = ns.L("Type a name and press Enter, or pick a category.")
@@ -32,7 +33,7 @@ local rows, results = {}, {}
 local labels = { [ALL] = TEXT_ALL_CATEGORIES }
 local picked = {}
 local category = ALL
-local active = false
+local active, queued = false, false
 
 local Browse = {}
 Market.Browse = Browse
@@ -112,6 +113,7 @@ end
 local function PaintRow(row, i)
     local result = results[i]
     local name, color, icon = KeyLook(result.itemKey)
+    local moved = row.itemKey ~= result.itemKey
     row.itemKey = result.itemKey
     row.stripe:SetShown(i % 2 == 0)
     row.picked:SetShown(SameKey(picked.itemKey, result.itemKey))
@@ -120,25 +122,32 @@ local function PaintRow(row, i)
     row.name:SetText(name)
     row.lowest:SetText(Parts.Coins(result.minPrice))
     row.listed:SetText(BreakUpLargeNumbers(result.totalQuantity))
+    if moved and GameTooltip:IsOwned(row) then RowEnter(row) end
+end
+
+local function DrawRows()
+    local first = math.floor(scroll:GetVerticalScroll() / ROW_H) + 1
+    local last = math.min(#results, first + math.ceil(scroll:GetHeight() / ROW_H))
+    local used = 0
+    for i = first, last do
+        used = used + 1
+        local row = rows[used] or NewRow()
+        rows[used] = row
+        PaintRow(row, i)
+        row:ClearAllPoints()
+        row:SetPoint("TOPLEFT", 0, -(i - 1) * ROW_H)
+        row:SetPoint("RIGHT", list, "RIGHT")
+        row:Show()
+    end
+    for i = used + 1, #rows do rows[i]:Hide() end
 end
 
 local function DrawResults()
     wipe(results)
     for i, result in ipairs(Results.list) do results[i] = result end
     Columns.Sort(sorter, results)
-    local y = 0
-    for i = 1, #results do
-        local row = rows[i] or NewRow()
-        rows[i] = row
-        PaintRow(row, i)
-        row:ClearAllPoints()
-        row:SetPoint("TOPLEFT", 0, -y)
-        row:SetPoint("RIGHT", list, "RIGHT")
-        row:Show()
-        y = y + ROW_H
-    end
-    for i = #results + 1, #rows do rows[i]:Hide() end
-    list:SetHeight(math.max(1, y))
+    list:SetHeight(math.max(1, #results * ROW_H))
+    DrawRows()
     note:SetShown(#results == 0)
     note:SetText(Results.searching and TEXT_SEARCHING or Results.searched and TEXT_NOTHING or TEXT_HINT)
 end
@@ -214,12 +223,23 @@ local function FillCategories(menu)
 end
 
 local function Scrolled(_, offset)
+    DrawRows()
     if offset >= scroll:GetVerticalScrollRange() - MORE_ROWS * ROW_H then Results.More() end
+end
+
+local function Later()
+    queued = false
+    if not active then return end
+    if Columns.Current(sorter) == "item" then return Browse.Draw() end
+    DrawRows()
+    DrawPicked()
 end
 
 local function OnEvent(_, _, itemID)
     if picked.waiting and itemID == picked.itemID then Want() end
-    Browse.Draw()
+    if queued then return end
+    queued = true
+    C_Timer.After(NEXT_FRAME, Later)
 end
 
 local function BuildResults()
@@ -254,7 +274,10 @@ local function BuildResults()
     list = CreateFrame("Frame", nil, scroll)
     list:SetHeight(1)
     scroll:SetScrollChild(list)
-    scroll:HookScript("OnSizeChanged", function(_, width) list:SetWidth(width) end)
+    scroll:HookScript("OnSizeChanged", function(_, width)
+        list:SetWidth(width)
+        DrawRows()
+    end)
     scroll:HookScript("OnVerticalScroll", Scrolled)
     note = ns.Font(frame, St.TEXT_SIZE, nil, T.muted)
     note:SetPoint("TOP", 0, -SECTION_GAP)

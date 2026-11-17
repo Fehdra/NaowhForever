@@ -169,6 +169,11 @@ function Kills.NoteRun(here, login)
     end
 end
 
+function Kills.RunStart()
+    local run = J.CharacterData(RUN_KEY)
+    if run and not run.left then return run.at end
+end
+
 function Kills.ThisRun(boss)
     local run = J.CharacterData(RUN_KEY)
     local record = run and run.at and not run.left and Kills.Record(boss)
@@ -313,4 +318,4 @@ local function OnSettingChanged(key)
 end
 
 S.OnChange(OnSettingChanged)
-hooksecurefunc(ns, "Apply", Sync)
+ns.OnApply(Sync)

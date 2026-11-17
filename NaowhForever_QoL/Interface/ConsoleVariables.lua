@@ -539,7 +539,7 @@ function PutBack()
     if done > 0 then ns.Print((done == 1 and TEXT_PUT_BACK_ONE or TEXT_PUT_BACK):format(done)) end
 end
 
-hooksecurefunc(ns, "Apply", OnApply)
+ns.OnApply(OnApply)
 
 ns.Shared.Settings.Page(PAGE, S):Card({
     id = "consoleVariables", name = "Console Variables", order = CARD_ORDER, switch = SWITCH,

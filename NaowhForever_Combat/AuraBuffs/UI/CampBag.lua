@@ -1,4 +1,4 @@
--- CampBag.lua: the Sleeping Bag beside the Round campfire icon, or where it was moved, while you carry it near a campfire or in the HUD Editor, a secure button that uses it.
+-- CampBag.lua: the Sleeping Bag beside the Round campfire icon, or where it was moved, while you carry it near a campfire (or anywhere, with Always Show Sleeping Bag) or in the HUD Editor, a secure button that uses it.
 local ns = _G.NaowhForever
 
 local A = ns.AuraBuffs
@@ -113,7 +113,8 @@ local function Near()
 end
 
 local function Wanted(icon, round, preview)
-    return round and icon ~= nil and C_Item.GetItemCount(ITEM) > 0 and (preview or Near() ~= nil)
+    if not (round and icon ~= nil and C_Item.GetItemCount(ITEM) > 0) then return false end
+    return preview or S.Get("campBagAlways") or (Near() ~= nil and icon:IsShown())
 end
 
 local function Art()

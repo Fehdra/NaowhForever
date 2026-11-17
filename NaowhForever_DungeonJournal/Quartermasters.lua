@@ -1,4 +1,4 @@
--- Quartermasters.lua: where each faction's quartermaster and the PvP rank's vendor stand, learned at the vendor.
+-- Quartermasters.lua: where each faction's quartermaster and the PvP rank's vendor stand, and what the rank vendors sell at each rank, learned at the vendor.
 local ns = _G.NaowhForever
 
 local J = ns.Journal
@@ -7,10 +7,16 @@ local Rep = J.Reputation
 local PERCENT = J.C.PERCENT
 
 local SPOTS_KEY = "journalQuartermasters"
+local RANK_ITEMS_KEY = "journalRankItems"
 local MAP_FRACTION = 1
 local SIDE_JOIN = "-"
+local FIRST_RANK = 1
 
 local EMPTY = {}
+local unranked = {}
+local found = {}
+local rankLists = {}
+local requirementRanks
 local sellers
 local rankIndexed = false
 local listener
@@ -70,8 +76,71 @@ local function SoldHere()
     end
 end
 
+local function RequirementRanks()
+    if requirementRanks then return requirementRanks end
+    local texts = J.RANK_REQUIREMENTS
+    requirementRanks = {}
+    for rank, text in ipairs(texts[GetLocale()] or texts.enUS) do requirementRanks[text] = rank end
+    return requirementRanks
+end
+
+local function RequiredRank(index)
+    local data = C_TooltipInfo.GetMerchantItem(index)
+    local lines = data and data.lines
+    if not lines then return nil end
+    local ranks = RequirementRanks()
+    for i = 1, #lines do
+        local text = lines[i].leftText
+        if text and not issecretvalue(text) and ranks[text] then return ranks[text] end
+    end
+    return nil
+end
+
+local function SideItems()
+    local side = UnitFactionGroup("player")
+    if not side then return nil end
+    local account = ns.AccountSettings()
+    local all = account[RANK_ITEMS_KEY]
+    if type(all) ~= "table" then
+        all = {}
+        account[RANK_ITEMS_KEY] = all
+    end
+    all[side] = all[side] or {}
+    return all[side]
+end
+
+local function LearnRankItems()
+    wipe(unranked)
+    wipe(found)
+    for i = 1, GetMerchantNumItems() do
+        local id = GetMerchantItemID(i)
+        if id then
+            local rank = RequiredRank(i)
+            if rank then
+                found[id] = rank
+            elseif C_Item.IsItemDataCachedByID(id) then
+                unranked[#unranked + 1] = id
+            end
+        end
+    end
+    if not next(found) then return false end
+    local items = SideItems()
+    if not items then return false end
+    local info = Rep.Rank()
+    if info and info.renownLevel == FIRST_RANK then
+        for i = 1, #unranked do
+            local id = unranked[i]
+            found[id] = items[id] or FIRST_RANK
+        end
+    end
+    for id, rank in pairs(found) do items[id] = rank end
+    wipe(rankLists)
+    return true
+end
+
 local function MerchantShown()
     local faction = SoldHere()
+    if LearnRankItems() then faction = faction or J.RANK end
     if not faction then return end
     local map = C_Map.GetBestMapForUnit("player")
     local position = map and C_Map.GetPlayerMapPosition(map, "player")
@@ -92,6 +161,22 @@ function Rep.RankVendor()
     return spots and Learned(spots[RankKey()]) or nil
 end
 
+function Rep.RankItems(rank)
+    local list = rankLists[rank]
+    if list then return list end
+    list = {}
+    local all = ns.AccountSettings()[RANK_ITEMS_KEY]
+    local items = type(all) == "table" and all[UnitFactionGroup("player") or ""]
+    if type(items) == "table" then
+        for id, itemRank in pairs(items) do
+            if itemRank == rank then list[#list + 1] = id end
+        end
+        table.sort(list)
+    end
+    rankLists[rank] = list
+    return list
+end
+
 local function Sync()
     local on = S.Get("enabled")
     if not (on or listener) then return end
@@ -107,4 +192,4 @@ local function OnSettingChanged(key)
 end
 
 S.OnChange(OnSettingChanged)
-hooksecurefunc(ns, "Apply", Sync)
+ns.OnApply(Sync)

@@ -11,6 +11,8 @@ local TEXT_RENAME = ns.L("Rename this BiS list")
 local TEXT_DELETE = ns.L("Delete the BiS list %s? Every character of your class using it moves to another list.")
 local TEXT_PASTE = ns.L("Paste a Naowh BiS list")
 local TEXT_COPY = ns.L("Copy this to share your list")
+local TEXT_SIM_COPY = ns.L("Copy this, then paste it at mythicsim.com/wow-forever/sim")
+local TEXT_SIM_LATER = ns.L("Your stats are hidden in combat: export for MythicSim once it ends.")
 local TEXT_PICK_FIRST = ns.L("Pick your BiS first: the test plays with your list's first one.")
 local TEXT_MENU_TITLE = ns.L("Your class's BiS lists")
 local TEXT_MENU_NEW, TEXT_MENU_RENAME, TEXT_MENU_DELETE = ns.L("New List"), ns.L("Rename This List"), ns.L("Delete This List")
@@ -56,6 +58,14 @@ end
 
 function A.Export()
     ns.ShowCopyBox(TEXT_COPY, ns.ExportBisList())
+end
+
+function A.Sim()
+    if not B.MythicSim.Available() then
+        ns.Print(TEXT_SIM_LATER)
+        return
+    end
+    ns.ShowCopyBox(TEXT_SIM_COPY, B.MythicSim.Export())
 end
 
 function A.TestAlert()

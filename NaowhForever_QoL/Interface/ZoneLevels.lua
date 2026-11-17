@@ -140,7 +140,7 @@ end
 hooksecurefunc(S, "Set", function(key)
     if key == "enabled" or key == "zoneLevels" or key == "mapFishing" or key == "zoneInfo" then Apply() end
 end)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 
 local boot = CreateFrame("Frame")
 boot:RegisterEvent("PLAYER_LOGIN")

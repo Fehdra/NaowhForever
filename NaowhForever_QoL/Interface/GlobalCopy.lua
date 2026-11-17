@@ -311,12 +311,12 @@ end
 
 for dataType in pairs(TYPES) do TooltipDataProcessor.AddTooltipPostCall(dataType, Decorate) end
 hooksecurefunc(S, "Set", OnSettingChanged)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 local boot = CreateFrame("Frame")
 boot:SetScript("OnEvent", Apply)
 boot:RegisterEvent("PLAYER_LOGIN")
 boot:RegisterEvent("PLAYER_REGEN_ENABLED")
-hooksecurefunc(ns, "Apply", SyncShortcut)
+ns.OnApply(SyncShortcut)
 
 local Settings = ns.Shared and ns.Shared.Settings
 if not Settings then return end

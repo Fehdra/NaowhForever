@@ -84,7 +84,7 @@ the game's art comes back and ours hides.
   question about taking over from them is not asked.
 - The parts both panels use (`Frame.lua`, `Restyler.lua`, `Slots.lua`, `Score.lua`, `Badge.lua`) make
   nothing at load; the `Your*` files, `SpecStats.lua` and `Chrome.lua` put them on your panel. These
-  load in that order so their setting listeners and `ns.Apply` hooks run in it: the slots, your score,
+  load in that order so their setting and `ns.OnApply` listeners run in it: the slots, your score,
   your badge, then the stats (placed under your score's card) and the frame.
 - `HALF` is added before `math.floor` to round to the nearest whole; `RING_OUT` is the house's black
   ring one pixel outside an edge.

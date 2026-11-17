@@ -23,11 +23,13 @@ local NO_DISENCHANT = {
 }
 local outcomeCache = {}
 
+-- Forever's uncommon weapons of item level 21-30 give Greater Magic Essence, not Astral (Wowhead's
+-- disenchant counts, 2026-11-16): the last field is a weapon's essence where it differs.
 local uncommon = {
     { 5, 15, 10940, 10938, nil, 80, 20, 20, 80, 1, 2, 1, 2 },
     { 16, 20, 10940, 10939, 10978, 75, 20, 20, 75, 2, 3, 1, 2 },
-    { 21, 25, 10940, 10998, 10978, 75, 15, 15, 75, 4, 6, 1, 2 },
-    { 26, 30, 11083, 11082, 11084, 75, 20, 20, 75, 1, 2, 1, 2 },
+    { 21, 25, 10940, 10998, 10978, 75, 15, 15, 75, 4, 6, 1, 2, 10939 },
+    { 26, 30, 11083, 11082, 11084, 75, 20, 20, 75, 1, 2, 1, 2, 10939 },
     { 31, 35, 11083, 11134, 11138, 75, 20, 20, 75, 2, 5, 1, 2 },
     { 36, 40, 11137, 11135, 11139, 75, 20, 20, 75, 1, 2, 1, 2 },
     { 41, 45, 11137, 11174, 11177, 75, 20, 20, 75, 2, 5, 1, 2 },
@@ -119,7 +121,7 @@ local function BuildOutcomes(classID, quality, level)
         local dustChance, essenceChance = row[weapon and 8 or 6], row[weapon and 9 or 7]
         local outcomes = {
             Outcome(row[3], dustChance, row[10], row[11]),
-            Outcome(row[4], essenceChance, row[12], row[13]),
+            Outcome(weapon and row[14] or row[4], essenceChance, row[12], row[13]),
         }
         if row[5] then outcomes[#outcomes + 1] = Outcome(row[5], 100 - dustChance - essenceChance) end
         return outcomes

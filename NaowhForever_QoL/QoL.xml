@@ -9,6 +9,7 @@
     <Script file="Loot\DeleteConfirm.lua"/>
     <Script file="Loot\LockboxData.lua"/>
     <Script file="Loot\Lockboxes.lua"/>
+    <Script file="Loot\QuestSellPrice.lua"/>
     <Script file="Loot\Durability.lua"/>
     <Script file="Questing\TalentPoints.lua"/>
     <Script file="Questing\LegacyPoints.lua"/>
@@ -24,6 +25,8 @@
     <Script file="Questing\LayerTracker.lua"/>
     <Script file="Questing\LayerRequests.lua"/>
     <Script file="Questing\QuestProgress.lua"/>
+    <Script file="Questing\QuestLinks.lua"/>
+    <Script file="Questing\QuestItems.lua"/>
     <Script file="Questing\FinderRoles.lua"/>
     <Script file="Loot\LootConfirm.lua"/>
     <Script file="Cursor\CursorClip.lua"/>
@@ -41,6 +44,7 @@
     <Script file="Cursor\MouseRing.lua"/>
     <Script file="Combat\PetTracker.lua"/>
     <Script file="Interface\ChatZones.lua"/>
+    <Script file="Interface\TradeFilter.lua"/>
     <Script file="Combat\GcdTracker.lua"/>
     <Script file="Combat\FocusCastBar.lua"/>
     <Script file="Combat\DamageMeterLayout.lua"/>
@@ -52,6 +56,7 @@
     <Script file="Loot\LootFeed.lua"/>
     <Script file="Loot\WaylaidCratesData.lua"/>
     <Script file="Loot\WritRequestsData.lua"/>
+    <Script file="Loot\VendorSoldData.lua"/>
     <Script file="Loot\PriceShare.lua"/>
     <Script file="Loot\AuctionPrices.lua"/>
     <Script file="Loot\AuctionSeen.lua"/>
@@ -69,6 +74,10 @@
     <Script file="Loot\FishingLoot.lua"/>
     <Script file="Loot\FoodBar.lua"/>
     <Script file="Loot\BagSpace.lua"/>
+    <Script file="Loot\DestroyCheapest.lua"/>
+    <Script file="Loot\DestroyCheapestScan.lua"/>
+    <Script file="Loot\DestroyCheapestDestroy.lua"/>
+    <Script file="Loot\DestroyCheapestPopup.lua"/>
     <Script file="Loot\BagSpaceIgnore.lua"/>
     <Script file="Loot\ScrapMarker.lua"/>
     <Script file="Loot\BankMarker.lua"/>
@@ -88,6 +97,7 @@
     <Script file="Interface\FishingLevelsData.lua"/>
     <Script file="Interface\ZoneLevels.lua"/>
     <Include file="Interface\ZoneInfo\ZoneInfo.xml"/>
+    <Script file="Interface\Find.lua"/>
     <Script file="Interface\SkyborneData.lua"/>
     <Include file="Interface\SkyborneSpots.xml"/>
     <Script file="Questing\Trainer.lua"/>

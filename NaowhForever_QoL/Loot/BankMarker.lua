@@ -373,7 +373,7 @@ end
 S.OnChange(function(key)
     if key == "enabled" or key:find("^bankMarker") then Apply() end
 end)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 
 local function Summary()
     local accountMarks, charMarks = AccountMarks(), CharMarks()

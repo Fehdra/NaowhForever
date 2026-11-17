@@ -7,7 +7,7 @@ local Shared = ns.Shared
 local Items = Shared.Items
 local St = B.Style
 
-local MAIN_HAND, OFF_HAND = B.C.MAIN_HAND, B.C.OFF_HAND
+local OFF_HAND = B.C.OFF_HAND
 local SECTION_SPACE = St.SECTION_SPACE
 local JOURNAL = "NaowhForever_DungeonJournal"
 local TEXT_TURN_ON_JOURNAL = ns.L("Turn On Dungeon Journal")
@@ -19,6 +19,7 @@ local TEXT_NO_PICKS = ns.L("Nothing picked yet. Click an item below: the first i
 local TEXT_RANKED = ns.L("Ranked")
 local TEXT_RANKED_FOR = ns.L("Ranked for ")
 local TEXT_NOTHING_RANKED = ns.L("Nothing ranked for this slot.")
+local TEXT_LATER = ns.L("For later levels")
 local TEXT_DROPS = ns.L("Dungeon drops")
 local TEXT_DROPS_NEAR = ns.L("Dungeon drops near your level")
 local TEXT_DROPS_OFF = ns.L("Turn on the Dungeon Journal to see what drops in dungeons for this slot.")
@@ -28,13 +29,6 @@ local TEXT_NO_DROPS_NEAR = ns.L("No dungeon drops for this slot within 10 levels
 local TEXT_QUESTS = ns.L("Quests for your BiS")
 local TEXT_QUESTS_OFF = ns.L("Turn on the Dungeon Journal to see the quests that reward your picks, "
     .. "with their chains and waypoints.")
-local TEXT_LEVEL = ns.L("Level %d")
-local TEXT_LEVELS_ABOUT = ns.L("The best gear you can get by each level. Load one as your list for this spec.")
-local TEXT_LOAD, TEXT_ACTIVE = ns.L("Load"), ns.L("Active")
-local TEXT_AUTO = ns.L("For Your Level")
-local TEXT_AUTO_ABOUT = ns.L("Your best gear from what you wear and what you can get within %d levels. "
-    .. "It keeps up as you level and gear up; a slot you change stays as you set it.")
-local TEXT_RESET = ns.L("Reset")
 local EVENTS = { "PLAYER_EQUIPMENT_CHANGED", "BAG_UPDATE_DELAYED", "PLAYER_LEVEL_UP" }
 local GROUPS = {
     { title = ns.L("Armor"), slots = { 1, 2, 3, 15, 5, 9, 10, 6, 7, 8 } },
@@ -198,11 +192,11 @@ function ViewMixin:ScrollTo(slot)
     scroll:SetVerticalScroll(math.max(0, math.min(target, scroll:GetVerticalScrollRange())))
 end
 
-function ViewMixin:DrawItems(slot, ids, mode, count, numbered)
+function ViewMixin:DrawItems(slot, ids, mode, count, numbered, ranks)
     local picked = self.picked
     for i = 1, #ids do
         self.striped = i % 2 == 1
-        self:Add("pick", slot, ids[i], picked[ids[i]], mode, count, numbered and i)
+        self:Add("pick", slot, ids[i], picked[ids[i]], mode, count, numbered and (ranks and ranks[i] or i))
     end
     self.striped = false
 end
@@ -220,9 +214,25 @@ end
 function ViewMixin:DrawRanked(slot)
     local spec = L.CurrentSpec()
     local ranked = R.Candidates(slot, spec)
-    self:Section(spec and TEXT_RANKED_FOR .. spec.name or TEXT_RANKED, #ranked)
-    self:DrawItems(slot, ranked, "add", nil, true)
+    local top = self.playerLevel + B.Auto.LEVELS_AHEAD
+    local now, nowRanks, later, laterRanks = wipe(self.rankedNow), wipe(self.nowRanks), wipe(self.rankedLater),
+        wipe(self.laterRanks)
+    for i, id in ipairs(ranked) do
+        local required = R.ReqLevel(id)
+        if required and required > top then
+            later[#later + 1], laterRanks[#laterRanks + 1] = id, i
+        else
+            now[#now + 1], nowRanks[#nowRanks + 1] = id, i
+        end
+    end
+    self:Section(spec and TEXT_RANKED_FOR .. spec.name or TEXT_RANKED, #now)
+    self:DrawItems(slot, now, "add", nil, true, nowRanks)
     if #ranked == 0 then self:Note(TEXT_NOTHING_RANKED) end
+    if #later > 0 then
+        self:Space(SECTION_SPACE)
+        self:Section(TEXT_LATER, #later)
+        self:DrawItems(slot, later, "add", nil, true, laterRanks)
+    end
     self:Space(SECTION_SPACE)
     return ranked
 end
@@ -248,60 +258,6 @@ function ViewMixin:DrawPicker(slot)
     self:Fit(EVENTS)
 end
 
-function ViewMixin:DrawLevel(spec, level, list)
-    local picks = R.LevelPicks(spec.key, level)
-    if not picks then return end
-    local active = L.IsLevelList(list, spec, level)
-    self:SectionLink(TEXT_LEVEL:format(level), active and TEXT_ACTIVE or TEXT_LOAD, not active and ns.LoadBisLevel or nil,
-        level)
-    local n = 0
-    for _, gear in ipairs(Items.GEAR_SLOTS) do
-        local itemID = picks[gear[1]]
-        if itemID then
-            n = n + 1
-            self.striped = n % 2 == 1
-            self:Add("pick", gear[1], itemID, nil, "level")
-        end
-    end
-    self.striped = false
-    self:Space(SECTION_SPACE)
-end
-
-function ViewMixin:DrawAuto(spec, list)
-    local active = L.IsAutoList(list, spec)
-    local kept = active and list.kept ~= nil and next(list.kept) ~= nil
-    self:SectionLink(TEXT_AUTO, kept and TEXT_RESET or active and TEXT_ACTIVE or TEXT_LOAD,
-        (kept or not active) and ns.LoadBisAuto or nil)
-    self:Note(TEXT_AUTO_ABOUT:format(B.Auto.LEVELS_AHEAD))
-    local picks = not active and B.Auto.Preview(spec)
-    local main = active and list.slots[MAIN_HAND] or picks and picks[MAIN_HAND][1]
-    local n = 0
-    for _, gear in ipairs(Items.GEAR_SLOTS) do
-        local slot = gear[1]
-        local itemID = active and list.slots[slot] or picks and picks[slot][1]
-        if itemID and not (slot == OFF_HAND and main and Items.IsTwoHand(main)) then
-            n = n + 1
-            self.striped = n % 2 == 1
-            self:Add("pick", slot, itemID, nil, "level")
-        end
-    end
-    self.striped = false
-    self:Space(SECTION_SPACE)
-end
-
-function ViewMixin:DrawLevels()
-    self.page = "levels"
-    self:Begin()
-    self:Note(TEXT_LEVELS_ABOUT)
-    local spec, list = L.CurrentSpec(), L.List()
-    if spec then
-        self:DrawAuto(spec, list)
-        for _, level in ipairs(ns.BiSLeveling.levels) do self:DrawLevel(spec, level, list) end
-    end
-    self:Fit(EVENTS)
-    if self.onDrawn then self.onDrawn() end
-end
-
 function ViewMixin:DrawQuestsOff()
     self.page = "questsOff"
     self:Begin()
@@ -315,8 +271,6 @@ function ViewMixin:Redraw()
         self:DrawPicker(self.slot)
     elseif self.page == "questsOff" then
         self:DrawQuestsOff()
-    elseif self.page == "levels" then
-        self:DrawLevels()
     else
         self:DrawList()
     end
@@ -329,6 +283,7 @@ View.Memo = Memo
 function View.New(parent)
     local view = Shared.View.New(parent, View.Kinds, ViewMixin)
     view.picks, view.picked, view.counts, view.open = {}, {}, {}, {}
+    view.rankedNow, view.nowRanks, view.rankedLater, view.laterRanks = {}, {}, {}, {}
     view.rows, view.rowTops, view.filter = {}, {}, "all"
     view.inset = St.STATUS_W
     B.OnListChange(view.redrawFn)

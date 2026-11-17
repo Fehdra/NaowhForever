@@ -354,7 +354,7 @@ hooksecurefunc(S, "Set", function(key)
         Resize()
     end
 end)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 
 local boot = CreateFrame("Frame")
 boot:RegisterEvent("PLAYER_LOGIN")

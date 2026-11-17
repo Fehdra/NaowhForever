@@ -162,4 +162,4 @@ end
 S.OnChange(function(key)
     if key == "enabled" or key == "altProfessions" then Apply() end
 end)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)

@@ -16,7 +16,6 @@ local TEXT_NAME_TAKEN = ns.L("that name is taken")
 local TEXT_NOT_GEAR = ns.L("That is not an item you can equip.")
 local TEXT_ADDED = ns.L("Added %s to your BiS %s.")
 local TEXT_ADDED_AS = ns.L("Added %s to your BiS %s as #%d.")
-local TEXT_LEVEL_NAME = ns.L("Level %d %s")
 local TEXT_AUTO_NAME = ns.L("Auto %s")
 local FREE_NAME = "%s %d"
 local SPEC_SHORT = "^(.-)%s+%S+$"
@@ -387,28 +386,6 @@ function ns.NewBisList(name, specOnly, from)
     if from then slots, extra = Copied(from) end
     L.AddList(name, current and current.key, slots, extra, specOnly)
     return true
-end
-
-function L.IsLevelList(list, spec, level)
-    return list.level == level and list.side == UnitFactionGroup("player") and list.spec == spec.key
-        and SpecOnly(list)
-end
-
-function ns.LoadBisLevel(level)
-    local spec = L.CurrentSpec()
-    local picks = spec and R.LevelPicks(spec.key, level)
-    if not picks then return end
-    local store = ClassLists()
-    local list
-    for _, l in ipairs(store.lists) do
-        if L.IsLevelList(l, spec, level) then list = l end
-    end
-    list = list or AddList(store, { spec = spec.key, specOnly = true, level = level, side = UnitFactionGroup("player"),
-        name = FreeName(store, TEXT_LEVEL_NAME:format(level, L.SpecShort(spec))) })
-    list.slots, list.extra = {}, {}
-    for slot, itemID in pairs(picks) do list.slots[slot] = itemID end
-    Use(list)
-    Changed()
 end
 
 function L.IsAutoList(list, spec)

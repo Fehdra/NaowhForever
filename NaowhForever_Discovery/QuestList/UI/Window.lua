@@ -5,20 +5,24 @@ local Completo = ns.Completo
 local S = Completo.Settings
 local Q = Completo.Quests
 local R = Completo.Rares
+local H = Completo.History
 local V = Completo.View
 local Style = Completo.Style
 local Shared = ns.Shared
 local Parts = Shared.Parts
 
 local SEARCH_MAX = 150
+local HISTORY_SHOWN = 300
+local DAY_FORMAT = "%A %d %B %Y"
 local ALL_ZONES = ns.L("All Zones")
 local CONTINENTS = { [0] = "Eastern Kingdoms", [1] = "Kalimdor" }
 local ELSEWHERE = ns.L("Elsewhere")
 local CONTINENT_ORDER = { CONTINENTS[0], CONTINENTS[1], ELSEWHERE }
 local EVENTS = { "QUEST_TURNED_IN", "QUEST_ACCEPTED", "QUEST_REMOVED", "PLAYER_LEVEL_UP", "SKILL_LINES_CHANGED",
-    "LEARNED_SPELL_IN_SKILL_LINE" }
+    "LEARNED_SPELL_IN_SKILL_LINE", "CALENDAR_UPDATE_EVENT_LIST" }
 local NO_EVENTS = {}
-local SEARCH_HINT = { quests = ns.L("Search quests or quest givers"), rares = ns.L("Search rares") }
+local SEARCH_HINT = { quests = ns.L("Search quests or quest givers"), rares = ns.L("Search rares"),
+    history = ns.L("Search your quest history") }
 local TEXT_ALL_ZONES = ns.L("All zones")
 local TEXT_KILLED_PERCENT = ns.L("%d%% killed")
 local TEXT_DONE_PERCENT = ns.L("%d%% done")
@@ -34,6 +38,11 @@ local TEXT_NO_RARE_FOUND = ns.L("No rare for your character holds \"%s\".")
 local TEXT_FIRST_OF = ns.L("The first %d of %d; type more to narrow it down.")
 local TEXT_RARES_PROGRESS = ns.L("%d of %d rares killed")
 local TEXT_QUESTS_PROGRESS = ns.L("%d of %d zone quests done")
+local TEXT_HISTORY_OFF = ns.L("Turn on Keep Quest History in Discovery's Quest List settings to keep a record from now on.")
+local TEXT_NO_HISTORY = ns.L("Nothing yet: take a quest and it shows here.")
+local TEXT_NO_HISTORY_FOUND = ns.L("Nothing in your quest history holds \"%s\".")
+local TEXT_HISTORY_LATEST = ns.L("The latest %d; search to find older ones.")
+local TEXT_HISTORY_COUNT = ns.L("%d entries")
 
 local window, scroll, view, searchBox
 local opened = {}
@@ -50,6 +59,10 @@ Completo.Tabs = Tabs
 
 local function OnRares()
     return tab == "rares"
+end
+
+local function OnHistory()
+    return tab == "history"
 end
 
 local function Source()
@@ -245,8 +258,41 @@ local function DrawQuests(self)
     self:Fit(EVENTS)
 end
 
+local function Holds(entry, text)
+    local title = entry[H.TITLE]
+    return text == "" or (title ~= nil and title:lower():find(text, 1, true) ~= nil)
+end
+
+local function DrawHistory(self)
+    if not S.Get("history") then
+        self:Note(TEXT_HISTORY_OFF)
+        return self:Fit(NO_EVENTS)
+    end
+    local list, text = H.List(), SearchText()
+    local day, shown = nil, 0
+    for i = #list, 1, -1 do
+        local entry = list[i]
+        if Holds(entry, text) then
+            if shown >= HISTORY_SHOWN then
+                self:Note(TEXT_HISTORY_LATEST:format(HISTORY_SHOWN))
+                break
+            end
+            local on = date(DAY_FORMAT, entry[H.WHEN])
+            if on ~= day then
+                day = on
+                self:Section(on)
+            end
+            shown = shown + 1
+            self:Add("history", entry, shown % 2 == 0)
+        end
+    end
+    if shown == 0 then self:Note(text == "" and TEXT_NO_HISTORY or TEXT_NO_HISTORY_FOUND:format(text)) end
+    self:Fit(NO_EVENTS)
+end
+
 function Draw:Redraw()
     self:Clear()
+    if OnHistory() then return DrawHistory(self) end
     if OnRares() then return DrawRares(self) end
     DrawQuests(self)
 end
@@ -278,7 +324,9 @@ function Draw:ToggleOpened(npc)
 end
 
 local function Paint()
-    if OnRares() then
+    if OnHistory() then
+        window.note.text:SetText(TEXT_HISTORY_COUNT:format(#H.List()))
+    elseif OnRares() then
         window.note.text:SetText(TEXT_RARES_PROGRESS:format(R.Progress()))
     else
         Q.Refresh()
@@ -334,7 +382,13 @@ function Tabs.Hide()
 end
 
 local function OnSettingChanged(key)
-    if IsShown() and (key == "hideDone" or key == "rareHideKilled") then view:Redraw() end
+    if IsShown() and (key == "hideDone" or key == "rareHideKilled" or key == "history") then view:Redraw() end
+end
+
+local function OnHistoryChanged()
+    if not IsShown() or not OnHistory() then return end
+    Paint()
+    view:QueueRedraw()
 end
 
 local function OnRareChanged()
@@ -364,4 +418,5 @@ end
 
 S.OnChange(OnSettingChanged)
 R.OnChange(OnRareChanged)
-hooksecurefunc(ns, "Apply", OnApply)
+H.OnChange(OnHistoryChanged)
+ns.OnApply(OnApply)

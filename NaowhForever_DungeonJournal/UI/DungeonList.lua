@@ -20,7 +20,7 @@ local NAME_LEFT, ICON_DROP, GROUP_GAP, STRIPE_EVERY = LP.NAME_LEFT, LP.ICON_DROP
 local SIZE_ICON, SIZE_GAP = 12, 3
 local HERE_DOT = 5
 local HERE_LEFT = LP.SELECTED_BAR + (LP.MARK_GAP - HERE_DOT) / 2
-local NAME_GAP, BIS_GAP, ICON_RIGHT = 8, 8, 8
+local NAME_GAP, BIS_GAP, QUEST_GAP, ICON_RIGHT = 8, 8, 8, 8
 local CONTESTED_RGB = { r = 0xe6 / 255, g = 0xcc / 255, b = 0x80 / 255 }
 local GROUPS = { "For your level", "Coming up", "Raids", "Low level" }
 local CLOSED_KEYS = { "closedGroup1", "closedGroup2", "closedGroup4", "closedGroup3" }
@@ -38,6 +38,8 @@ local TEXT_IN_LOG = ns.L("%d in your log")
 local TEXT_BIS = ns.L("%s%d of your %d BiS here are yours|r")
 local TEXT_LOOKS = ns.L("%s%d new |4look:looks;|r")
 local TEXT_DONE_GAP = "  "
+local TEXT_QUESTS = "%s%d/%d"
+local QUEST_MARK = Parts.Inline(St.BANG, T.fg)
 
 local rows, groups = {}, {}
 local onSelect
@@ -55,6 +57,15 @@ end
 
 local function Closed(g)
     return S.Get(CLOSED_KEYS[g]) == true
+end
+
+local function Complete(dungeon)
+    local done, total = Quests.Progress(dungeon.quests)
+    return total > 0 and done == total
+end
+
+local function Listed(dungeon)
+    return J.FactionShown(dungeon) and not (S.Get("hideCompleted") and Complete(dungeon))
 end
 
 local function LevelCells(row, text, icon)
@@ -92,12 +103,10 @@ local function LootLines(dungeon)
     if looks > 0 then GameTooltip:AddLine(TEXT_LOOKS:format(LOOK_CODE, looks)) end
 end
 
-local function RowEnter(row)
-    local dungeon = row.dungeon
-    LP.Hover(row)
-    GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
+local function Tip(owner, dungeon, here)
+    GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
     GameTooltip:SetText(dungeon.name)
-    if row.here:IsShown() then GameTooltip:AddLine(TEXT_HERE, T.accent.r, T.accent.g, T.accent.b) end
+    if here then GameTooltip:AddLine(TEXT_HERE, T.accent.r, T.accent.g, T.accent.b) end
     if dungeon.new then GameTooltip:AddLine(Parts.ForeverLine()) end
     WhereLines(dungeon)
     if not J.HasBosses(dungeon) then
@@ -107,6 +116,11 @@ local function RowEnter(row)
         LootLines(dungeon)
     end
     GameTooltip:Show()
+end
+
+local function RowEnter(row)
+    LP.Hover(row)
+    Tip(row, row.dungeon, row.here:IsShown())
 end
 
 local function TerritoryIcon(row, territory)
@@ -146,6 +160,8 @@ local function RightColumns(row, dungeon)
     else
         row.bis:SetPoint("RIGHT", row.territory, "LEFT", -BIS_GAP, ICON_DROP)
     end
+    row.quests = ns.Font(row, COUNT_SIZE, nil, T.muted)
+    row.quests:SetPoint("RIGHT", row.bis, "LEFT", -QUEST_GAP, 0)
 end
 
 local function Row(parent, dungeon)
@@ -157,7 +173,7 @@ local function Row(parent, dungeon)
     RightColumns(row, dungeon)
     row.name = ns.Font(row, NAME_SIZE)
     row.name:SetPoint("LEFT", NAME_LEFT, 0)
-    row.name:SetPoint("RIGHT", row.bis, "LEFT", -NAME_GAP, 0)
+    row.name:SetPoint("RIGHT", row.quests, "LEFT", -NAME_GAP, 0)
     row.name:SetJustifyH("LEFT")
     row.name:SetWordWrap(false)
     row.name:SetText(dungeon.name)
@@ -176,7 +192,7 @@ local function LayoutGroup(g, header, y)
     local count, closed = 0, Closed(g)
     for _, row in ipairs(rows) do
         local inGroup = Group(row.dungeon) == g
-        local listed = inGroup and J.FactionShown(row.dungeon)
+        local listed = inGroup and Listed(row.dungeon)
         if listed then
             if count == 0 then
                 header:ClearAllPoints()
@@ -202,9 +218,8 @@ local function LayoutGroup(g, header, y)
     return y
 end
 
-local function Finished(dungeon, bis, haveBis)
+local function Finished(dungeon, done, total, bis, haveBis)
     local any = false
-    local done, total = Quests.Progress(dungeon.quests)
     if total > 0 then
         if done < total then return false end
         any = true
@@ -221,18 +236,34 @@ local function Finished(dungeon, bis, haveBis)
     return any
 end
 
+local function PaintQuests(row, done, total)
+    if done == row.questsDone and total == row.questsTotal then return end
+    row.questsDone, row.questsTotal = done, total
+    if total == 0 then
+        row.quests:SetText("")
+    else
+        row.quests:SetText(done == total and DONE_MARK or TEXT_QUESTS:format(QUEST_MARK, done, total))
+    end
+end
+
 local function PaintCounts(row, dungeon)
+    local done, total = Quests.Progress(dungeon.quests)
+    PaintQuests(row, done, total)
+    local complete = total > 0 and done == total
+    local moved = complete ~= row.complete
+    row.complete = complete
     local bis, haveBis = Loot.DungeonBis(dungeon, filters)
     local missing = bis - haveBis
     if missing ~= row.missing then
         row.missing = missing
         row.bis:SetText(missing > 0 and STAR_TAG .. missing or "")
     end
-    local finished = Finished(dungeon, bis, haveBis)
+    local finished = Finished(dungeon, done, total, bis, haveBis)
     if finished ~= row.finished then
         row.finished = finished
         row.name:SetText(finished and dungeon.name .. TEXT_DONE_GAP .. DONE_MARK or dungeon.name)
     end
+    return moved
 end
 
 local function PaintRow(row, selected, current)
@@ -244,11 +275,14 @@ local function PaintRow(row, selected, current)
     row.name:SetTextColor(color.r, color.g, color.b)
     row:SetAlpha((J.HasBosses(dungeon) or chosen) and 1 or UNUSABLE)
     row.here:SetShown(dungeon == current)
-    PaintCounts(row, dungeon)
+    return PaintCounts(row, dungeon)
 end
 
 local List = {}
 J.DungeonList = List
+
+List.GROUPS, List.ORDER, List.CLOSED_KEYS = GROUPS, ORDER, CLOSED_KEYS
+List.Group, List.Listed, List.Tip = Group, Listed, Tip
 
 function List.Build(parent, select)
     onSelect = select
@@ -270,7 +304,9 @@ function List.Paint(selected)
     local here = J.Current()
     local current = here and here[1]
     Loot.ReadFilters(filters)
-    for _, row in ipairs(rows) do PaintRow(row, selected, current) end
+    local moved = false
+    for _, row in ipairs(rows) do moved = PaintRow(row, selected, current) or moved end
+    if moved and S.Get("hideCompleted") then List.Layout() end
 end
 
 function List.Next(from, by)
@@ -280,7 +316,7 @@ function List.Next(from, by)
         if dungeon == from then
             for step = 1, n do
                 local after = dungeons[(i - 1 + by * step) % n + 1]
-                if J.FactionShown(after) then return after end
+                if Listed(after) then return after end
             end
             return from
         end

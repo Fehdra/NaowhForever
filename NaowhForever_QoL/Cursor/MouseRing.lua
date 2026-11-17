@@ -589,7 +589,7 @@ end
 hooksecurefunc(S, "Set", function(key)
     if key == "enabled" or key == "crossMeleeSpell" or key:find("^mouse") then Apply() end
 end)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 
 local boot = CreateFrame("Frame")
 boot:RegisterEvent("PLAYER_LOGIN")

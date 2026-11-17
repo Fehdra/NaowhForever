@@ -13,8 +13,9 @@ local installed = false
 local function ManaLine(tooltip, id, link, spec)
     if not (spec.healer and S.Get("manaUpgrades")) then return end
     local mana = SW.ManaWeights()
-    local gain = mana and SW.BestGain(id, link, mana, SW.Power(mana))
-    if gain then tooltip:AddLine(UpgradeLine(gain, spec.name, TEXT_MANA)) end
+    if not mana then return end
+    local gain, partner = SW.BestGain(id, link, mana, SW.Power(mana))
+    if gain then tooltip:AddLine(UpgradeLine(gain, spec.name, TEXT_MANA, partner)) end
 end
 
 local function TooltipLink(tooltip)
@@ -33,8 +34,8 @@ local function OnItem(tooltip, data)
     if not weights then return end
     local link = TooltipLink(tooltip)
     local spec = SW.Spec(key)
-    local best = SW.BestGain(id, link, weights, SW.Power(weights))
-    if best then tooltip:AddLine(UpgradeLine(best, spec.name)) end
+    local best, partner = SW.BestGain(id, link, weights, SW.Power(weights))
+    if best then tooltip:AddLine(UpgradeLine(best, spec.name, nil, partner)) end
     ManaLine(tooltip, id, link, spec)
 end
 
@@ -49,4 +50,4 @@ local function OnSetting(key)
 end
 
 S.OnChange(OnSetting)
-hooksecurefunc(ns, "Apply", Install)
+ns.OnApply(Install)

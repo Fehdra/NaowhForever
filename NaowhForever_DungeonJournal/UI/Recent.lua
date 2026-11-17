@@ -9,7 +9,7 @@ local Parts = J.View.Parts
 local FightLength = Parts.FightLength
 local Ago = ns.Shared.Ago
 local St = J.Style
-local BORDER_RGB, SKULL, KILL_DATE, HOVER = St.BORDER_RGB, St.SKULL, St.KILL_DATE, St.ITEM_HOVER
+local BORDER_RGB, SKULL, CLOCK, KILL_DATE, HOVER = St.BORDER_RGB, St.SKULL, St.CLOCK, St.KILL_DATE, St.ITEM_HOVER
 local TEXT_SIZE, HEADING_SIZE = St.TEXT_SIZE, St.HEADING_SIZE
 
 local RECENT_ROWS = 5
@@ -281,7 +281,7 @@ J.Recent = Recent
 
 function Recent.Button(window, onPick)
     show = onPick
-    button = Parts.BarIcon(window, SKULL, true)
+    button = Parts.BarIcon(window, CLOCK, true)
     button:SetScript("OnClick", Clicked)
     button:SetScript("OnEnter", Enter)
     return button

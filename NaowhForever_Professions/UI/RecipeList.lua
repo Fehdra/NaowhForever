@@ -168,28 +168,38 @@ local function AddChanceLines(spell, chance)
     if cost then GameTooltip:AddLine(TEXT_TIP_COST:format(Text.Money(cost)), T.muted.r, T.muted.g, T.muted.b) end
 end
 
+local function PlaceTip(row)
+    GameTooltip:Show()
+    GameTooltip:ClearAllPoints()
+    if win:GetLeft() * win:GetEffectiveScale() >= GameTooltip:GetWidth() * GameTooltip:GetEffectiveScale() then
+        GameTooltip:SetPoint("BOTTOMRIGHT", row, "TOPLEFT", win:GetLeft() - row:GetLeft(), 0)
+    else
+        GameTooltip:SetPoint("BOTTOMLEFT", row, "TOPRIGHT", win:GetRight() - row:GetRight(), 0)
+    end
+end
+
 local function OnRowEnter(self)
     local r = self.entry.unlearned
     if r then
-        GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+        GameTooltip:SetOwner(self, "ANCHOR_NONE")
         GameTooltip:SetSpellByID(r.spell)
         GameTooltip:AddLine(" ")
         GameTooltip:AddLine(TEXT_REQUIRED:format(ns.RecipeFinder.Skill(r), ns.RecipeFinder.Tag(r)), 1, 1, 1)
         AddChanceLines(r.spell, self.chanceValue)
-        GameTooltip:Show()
+        PlaceTip(self)
         return
     end
     if not self.entry.recipe then return end
-    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:SetOwner(self, "ANCHOR_NONE")
     if not pcall(GameTooltip.SetRecipeResultItem, GameTooltip, self.entry.recipe.recipeID) then
         GameTooltip:SetSpellByID(self.entry.recipe.recipeID)
     end
     AddChanceLines(self.entry.recipe.recipeID, self.chanceValue)
-    GameTooltip:Show()
+    PlaceTip(self)
 end
 
 local function MarkerTooltip(self)
-    GameTooltip:SetOwner(self, "ANCHOR_RIGHT")
+    GameTooltip:SetOwner(self, "ANCHOR_NONE")
     GameTooltip:AddLine(self.title, 1, 1, 1)
     if self.kind == "bag" then
         GameTooltip:AddDoubleLine(TEXT_BAGS, tostring(self.bags), T.fg.r, T.fg.g, T.fg.b,
@@ -206,7 +216,7 @@ local function MarkerTooltip(self)
         GameTooltip:AddDoubleLine(TEXT_QUEUE, tostring(self.count), T.fg.r, T.fg.g, T.fg.b,
             T.accent.r, T.accent.g, T.accent.b)
     end
-    GameTooltip:Show()
+    PlaceTip(self:GetParent())
 end
 
 local function EnsureAuctionMarker(row)

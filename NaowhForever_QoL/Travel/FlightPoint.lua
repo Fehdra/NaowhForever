@@ -441,7 +441,7 @@ events:SetScript("OnEvent", OnEvent)
 hooksecurefunc(S, "Set", function(key)
     if key == "enabled" or key:find("^flightPoint") then Apply() end
 end)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 hooksecurefunc(ns, "ShowUnlockMode", function()
     unlocked = S.Get("enabled") == true
     Apply()

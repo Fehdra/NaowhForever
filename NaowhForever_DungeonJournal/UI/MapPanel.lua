@@ -41,6 +41,7 @@ end
 
 local function DrawShown()
     local page = pages[shownIndex]
+    view.lootDense = S.Get("newLayout") == true
     if pagesAreFactions then
         view:DrawFaction(page)
     elseif shownBoss then
@@ -306,4 +307,4 @@ function J.ShowBossBesideMap(boss)
 end
 
 S.OnChange(SettingChanged)
-hooksecurefunc(ns, "Apply", Sync)
+ns.OnApply(Sync)

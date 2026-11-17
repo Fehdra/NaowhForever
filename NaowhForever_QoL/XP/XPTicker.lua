@@ -962,7 +962,7 @@ end
 hooksecurefunc(S, "Set", function(key, value)
     if key == "enabled" or (key:find("^xpTicker") and key ~= "xpTickerPos") then Apply() end
 end)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 hooksecurefunc(Played, "Answered", PlayedAnswered)
 hooksecurefunc(Played, "LeveledUp", PlayedLeveledUp)
 hooksecurefunc(ns, "ShowUnlockMode", function()

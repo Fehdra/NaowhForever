@@ -118,7 +118,11 @@ NaowhForever_Combat/Blessings/
   Forever may not ship the display, so it is optional. Its button sits over the button's own icon, so
   the black border still shows; not with `PixelInset`, since a Blizzard aura button's `IsVisible` is
   secret and refitting it raises. When the header points a player-list button at another unit mid
-  fight, the display follows.
+  fight, the display follows. Its buttons can be configured only in `initializeFrame`; after
+  that they deny tainted access while auras are secret (battlegrounds), which `IsForbidden` does not
+  report. So its timer text is restyled only while `CanBeAccessedInContext` is true. Before that check the
+  error stopped each refresh before the class buttons were laid out, and the bar kept the party from
+  before the queue.
 - A plan travels as ten characters: a blessing code per class in `CLASSES` order, then the aura's,
   "-" for none. Per-player choices travel as GUID=code pairs in batches; "P|1|" starts the list over,
   so an empty one clears what the others had, and at most `MAX_PLAYER_CHOICES` are kept per paladin.

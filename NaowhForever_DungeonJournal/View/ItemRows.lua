@@ -11,6 +11,7 @@ local GetCoinTextureString = C_CurrencyInfo.GetCoinTextureString
 local T = ns.THEME
 local J = ns.Journal
 local Loot = J.Loot
+local Favourites = J.Favourites
 local Rep = J.Reputation
 local FACT = J.FACT
 local View = J.View
@@ -25,6 +26,7 @@ local St = J.Style
 local RED_CODE, UPGRADE_CODE = St.RED_CODE, St.UPGRADE_CODE
 local LOOK_CODE, LOOK_RGB, HAVE_RGB, HANGER = St.LOOK_CODE, St.LOOK_RGB, St.HAVE_RGB, St.HANGER
 local UPGRADE_ATLAS = St.UPGRADE_ATLAS
+local FAVOURITE, FAVOURITE_RGB = St.FAVOURITE, St.FAVOURITE_RGB
 local PLACE_DOT, CARD_PAD, ICON, ITEM_H = St.PLACE_DOT, St.CARD_PAD, St.ICON, St.ITEM_H
 local CHANCE_W, CHANCE_BAR_W, CHANCE_HIGH, CHANCE_FAIR = St.CHANCE_W, St.CHANCE_BAR_W, St.CHANCE_HIGH,
     St.CHANCE_FAIR
@@ -63,13 +65,20 @@ local TEXT_CHANCE_HELP = ns.L("From the kills recorded so far. The bar fills, an
 local TEXT_CHANCE_NONE = ns.L("Not known yet: there is no count of how often it drops.")
 local TEXT_MENU_HINT = ns.L("Right-click: menu")
 local TEXT_CLICK_HINT = TEXT_MENU_HINT .. PLACE_DOT .. ns.L("Shift-click: link")
+local TEXT_FOUND_HINT = ns.L("Click: its boss on the dungeon's page") .. PLACE_DOT .. TEXT_CLICK_HINT
 local TEXT_UPGRADE = ns.L("Upgrade over what you wear|r")
 local TEXT_NEW_LOOK = ns.L("A look you do not have yet|r")
 local TEXT_KNOWN = ns.L("Known|r")
+local TEXT_FAVOURITE = ns.L("Favourite")
+local TEXT_FAVOURITE_OWNED = ns.L("Favourite, and you have it")
 local TEXT_LEVEL = ns.L("Level ")
 local TEXT_ITEM = ns.L("Item ")
 local TEXT_UNDER_ONE = "<1"
 local TEXT_NONE = "-"
+local TEXT_NEW = ns.L("New")
+local TEXT_STAR_ADD = ns.L("Add to Favourites")
+local TEXT_STAR_REMOVE = ns.L("Remove from Favourites")
+local STAR_GAP, STAR_ROOM = 4, 22
 local TEXT_CODE_END = "|r"
 local TEXT_KIND = "%s, %s"
 local GAIN_TEXT = "+%d%%"
@@ -81,6 +90,10 @@ local KNOWN_TAG = TAG_SPACE .. Inline(St.CHECK, HAVE_RGB) .. " " .. Items.KEPT_C
 local NEW_LOOK_ICON = Inline(HANGER, LOOK_RGB)
 local NEW_LOOK_TAG = TAG_SPACE .. Inline(HANGER, LOOK_RGB, CARD_DROP)
 local NOT_YET_TAG = TAG_SPACE .. J.NOT_YET
+local FAVOURITE_TAG = MARK_SPACE .. Inline(FAVOURITE, FAVOURITE_RGB, CARD_DROP)
+local OWNED_TAG = FAVOURITE_TAG .. " " .. Inline(St.CHECK, HAVE_RGB, CARD_DROP)
+local FAVOURITE_LINE = Inline(FAVOURITE, FAVOURITE_RGB) .. " " .. TEXT_FAVOURITE
+local OWNED_LINE = Inline(FAVOURITE, FAVOURITE_RGB) .. " " .. TEXT_FAVOURITE_OWNED
 local UPGRADE_LINE = UPGRADE_ICON .. " " .. UPGRADE_CODE .. TEXT_UPGRADE
 local NEW_LOOK_LINE = NEW_LOOK_ICON .. " " .. LOOK_CODE .. TEXT_NEW_LOOK
 local PERCENT = ns.Color("muted", "%")
@@ -90,6 +103,11 @@ local tiers = {}
 
 local function RankTag(rank)
     return rank and MARK_SPACE .. RankMark(rank, CARD_DROP) or ""
+end
+
+local function FavouriteTag(favourite, owned)
+    if not favourite then return "" end
+    return owned and OWNED_TAG or FAVOURITE_TAG
 end
 
 local function UpgradeTag(upgrade)
@@ -181,6 +199,7 @@ local function MarkLines(row)
     end
     if row.upgrade and not (ns.StatWeights and ns.StatWeights.On()) then GameTooltip:AddLine(UPGRADE_LINE) end
     if row.newLook then GameTooltip:AddLine(NEW_LOOK_LINE) end
+    if row.favourite then GameTooltip:AddLine(row.owned and OWNED_LINE or FAVOURITE_LINE) end
 end
 
 local function ItemEnter(row)
@@ -193,7 +212,8 @@ local function ItemEnter(row)
     NeedsLine(row)
     ColumnLine(row)
     MarkLines(row)
-    GameTooltip:AddLine(notYet and TEXT_MENU_HINT or TEXT_CLICK_HINT, muted.r, muted.g, muted.b)
+    local hint = row.where and TEXT_FOUND_HINT or notYet and TEXT_MENU_HINT or TEXT_CLICK_HINT
+    GameTooltip:AddLine(hint, muted.r, muted.g, muted.b)
     GameTooltip:Show()
 end
 
@@ -207,6 +227,7 @@ local function ItemClick(row, button)
         View.ItemMenu(row, row.itemID, row:GetParent().redrawFn)
         return
     end
+    if row.where and not IsModifiedClick() then return row:GetParent().onFound(row.boss, row.dungeon, row.itemID) end
     if J.IsNotYet(row.itemID) then return end
     local _, link = GetItemInfo(row.itemID)
     if link then HandleModifiedItemClick(link) end
@@ -298,7 +319,7 @@ local function SetChance(row, chance, shown, top)
     else
         row.chanceText:SetPoint("RIGHT", 0, 0)
         row.chanceText:SetTextColor(T.muted.r, T.muted.g, T.muted.b)
-        row.chanceText:SetText(shown and TEXT_NONE or "")
+        row.chanceText:SetText(shown and (row:GetParent().lootDense and TEXT_NEW or TEXT_NONE) or "")
     end
     ShowBar(row, shown and known)
     row.chanceZone:SetShown(shown)
@@ -390,12 +411,13 @@ local function SetMeta(row, itemID, facts, view, notYet, known, worn, look, icon
     local bare = view.bare
     local required = not bare and facts and facts[FACT.REQUIRED] or 0
     local level = LevelText(required, view.playerLevel)
-    local kind = ItemType(itemID)
+    local kind = row.where or ItemType(itemID)
     row.metaTail:SetText(((kind ~= "" and level ~= "") and PLACE_DOT or "") .. level
         .. TagText(row, itemID, notYet, known, worn, bare) .. (look == false and NEW_LOOK_TAG or ""))
     row.meta:SetWidth(0)
     row.meta:SetText(kind)
-    local room = row:GetWidth() - icon - TEXT_GAP - (CHANCE_W + TEXT_GAP) - math.ceil(row.metaTail:GetStringWidth())
+    local room = row:GetWidth() - icon - TEXT_GAP - (CHANCE_W + TEXT_GAP) - (view.itemRoom or 0) - (row.starRoom or 0)
+        - math.ceil(row.metaTail:GetStringWidth())
     row.meta:SetWidth(math.max(1, math.min(math.ceil(row.meta:GetStringWidth()) + 1, room)))
 end
 
@@ -403,6 +425,48 @@ local function SetColumn(row, view, chance, price, dense)
     local column = view.column
     if column == PRICE_COLUMN then return SetPrice(row, price) end
     SetChance(row, chance, column == nil and view.showChance, dense and DENSE_CHANCE_TOP or CHANCE_TOP)
+end
+
+Parts.RankTag, Parts.UpgradeTag = RankTag, UpgradeTag
+
+local function StarClicked(star)
+    local row = star:GetParent()
+    Favourites.Toggle(row.itemID)
+    row:GetParent():Redraw()
+end
+
+local function StarEnter(star)
+    if not Parts.Tip(star, "ANCHOR_RIGHT") then return end
+    GameTooltip:SetText(star.on and TEXT_STAR_REMOVE or TEXT_STAR_ADD, 1, 1, 1)
+    GameTooltip:Show()
+end
+
+local function PaintStar(star)
+    local color = star.on and St.FAVOURITE_RGB or T.muted
+    star.icon:SetVertexColor(color.r, color.g, color.b)
+end
+
+local function StarLeave(star)
+    PaintStar(star)
+    GameTooltip:Hide()
+end
+
+local function SetStar(row, shown)
+    if not shown then
+        if row.star then row.star:Hide() end
+        return 0
+    end
+    if not row.star then
+        row.star = Parts.IconButton(row, StarClicked, St.FAVOURITE)
+        row.star:SetPoint("RIGHT", -(CHANCE_W + STAR_GAP), 0)
+        row.star:SetScript("OnEnter", StarEnter)
+        row.star:SetScript("OnLeave", StarLeave)
+    end
+    row.star.on = row.favourite
+    row.star.icon:SetTexture(row.favourite and St.STAR or St.FAVOURITE)
+    PaintStar(row.star)
+    row.star:Show()
+    return STAR_ROOM
 end
 
 Kinds.item = {
@@ -427,13 +491,17 @@ Kinds.item = {
         row:SetScript("OnClick", ItemClick)
         return row
     end,
-    Set = function(row, itemID, chance, rank, upgrade, price)
+    Set = function(row, itemID, chance, rank, upgrade, price, where)
         local view = row:GetParent()
         local dense = view.dense
         local icon = dense and DENSE_ICON or ICON
         row.iconFrame:SetSize(icon, icon)
+        row.favourite = Favourites.Is(itemID)
+        local starRoom = SetStar(row, (view.lootDense or view.finderAside) and Favourites.On())
+        row.starRoom = starRoom
+        row.name:SetPoint("RIGHT", -(CHANCE_W + TEXT_GAP + (view.itemRoom or 0) + starRoom), 0)
         row.chanceTrack:SetPoint("BOTTOMRIGHT", -BAR_H / 2, dense and DENSE_BAR_BOTTOM or BAR_BOTTOM)
-        row.itemID = itemID
+        row.itemID, row.where = itemID, where
         row.needs, row.toGo, row.exact = nil, nil, nil
         row.hover:Hide()
         row.stripe:SetShown(view.striped)
@@ -453,8 +521,10 @@ Kinds.item = {
         local known = not bare and Loot.Recipe(itemID) ~= nil and view:RecipeKnown(itemID)
         row.rank, row.upgrade, row.newLook = rank, upgrade, look == false
         row.forever = IsForever("items", itemID)
+        row.favourite = Favourites.Is(itemID)
+        row.owned = row.favourite and Loot.Have(itemID)
         row.name:SetText("|c" .. hex .. (name or (TEXT_ITEM .. itemID)) .. TEXT_CODE_END
-            .. RankTag(rank) .. UpgradeTag(upgrade))
+            .. RankTag(rank) .. FavouriteTag(row.favourite, row.owned) .. UpgradeTag(upgrade))
         SetMeta(row, itemID, facts, view, notYet, known, worn, look, icon)
         SetColumn(row, view, chance, price, dense)
         row.keep = rank ~= nil or upgrade

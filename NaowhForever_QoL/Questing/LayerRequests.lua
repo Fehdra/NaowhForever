@@ -318,7 +318,7 @@ end
 hooksecurefunc(S, "Set", function(key)
     if key == "enabled" or key == "layerTracker" or (key:find("^layerRequests") and key ~= TOAST_POS) then Apply() end
 end)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 
 local boot = CreateFrame("Frame")
 boot:RegisterEvent("PLAYER_LOGIN")

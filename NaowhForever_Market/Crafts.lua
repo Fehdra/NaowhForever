@@ -9,7 +9,7 @@ local Market = ns.Market
 local ROSTER = "marketCharacters"
 local VENDOR_PRICE = 11
 local SELL, DISENCHANT, VENDOR = "sell", "disenchant", "vendor"
-local TEXT_RECIPE = "Recipe %d"
+local TEXT_RECIPE = ns.L("Recipe %d")
 
 local rows, spare, byOutput, byPart = {}, {}, {}, {}
 local stale = true

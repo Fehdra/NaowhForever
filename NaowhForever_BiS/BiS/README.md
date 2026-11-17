@@ -1,18 +1,19 @@
 # BiS List
 
 Your best-in-slot picks for every gear slot, ranked: your BiS (an orange star), your second
-pick (a silver one), then the rest. Picks come from wowsrc.com's ranking for your spec, then
+pick (a silver one), then the rest. Picks come from MythicSim's simmed level-60 gear for your spec
+(its pre-raid BiS, and its best trinkets in sim order), then wowsrc.com's ranking for it, then
 ForeverChanges' picks for it that wowsrc does not rank, from every dungeon drop your class can
 use, or from Alt+Shift-clicking any item. The list has its
 own window (`/nfbis`, a key binding, or the BiS stat in the Dungeon Journal): your paperdoll
 on the left, a card per slot with its picks on the right, where to run next (a waypoint on
 whoever has your BiS out in the world) and the best enchant for what you wear; and a Quests
 page, the quests that reward a pick you do not have yet, as the Dungeon Journal shows its own;
-and a Leveling page, your spec's best gear at levels 30, 40, 50 and 60 for your side, each one
-a Load away from being your list, and an Auto list that keeps your best gear for your level as
-you level.
+and Generate BiS List, an Auto list that keeps your best gear for your level as you level.
 Listed items say so on their tooltip, and call out when they drop. Lists are shared by every
-character of a class, and can be shared as a string.
+character of a class, and can be shared as a string. Sim on MythicSim, on the window's title bar,
+copies your character for MythicSim's Forever sim (mythicsim.com/wow-forever/sim), so you need no
+other addon to sim your gear, bags and talents there.
 
 What drops in a dungeon, and where, is the [Dungeon Journal](../../NaowhForever_DungeonJournal/README.md)'s:
 the picker's dungeon drops and an item's boss and dungeon come from its data, so the two always
@@ -30,24 +31,25 @@ BiS/
   BiS.lua             settings, a list's shape, change listeners (ns.BiS)
   Constants.lua       the numbers several files share: the hand slots, a list name's length (B.C)
   Data/               generated, no logic
-    BiS.lua           wowsrc.com's ranking per spec, then ForeverChanges', and item sources (Tools/build/bis_data.py)
+    BiS.lua           MythicSim's picks per spec, then wowsrc.com's ranking and ForeverChanges', its trinkets in sim order, and item sources (Tools/build/bis_data.py)
     Leveling.lua      each spec's gear at levels 30, 40, 50 and 60 for each side, and its sources (Tools/build/leveling_bis.py)
     Spots.lua         where the NPC with a BiS stands out in the world (Tools/build/bis_spots.py)
     Enchants.lua      every enchant, what it gives and goes on, the skill it needs (Tools/build/enchants.py)
   Rankings.lua        rankings, a level's picks, dungeon drops, sources, Run Next (B.Rankings)
-  Lists.lua           your lists, their old formats, loading a level's, and the ns calls that change them (B.Lists)
+  Lists.lua           your lists, their old formats, the Auto list's, and the ns calls that change them (B.Lists)
   Gains.lua           what your BiS gets you: Gear Score and stats over what you wear (B.Gains)
   Upgrades.lua        how much stronger each BiS makes you, in percent, by your spec's weights (B.Upgrades)
   Auto.lua            the Auto list: your best gear for your level, refreshed as you level and gear up (B.Auto)
   Enchants.lua        the best enchant for what you wear, for your spec and the item's level (B.Enchants)
   Sharing.lua         export and import strings (ns.ExportBisList, ns.ImportBisList)
+  MythicSim.lua       your character as MythicSim's Forever sim reads it (B.MythicSim)
   Marks.lua           your list's rank on item tooltips, and Alt+Shift-click to add or take off an item
   Alerts.lua          Drop Alert: which picks, chat line, sounds, and the loot events while it is on (B.Alerts)
   Quests.lua          the quests that reward your picks, by zone, as the Journal's quests (B.Quests)
   Sources.lua         where a click on an item's source goes: Journal, quest, waypoint, recipe, map, Wowhead (B.Sources)
   View/
     Style.lua         what only the BiS List draws, over Shared/Style.lua (B.Style)
-    View.lua          the list page, the Leveling page and a slot's picker, on the shared engine (B.View)
+    View.lua          the list page and a slot's picker, on the shared engine (B.View)
     Cells.lua         what the rows share: the gain cell, where an item drops, the hover zones (B.View.Cells)
     Summary.lua       how many are yours, the filter, the bar of your slots, pinned over the list
     EnchantBadge.lua  the enchant dot on a slot's icon and its advice (B.View.EnchantBadge)
@@ -82,8 +84,8 @@ Other modules call in through `ns`: `ns.IsBisItem` (the Journal, Bag Space, the 
 | --- | --- |
 | A colour, a size, a font size, an icon | `View/Style.lua`, or `Shared/Style.lua` for the house look (the stars) |
 | What a class can wear or wield | `Rankings.lua` |
-| A spec's ranking | `python Tools/build/bis_data.py` (daily in CI); ForeverChanges' picks after it, `python Tools/build/foreverchanges_bis.py`, then `bis_data.py` |
-| A level's list on the Leveling page | `python Tools/build/leveling_bis.py` |
+| A spec's ranking | `python Tools/build/bis_data.py` (daily in CI); MythicSim's picks before it and its trinket order, `python Tools/build/mythicsim_bis.py`, ForeverChanges' after it, `python Tools/build/foreverchanges_bis.py`, then `bis_data.py` |
+| A spec's gear at levels 30 to 60 (the Auto list's pool) | `python Tools/build/leveling_bis.py` |
 | Where an item drops | A dungeon drop: the Dungeon Journal's data (`Tools/build/journal.py`), which the BiS List reads; anything else: `Tools/data/bis_sources.json`, then rebuild |
 | What a list keeps, or an old format | `Lists.lua` (saved lists) and `Sharing.lua` (strings) |
 | Which enchant or upgrade wins for a spec | the spec's weights in `StatWeights/Data/Defaults.lua` (players change their own in the module's page); a proc's worth in `PROCS` in `Tools/build/enchants.py` |
@@ -114,26 +116,28 @@ Other modules call in through `ns`: `ns.IsBisItem` (the Journal, Bag Space, the 
 - Older saved lists are moved when read: a character's own list from before lists were shared joins
   its class's (named for the character unless it had a name), a flat item list is put in slots, and
   the unordered next picks of the 0.5.12 test builds go in ranked order.
-- Load on the Leveling page makes a spec-only list named for the level and spec, marked with its
-  `level` and `side`, and uses it; the player's own lists are left as they are. Loading that level
-  again puts its picks back on the same list, so loading never makes a second one.
-- A level's picks are your side's (`UnitFactionGroup`), as many are quest rewards of one side. Lists
-  are shared by every character of a class, so a level's list is one side's: an alt of the other
-  side loading it gets a list of its own. The list is a copy: changing it never changes the data.
-- Load on the Leveling page's For Your Level makes a spec-only list marked `auto` ("Auto <Spec>")
-  and uses it. While it is the list you use, it is refilled when you level or change gear: each slot
+- A level's picks are your side's (`UnitFactionGroup`), as many are quest rewards of one side.
+- Generate BiS List, beside the window's tabs, makes a spec-only list marked `auto` ("Auto <Spec>"),
+  uses it and shows Your List. While it is the list you use, it is refilled when you level or change gear: each slot
   gets the items worth most to your spec's weights, best first (`PICKS`, 3), from what you wear, the
   spec's ranking, its leveling lists and the Journal's drops near your level, that your class can
   use and that need no more than `LEVELS_AHEAD` (5) levels over yours. What you wear competes, so
-  the list never asks you to wear worse.
+  the list never asks you to wear worse. Trinkets go by MythicSim's sim order where it ranks them
+  (the spec's `trinkets`), and those it does not after them by weights: weights give an on-use or
+  proc trinket next to nothing. MythicSim sims no healer, so a healer's trinkets go by weights.
+- A slot's picker shows the ranking in two parts: what you can wear within `LEVELS_AHEAD` (the Auto
+  list's 5) levels, then For later levels, each item keeping its rank. At the top level the second part
+  is empty and the ranking reads as one list.
+- MythicSim's picks lead each slot's ranking because wowsrc's rankings stop below level 40. Its
+  raid trinkets stay out until the raids open (`RAIDS_OPEN` in `Tools/build/mythicsim_bis.py`).
 - A slot you change on the Auto list (add, remove, move) is kept in `kept` and never refilled;
-  Reset on the page lets every slot go back to the Auto picks. To mix more freely, New List can
+  Generate BiS List again lets every slot go back to the Auto picks. To mix more freely, New List can
   start from the Auto list.
 - The Auto list is shared by every character of a class, as every list is, and is refilled for
   the character using it. Its refill waits `REFRESH_DELAY` (0.5 s) so a gear swap's burst of
   events, and the level that `UnitLevel` returns late on `PLAYER_LEVEL_UP`, give one refill.
-- An item the client has not loaded, worn or not, is asked for, and the list (or the page's preview)
-  is built again when it arrives. Only the items it waits for wake it, and only when the server sends
+- An item the client has not loaded, worn or not, is asked for, and the list is built again when it
+  arrives. Only the items it waits for wake it, and only when the server sends
   them, so an item the server refuses never wakes it again. Level and gear changes are listened to only
   while the module is on and an Auto list is the one in use; switching to another spec's Auto list
   refills it for you.
@@ -143,7 +147,6 @@ Other modules call in through `ns`: `ns.IsBisItem` (the Journal, Bag Space, the 
   only when it beats the pair. Ring 2 and Trinket 2 skip what Ring 1 and Trinket 1 took.
 - An item of a level's list that neither the Journal nor wowsrc and ForeverChanges place takes the
   leveling data's source, so its row still says where it comes from.
-- The Leveling page is drawn on the list's view, without the summary: the summary is about your list.
 - A list's name shows in chat and tooltips, so its escape codes are neutralised (`|` doubled) and it
   is cut to `NAME_MAX` letters.
 - A two-hander as the main hand's BiS leaves the off hand unused: its picks are kept, not counted,
@@ -178,9 +181,8 @@ Other modules call in through `ns`: `ns.IsBisItem` (the Journal, Bag Space, the 
   the Journal's rules know none; a race the mask does not know of is let through. `RACE_BITS` is your
   race's bit in a quest's races mask (`ChrRaces.PlayableRaceBit`): the classic eight, and Forever's
   Skyborne.
-- The Quests page has the quests that reward a pick of a spec's ranking or of the Leveling page's
-  level-60 lists: the rankings stop below level 40, so a loaded level-60 list brings the endgame's
-  quests. The level-30 to 50 lists are not read: their quest rewards show where a ranking has them.
+- The Quests page has the quests that reward a pick of a spec's ranking or of its level-60 leveling
+  gear: the rankings stop below level 40, so a list with that gear on it brings the endgame's quests. The level-30 to 50 lists are not read: their quest rewards show where a ranking has them.
 - A quest starts where ForeverChanges maps its quest giver, else Wowhead, else the map of the
   Journal's quest giver, else the dungeon it starts inside.
 - Enchants: the game puts no level limit on any; the level is advice. `SKILL_LEVELS` follows the
@@ -233,15 +235,35 @@ Other modules call in through `ns`: `ns.IsBisItem` (the Journal, Bag Space, the 
   away; it comes back when that one closes, unless it was opened again meanwhile.
 - The Quests page is a Journal view, made the first time the page opens, as the Journal loads after
   the BiS List.
+- Sim on MythicSim writes the character JSON MythicSim's Forever sim reads: the WoWSims exporter's
+  fields (name, realm, race, class, level, talents, professions, gear), its `mythicsim` object (the
+  client, faction and race ID, the talents' spells, the character sheet, the spells you know) and
+  `bags`, the equippable items you carry, for its Best Gear. Gear goes in `SLOTS`' order, which its
+  site reads rings and trinkets in. `Undead` is the game's `Scourge`, and a profession its English
+  name by skill line.
+- The talents are one digit per talent, a tab's rows top to bottom, each left to right, tabs joined
+  by `-`: the sim reads them by position. A talent's tab is its group among the tree's display
+  groups (Stat Weights reads the same ones); its row and column are its place over `SQUARE`, counted
+  from the tree's top row and the tab's first column. A node off the grid (past `MAX_ROW` or
+  `MAX_COL`: Hunter's old Lightning Reflexes, Priest's Holy Specialization) is left out, since one
+  digit too many moves every talent after it; where two share a square, the newer node is the live
+  one. Each talent's spell and rank go along in `talentSpells`, for the site to match by spell when
+  its trees and the game's drift apart. Checked against the 1.60.1.70938 client's tables: every
+  class's order matches MythicSim's own exporter.
+- The export waits out combat: the game hides your stats and auras then
+  (`C_Secrets.ShouldUnitStatsBeSecret`, `ShouldAurasBeSecret`). Forever has no weapon skills, so the
+  sheet has none.
 
 ## Checking
 
-- `lua Tools/regression/test-bis-slots.lua`: lists, picks, old formats, sharing, Run Next, loading a level.
+- `lua Tools/regression/test-bis-slots.lua`: lists, picks, old formats, sharing, Run Next.
 - `lua Tools/regression/test-bis-dungeon-drops.lua`: class rules, dungeon drops, sources.
 - `lua Tools/regression/test-bis-window.lua`: the window, paperdoll and picker, a click
-  changing the list, the Leveling page and its Load, the redraw's cost (no garbage), Drop Alert only listening while on and as
+  changing the list, Generate BiS List, the redraw's cost (no garbage), Drop Alert only listening while on and as
   you set it (which picks, alert, chat, sounds, its look, and the settings page's studio and
   rows), Run Next's waypoints, and enchants by spec and item level.
+- `lua Tools/regression/test-bis-mythicsim.lua`: the MythicSim export: its JSON, gear, bags, talents
+  in the sim's order (off-grid and replaced nodes left out), professions, and waiting out combat.
 - `lua Tools/regression/test-bag-marks.lua`: Bag Marks in the game's bags, EllesmereUI's, and Baganator's.
 - `lua Tools/regression/test-dungeon-journal.lua`: also the Quests page, the quests that
   reward your picks, by zone, for your side, class and race.

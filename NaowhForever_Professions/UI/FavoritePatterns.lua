@@ -561,7 +561,7 @@ end
 
 events:SetScript("OnEvent", OnEvent)
 hooksecurefunc(S, "Set", OnSettingChanged)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 ns.OnAuctionHouseMoved(Queue)
 if ns.ProfFavorites then hooksecurefunc(ns.ProfFavorites, "Toggle", OnStarred) end
 

@@ -87,7 +87,7 @@ local function Build()
 end
 
 hooksecurefunc(ns.UI, "RefreshPage", RedrawSoon)
-hooksecurefunc(ns, "Apply", RedrawSoon)
+ns.OnApply(RedrawSoon)
 
 function ns.OpenInstanceTrackerWindow(tab)
     if not window then Build() end

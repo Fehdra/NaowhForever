@@ -1,10 +1,12 @@
--- MapView.lua: a dungeon's map drawn into a frame: its art, its bosses' pins, the entrance and the floor switch (J.DungeonMap).
+-- MapView.lua: a dungeon's map drawn into a frame: its art, its bosses' and quest pins, the entrance and the floor switch (J.DungeonMap).
 local ns = _G.NaowhForever
 
 local T = ns.THEME
 local J = ns.Journal
+local S = J.Settings
 local C = J.C
 local St = J.Style
+local Parts = J.View.Parts
 local PIN, FLOOR_H, TEXT_SIZE = St.MAP_PIN, St.MAP_FLOOR_H, St.TEXT_SIZE
 local MAP_W, MAP_H, ART = C.MAP_W, C.MAP_H, C.MAP_ART
 
@@ -35,6 +37,9 @@ local LABEL_ANCHOR = {
 }
 local KILLED_ALPHA = 0.45
 local UNPLACED_ALPHA = 0.7
+local QUEST_INSET = 5
+local QUEST_EVENTS = { "QUEST_LOG_UPDATE", "QUEST_DATA_LOAD_RESULT", "PLAYER_LEVEL_UP" }
+local NOTHING = { kind = "none" }
 local PICKED_RING = 8
 local PICKED_GLOW = 24
 local GLOW_LOW, GLOW_HIGH, GLOW_PULSE = 0.15, 0.55, 0.9
@@ -53,6 +58,9 @@ local TEXT_ELSEWHERE = ns.L("On %s: drag it here to move it.")
 local TEXT_MOVE = ns.L("Drag to move it, right-click to take it off.")
 local TEXT_PLACE = ns.L("Drag to place it.")
 local TEXT_FLOOR = ns.L("Floor %d")
+local TEXT_NOTHING = ns.L("Nothing here for you right now.")
+local TEXT_QUEST_CLICK = ns.L("Click: details    ")
+local TEXT_QUEST_MENU = ns.L("Right-click: Share, Link, Track")
 local TEXT_DOWN, TEXT_UP = "<", ">"
 
 local Map = { placing = false, TAG_WORDS = TAG_WORDS }
@@ -62,6 +70,8 @@ local View = {}
 View.__index = View
 
 local sorting, filling
+local events, queued, drewQuests, drawnSignature
+local questViews = {}
 
 local function Placed(dungeon)
     local all = ns.AccountSettings().journalMapPins
@@ -101,13 +111,51 @@ local function EachBoss(dungeon, fn)
     end
 end
 
+local function QuestKey(data)
+    return data.npc or -data.object
+end
+
 local function PinHint(pin)
     if not pin.view:Placing() then return TEXT_CLICK_LOOT end
     if pin.elsewhere then return TEXT_ELSEWHERE:format(pin.elsewhere) end
     return Spot(pin.view.dungeon, pin.key) and TEXT_MOVE or TEXT_PLACE
 end
 
+local function QuestHint(pin)
+    if pin.view:Placing() then return PinHint(pin) end
+    local lead = pin.quests[1]
+    if not lead then return end
+    return (lead.loggedID and TEXT_QUEST_CLICK or "") .. TEXT_QUEST_MENU
+end
+
+local function QuestPinEnter(pin)
+    local list = pin.quests
+    GameTooltip:SetOwner(pin, "ANCHOR_RIGHT")
+    GameTooltip:SetText(pin.quest.name, 1, 1, 1)
+    for i = 1, #list do
+        local entry = list[i]
+        if entry.kind == "none" then
+            GameTooltip:AddLine(entry.name, T.muted.r, T.muted.g, T.muted.b)
+        else
+            GameTooltip:AddDoubleLine(entry.name, Parts.QuestStatus(entry), 1, 1, 1, 1, 1, 1)
+        end
+    end
+    if (list[1] or NOTHING).kind == "none" then GameTooltip:AddLine(TEXT_NOTHING, T.muted.r, T.muted.g, T.muted.b) end
+    local hint = QuestHint(pin)
+    if hint then GameTooltip:AddLine(hint, T.accentSoft.r, T.accentSoft.g, T.accentSoft.b) end
+    GameTooltip:Show()
+end
+
+local function QuestPinClicked(pin, button)
+    local lead = pin.quests[1]
+    if not lead then return end
+    GameTooltip:Hide()
+    if button ~= "RightButton" and lead.loggedID then return J.View.QuestPanel.Show(lead.loggedID, pin) end
+    Parts.QuestMenu(pin, lead)
+end
+
 local function PinEnter(pin)
+    if pin.quest then return QuestPinEnter(pin) end
     local boss = pin.boss
     GameTooltip:SetOwner(pin, "ANCHOR_RIGHT")
     GameTooltip:SetText(boss.name, 1, 1, 1)
@@ -146,6 +194,10 @@ local function PinClicked(pin, button)
         Keep(pin.view.dungeon, pin.key, false)
         GameTooltip:Hide()
         pin.view:Draw()
+        return
+    end
+    if pin.quest then
+        if not pin.view:Placing() then QuestPinClicked(pin, button) end
         return
     end
     if button == "RightButton" then
@@ -257,6 +309,8 @@ end
 
 local function SetFace(mark, boss, killed)
     local face = boss.model and SetPortraitTextureFromCreatureDisplayID
+    mark.face:SetAllPoints()
+    mark.face:SetVertexColor(1, 1, 1)
     if boss.chest then
         mark.face:SetTexture(St.CHEST_ICON)
     elseif face then
@@ -284,6 +338,71 @@ local function SetMark(mark, boss, number, ring, killed)
     local color = number and T.fg or T.muted
     mark.badge.text:SetTextColor(color.r, color.g, color.b)
     mark:SetAlpha(killed and KILLED_ALPHA or 1)
+end
+
+local function SetQuestMark(mark, lead, ring)
+    mark.ring:SetSize(PIN + ring * 2, PIN + ring * 2)
+    mark.ring:SetColorTexture(T.muted.r, T.muted.g, T.muted.b, 1)
+    mark.face:ClearAllPoints()
+    mark.face:SetPoint("TOPLEFT", QUEST_INSET, -QUEST_INSET)
+    mark.face:SetPoint("BOTTOMRIGHT", -QUEST_INSET, QUEST_INSET)
+    Parts.QuestMark(mark.face, lead)
+    local none = lead.kind == "none"
+    if none then
+        mark.face:SetDesaturated(true)
+        mark.face:SetVertexColor(T.muted.r, T.muted.g, T.muted.b)
+    end
+    mark.face:Show()
+    mark.big:Hide()
+    mark.badge:Hide()
+    mark:SetAlpha(none and KILLED_ALPHA or 1)
+end
+
+local function QuestSignature()
+    local signature = UnitLevel("player")
+    for view in pairs(questViews) do
+        local quests = view.dungeon.quests
+        if quests then signature = signature + J.Quests.Signature(quests) end
+    end
+    return signature
+end
+
+local function Shown()
+    for view in pairs(questViews) do
+        if view.canvas:IsVisible() then return true end
+    end
+    return false
+end
+
+local function RefreshQuests()
+    queued = false
+    if Shown() and QuestSignature() == drawnSignature then return end
+    drewQuests = false
+    wipe(questViews)
+    J.RedrawDungeonMaps()
+    if not drewQuests then events:UnregisterAllEvents() end
+    drawnSignature = QuestSignature()
+end
+
+local function OnQuestEvent()
+    if queued then return end
+    queued = true
+    C_Timer.After(0, RefreshQuests)
+end
+
+local function WatchQuests()
+    drewQuests = true
+    if not events then
+        events = CreateFrame("Frame")
+        events:SetScript("OnEvent", OnQuestEvent)
+    end
+    for i = 1, #QUEST_EVENTS do events:RegisterEvent(QUEST_EVENTS[i]) end
+end
+
+local function OnSettingChanged(key)
+    if key ~= "mapQuestPins" then return end
+    if events and not S.Get(key) then events:UnregisterAllEvents() end
+    J.RedrawDungeonMaps()
 end
 
 local function ShowPicked(mark, on, ringOnly)
@@ -433,6 +552,7 @@ function View:FillFloors()
         self:Offer(Spot(dungeon, ENTRANCE_KEY))
         filling = self
         EachBoss(dungeon, OfferBoss)
+        self:OfferQuests()
         sorting = J.Maps[dungeon.key]
         table.sort(floors, ByWalk)
     end
@@ -460,19 +580,58 @@ function View:ToTray(pin)
     pin:SetAlpha(UNPLACED_ALPHA)
 end
 
+function View:OfferQuests()
+    local quests = J.Maps[self.dungeon.key].quests
+    if not (quests and S.Get("mapQuestPins")) then return end
+    for i = 1, #quests do self:Offer(Spot(self.dungeon, QuestKey(quests[i]))) end
+end
+
+function View:NextPin()
+    self.used = self.used + 1
+    local pin = self.pins[self.used] or self:NewPin()
+    self.pins[self.used] = pin
+    return pin
+end
+
 function View:DrawPin(boss, number, key)
     local spot = Spot(self.dungeon, key)
     local here = type(spot) == "table" and spot[1] == self.floor
     if not here and not self:Placing() then return end
-    self.used = self.used + 1
-    local pin = self.pins[self.used] or self:NewPin()
-    self.pins[self.used] = pin
-    pin.boss, pin.key = boss, key
+    local pin = self:NextPin()
+    pin.boss, pin.quest, pin.key = boss, nil, key
     local killed = self.inside and J.Kills.ThisRun(boss) or false
     SetMark(pin, boss, number, 1 / self.scale, killed)
+    ShowPicked(pin, self.picked ~= nil and key == self.picked and not self:Placing())
+    self:Put(pin, spot, here)
+end
+
+function View:DrawQuestPin(data)
+    local key = QuestKey(data)
+    local spot = Spot(self.dungeon, key)
+    local here = type(spot) == "table" and spot[1] == self.floor
+    if not here and not self:Placing() then return end
+    local pin = self:NextPin()
+    pin.boss, pin.quest, pin.key = nil, data, key
+    pin.quests, pin.questPool = pin.quests or {}, pin.questPool or {}
+    J.Quests.PinQuests(data, pin.quests, pin.questPool)
+    SetQuestMark(pin, pin.quests[1] or NOTHING, 1 / self.scale)
+    ShowPicked(pin, false)
+    self:Put(pin, spot, here)
+end
+
+function View:DrawQuestPins(map)
+    local on = S.Get("mapQuestPins")
+    if not (map.quests and (on or self:Placing())) then return end
+    for i = 1, #map.quests do self:DrawQuestPin(map.quests[i]) end
+    if not on then return end
+    questViews[self] = true
+    WatchQuests()
+    drawnSignature = QuestSignature()
+end
+
+function View:Put(pin, spot, here)
     pin.elsewhere = not here and type(spot) == "table" and FloorName(J.Maps[self.dungeon.key], spot[1]) or nil
     pin.glow:Hide()
-    ShowPicked(pin, self.picked ~= nil and key == self.picked and not self:Placing())
     pin.atX = here and spot[2] * MAP_W or nil
     pin.atY = here and spot[3] * MAP_H or nil
     if here then self:At(pin, spot[2], spot[3]) else self:ToTray(pin) end
@@ -552,6 +711,7 @@ function View:Draw()
     self.used, self.tray = 0, 0
     self.drawPin = self.drawPin or DrawPinOf(self)
     EachBoss(dungeon, self.drawPin)
+    self:DrawQuestPins(map)
     self:DrawDoor(dungeon)
     local several = #self.floors > 1
     self.floorName:SetShown(several)
@@ -589,7 +749,11 @@ function Map.Spot(dungeon, key)
 end
 
 Map.KeyOf = KeyOf
+Map.FloorName = FloorName
+Map.QuestKey = QuestKey
 Map.EachBoss = EachBoss
 Map.BuildMark = BuildMark
 Map.SetMark = SetMark
 Map.ShowPicked = ShowPicked
+
+S.OnChange(OnSettingChanged)

@@ -2,23 +2,30 @@
 local ns = _G.NaowhForever
 
 local GetCoinTextureString = C_CurrencyInfo.GetCoinTextureString
+local GetItemCount = C_Item.GetItemCount
 
 local J = ns.Journal
+local S = J.Settings
 local Quests = J.Quests
 local View = J.View
 local Parts = View.Parts
 local Plain = Parts.Plain
 local QUEST = J.C.QUEST
 local St = J.Style
-local SECTION_SPACE, PLACE_DOT = St.SECTION_SPACE, St.PLACE_DOT
+local SECTION_SPACE, PLACE_DOT, QUEST_CODE = St.SECTION_SPACE, St.PLACE_DOT, St.QUEST_CODE
 
 local REDRAW_DELAY = 0.15
 local ITEM_ID_RETURN = 6
+local ACTION_W, ACTION_H, ACTION_GAP, ACTION_PAD = 98, 22, 6, 8
 local TURN_IN_WHO = 4
 
 local TEXT_QUEST = ns.L("QUEST")
 local TEXT_HAND_IN = ns.L("Hand in: ")
 local TEXT_OBJECTIVES = ns.L("Objectives")
+local TEXT_ITEMS = ns.L("Items It Needs")
+local TEXT_DROPS = ns.L("Drops from %s")
+local TEXT_COUNT = "%d/%d"
+local TEXT_CODE_END = "|r"
 local TEXT_DESCRIPTION = ns.L("Description")
 local TEXT_REWARDS = ns.L("Rewards")
 local TEXT_CHOOSE = ns.L("Choose one of these:")
@@ -26,6 +33,7 @@ local TEXT_ALSO = ns.L("And also:")
 local TEXT_EXPERIENCE = ns.L(" experience")
 local TEXT_TRACK, TEXT_UNTRACK = ns.L("Track"), ns.L("Untrack")
 local TEXT_ABANDON = ns.L("Abandon %s?")
+local TEXT_CHAIN = ns.L("Chain")
 
 local EMPTY = {}
 local panel, view
@@ -82,6 +90,21 @@ local function DrawObjectives(id)
     view:Space(SECTION_SPACE)
 end
 
+local function DrawItems(id)
+    local items = S.Get("questHelp") and J.QuestItems[id]
+    if not items then return end
+    view:Section(TEXT_ITEMS, #items)
+    for i = 1, #items do
+        local itemID, need, npc = items[i][1], items[i][2], items[i][3]
+        local have = GetItemCount(itemID)
+        local boss = npc and J.Boss(npc)
+        local count = TEXT_COUNT:format(have, need)
+        if have >= need then count = QUEST_CODE.ready .. count .. TEXT_CODE_END end
+        view:Add("questItem", itemID, boss and TEXT_DROPS:format(boss.name) or "", count)
+    end
+    view:Space(SECTION_SPACE)
+end
+
 local function DrawDescription(description)
     if not description or description == "" then return end
     view:Section(TEXT_DESCRIPTION)
@@ -102,8 +125,7 @@ local function DrawRewards(xp, money)
     if #gains > 0 then view:Note(table.concat(gains, PLACE_DOT)) end
 end
 
-local function PaintButtons(id)
-    local buttons = panel.buttons
+local function PaintButtons(id, buttons)
     ns.SetButtonText(buttons.Track, QuestUtils_IsQuestWatched(id) and TEXT_UNTRACK or TEXT_TRACK)
     buttons.Share:SetEnabled(IsInGroup() and C_QuestLog.IsPushableQuest(id) == true)
     buttons.Abandon:SetEnabled(C_QuestLog.CanAbandonQuest(id) == true)
@@ -123,10 +145,11 @@ local function Draw()
     view:Add("questTitle", C_QuestLog.GetTitleForQuestID(id) or (quest and quest[QUEST.NAME]) or "",
         quest and Quests.Level(quest), C_QuestLog.IsComplete(id), HandIn(id, quest))
     DrawObjectives(id)
+    DrawItems(id)
     DrawDescription(description)
     DrawRewards(xp, money)
     view:Finish()
-    PaintButtons(id)
+    PaintButtons(id, panel.buttons)
 end
 
 local function Flush()
@@ -148,27 +171,25 @@ local function OnHide(self)
     self:UnregisterAllEvents()
 end
 
-local function Share()
-    local index = C_QuestLog.GetLogIndexForQuestID(shownID)
+local function ShareQuest(id)
+    local index = C_QuestLog.GetLogIndexForQuestID(id)
     if index then QuestLogPushQuest(index) end
 end
 
-local function Track()
-    if QuestUtils_IsQuestWatched(shownID) then
-        C_QuestLog.RemoveQuestWatch(shownID)
+local function TrackQuest(id)
+    if QuestUtils_IsQuestWatched(id) then
+        C_QuestLog.RemoveQuestWatch(id)
     else
-        C_QuestLog.AddQuestWatch(shownID)
+        C_QuestLog.AddQuestWatch(id)
     end
-    Draw()
 end
 
-local function Waypoint()
-    local quest = FindQuest(shownID)
+local function WaypointQuest(id)
+    local quest = FindQuest(id)
     if quest then Quests.Waypoint(quest) end
 end
 
-local function Abandon()
-    local id = shownID
+local function AbandonQuest(id)
     local name = C_QuestLog.GetTitleForQuestID(id) or ""
     ns.Confirm(TEXT_ABANDON:format(name), function()
         local previous = C_QuestLog.GetSelectedQuest()
@@ -176,11 +197,56 @@ local function Abandon()
         C_QuestLog.SetAbandonQuest()
         C_QuestLog.AbandonQuest()
         if previous and previous ~= id then C_QuestLog.SetSelectedQuest(previous) end
-        panel:Hide()
+        if panel and shownID == id then panel:Hide() end
     end)
 end
 
+local function Share()
+    ShareQuest(shownID)
+end
+
+local function Track()
+    TrackQuest(shownID)
+    Draw()
+end
+
+local function Waypoint()
+    WaypointQuest(shownID)
+end
+
+local function Abandon()
+    AbandonQuest(shownID)
+end
+
 local ACTIONS = { { "Share", Share }, { "Track", Track }, { "Waypoint", Waypoint }, { "Abandon", Abandon } }
+local ROW_ACTIONS = { { "Share", ShareQuest }, { "Track", TrackQuest }, { "Waypoint", WaypointQuest },
+    { "Abandon", AbandonQuest } }
+
+local function RowAction(button)
+    local row = button:GetParent()
+    button.act(row.id)
+    PaintButtons(row.id, row.buttons)
+end
+
+View.Kinds.questActions = {
+    New = function(parent)
+        local row = CreateFrame("Frame", nil, parent)
+        row.buttons = {}
+        for i, action in ipairs(ROW_ACTIONS) do
+            local button = ns.Button(row, action[1], ACTION_W, ACTION_H, nil)
+            button.act = action[2]
+            button:SetScript("OnClick", RowAction)
+            button:SetPoint("TOPLEFT", (i - 1) * (ACTION_W + ACTION_GAP), 0)
+            row.buttons[action[1]] = button
+        end
+        return row
+    end,
+    Set = function(row, id)
+        row.id = id
+        PaintButtons(id, row.buttons)
+        return ACTION_H + ACTION_PAD
+    end,
+}
 
 local function Build()
     panel = Parts.SidePanel(ACTIONS)
@@ -193,6 +259,28 @@ end
 
 local QuestPanel = {}
 View.QuestPanel = QuestPanel
+
+function QuestPanel.DrawInto(target, entry)
+    local own, id = view, entry.loggedID
+    view = target
+    local chance = view.showChance
+    view.showChance = false
+    if id then
+        local description, xp, money = Read(id)
+        view:Add("questActions", id)
+        DrawObjectives(id)
+        DrawItems(id)
+        DrawDescription(description)
+        DrawRewards(xp, money)
+    end
+    local chain = Quests.Chain(entry.quest)
+    if chain then
+        view:Section(TEXT_CHAIN, #chain)
+        for i, step in ipairs(chain) do view:Add("keyStep", i, step) end
+    end
+    view.showChance = chance
+    view = own
+end
 
 function QuestPanel.Show(questID, from)
     if not panel then Build() end

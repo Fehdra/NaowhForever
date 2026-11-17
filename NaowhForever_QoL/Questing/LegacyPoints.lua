@@ -99,7 +99,7 @@ end
 S.OnChange(function(key)
     if key == "enabled" or key:find("^legacyPoints") then Apply() end
 end)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 hooksecurefunc(ns, "ShowUnlockMode", function()
     unlocked = On() == true
     Apply()

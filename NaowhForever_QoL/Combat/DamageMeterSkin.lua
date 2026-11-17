@@ -1027,7 +1027,7 @@ hooksecurefunc(S, "Set", function(key)
     Apply()
     if key == THEME_KEY and ns.UI and ns.UI.RefreshPage then ns.UI:RefreshPage(true) end
 end)
-hooksecurefunc(ns, "Apply", function()
+ns.OnApply(function()
     customized = nil
     Start()
     Apply()

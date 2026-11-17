@@ -502,5 +502,5 @@ end
 ns.SpellEfficiencyStudio = { height = STAGE_H, states = STATES, new = NewPreview, paint = PaintPreview }
 
 hooksecurefunc(S, "Set", OnSettingChanged)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 Apply()

@@ -225,6 +225,6 @@ end)
 S.OnChange(function(key)
     if key == "enabled" or key == "inspectPanelShareBis" then Listen() end
 end)
-hooksecurefunc(ns, "Apply", Listen)
+ns.OnApply(Listen)
 
 IP._TheirBiSTest = { OnMessage = OnMessage, pending = pending, Read = Read, items = items }

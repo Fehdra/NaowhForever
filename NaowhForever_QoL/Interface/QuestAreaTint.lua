@@ -49,7 +49,7 @@ end
 hooksecurefunc(S, "Set", function(key)
     if key == "enabled" or key:find("^mapQuestTint") then Apply() end
 end)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 
 local boot = CreateFrame("Frame")
 boot:RegisterEvent("PLAYER_LOGIN")

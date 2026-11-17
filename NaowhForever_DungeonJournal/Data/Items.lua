@@ -10,7 +10,6 @@ ns.Journal.NotYet = {
     [13175] = { 2, 2, 60, 55, 2, 135498, "Voone's Twitchbow" },
     [13950] = { 4, 3, 62, 57, 3, 132498, "Detention Strap" },
     [14543] = { 4, 1, 62, 57, 3, 132949, "Darkshade Gloves" },
-    [18754] = { 4, 4, 62, 57, 3, 132614, "Fel Hardened Bracers" },
     [18757] = { 4, 1, 62, 57, 3, 135056, "Diabolic Mantle" },
     [22314] = { 2, 6, 61, 56, 3, 135129, "Huntsman's Harpoon" },
     [22315] = { 2, 4, 61, 56, 3, 133039, "Hammer of Revitalization" },

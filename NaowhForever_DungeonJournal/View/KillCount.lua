@@ -86,6 +86,8 @@ local function KillsEnter(button)
 end
 
 local function OpenHistory(button)
+    local view = button:GetParent():GetParent()
+    if view.openHistory then return view.openHistory(button.boss) end
     J.View.BossPanel.Show(button.boss, button, Dungeon(button))
 end
 

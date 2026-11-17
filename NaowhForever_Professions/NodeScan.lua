@@ -1,4 +1,4 @@
--- NodeScan.lua: the herbs and veins a minimap tooltip names, and the skill each needs (P.NodeScan).
+-- NodeScan.lua: the herbs and veins of Data/GatherNodes.lua, and your Herbalism and Mining (P.NodeScan).
 local ns = _G.NaowhForever
 
 local GetProfessions, GetProfessionInfo = GetProfessions, GetProfessionInfo
@@ -8,37 +8,10 @@ local NODES = P.GatherNodes
 
 local PROFESSION_LINE = { herb = 182, ore = 186 }
 local KIND, NEED, ITEM = 1, 2, 3
-local CODES = { "|c%x%x%x%x%x%x%x%x", "|r", "|T.-|t", "|A.-|a" }
-local LINE_PART = "[^\n]+"
-local TRIM = "^%s*(.-)%s*$"
-local CACHE_MAX = 200
 local ENGLISH_CLIENTS = { enUS = true, enGB = true }
 
 local unlockNeed = {}
 local skills = {}
-local cache = {}
-local cacheCount = 0
-
-local function Clean(text)
-    for _, code in ipairs(CODES) do text = text:gsub(code, "") end
-    return text:match(TRIM)
-end
-
-local function KnownIn(text)
-    local list = cache[text]
-    if list then return list end
-    list = {}
-    for part in text:gmatch(LINE_PART) do
-        local name = Clean(part)
-        if NODES[name] then list[#list + 1] = name end
-    end
-    if cacheCount >= CACHE_MAX then
-        wipe(cache)
-        cacheCount = 0
-    end
-    cache[text], cacheCount = list, cacheCount + 1
-    return list
-end
 
 local function AddSkill(index)
     if not index then return end
@@ -53,10 +26,6 @@ P.NodeScan = Scan
 
 function Scan.Usable()
     return ENGLISH_CLIENTS[GetLocale()] == true
-end
-
-function Scan.Known(text)
-    return KnownIn(text)
 end
 
 function Scan.Node(name)

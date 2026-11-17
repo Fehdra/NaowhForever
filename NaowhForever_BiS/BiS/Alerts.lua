@@ -139,4 +139,4 @@ A.Wanted = Alerts
 A.Say = Say
 
 S.OnChange(OnSetting)
-hooksecurefunc(ns, "Apply", Listen)
+ns.OnApply(Listen)

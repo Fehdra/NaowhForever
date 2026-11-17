@@ -140,13 +140,16 @@ local function FactionLines(page)
     if page.unreleased then GameTooltip:AddLine(TEXT_NOT_ANNOUNCED, T.muted.r, T.muted.g, T.muted.b, true) end
 end
 
-local function RowEnter(row)
-    local page = row.page
-    LP.Hover(row)
-    GameTooltip:SetOwner(row, "ANCHOR_RIGHT")
+local function Tip(owner, page)
+    GameTooltip:SetOwner(owner, "ANCHOR_RIGHT")
     GameTooltip:SetText(page.rank and TEXT_YOUR_PVP_RANK or page.name)
     if page.rank then RankLines() else FactionLines(page) end
     GameTooltip:Show()
+end
+
+local function RowEnter(row)
+    LP.Hover(row)
+    Tip(row, row.page)
 end
 
 local function RowClicked(row)
@@ -310,6 +313,8 @@ end
 
 local List = {}
 J.FactionList = List
+List.GROUPS, List.GroupOf, List.Tip = GROUPS, GroupOf, Tip
+List.UNRELEASED, List.ToggleUnreleased = TEXT_UNRELEASED, HeaderClicked
 
 function List.Build(parent, select)
     onSelect = select

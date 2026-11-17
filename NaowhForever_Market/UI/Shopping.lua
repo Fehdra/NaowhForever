@@ -1,4 +1,4 @@
--- Shopping.lua: the Shopping List page: what your Shopping List and your alts' still need, each counted on its own list when bought, and in the full window the listings of the one you pick.
+-- Shopping.lua: the Shopping List page: what your Shopping List and your alts' still need, each counted on its own list when bought, and the listings of the one you pick, with Buy.
 local ns = _G.NaowhForever
 
 local T = ns.THEME
@@ -6,7 +6,7 @@ local Market = ns.Market
 local St = Market.Style
 local Parts = ns.Shared.Parts
 local Items = ns.Shared.Items
-local Finder = Market.Finder
+local Finder, Listings = Market.Finder, Market.Listings
 
 local HEAD_H, HEAD_ICON, NAME_SIZE, NAME_GAP, SUB_GAP, GAP = 40, 32, 15, 8, 3, 10
 local BUTTON_W, BUTTON_H = 86, 24
@@ -20,9 +20,10 @@ local TEXT_MORE_FOR = ns.L("%d more for %s")
 local TEXT_SCAN_SUB = ns.L("Your last scan: %s each")
 local TEXT_NO_SCAN_SUB = ns.L("Not in your scans yet")
 
-local page, column, head, watch, finder, events, roster
+local page, column, head, watch, finder, events, roster, listPane, itemEvents
 local entries, pool, alts = {}, {}, {}
-local buying = {}
+local buying, focus = {}, {}
+local docked = false
 
 local Page = {}
 Market.Pages.shop = Page
@@ -100,9 +101,41 @@ local function DrawHead(itemID)
     head.sub:SetText(scan and TEXT_SCAN_SUB:format(Parts.Coins(scan)) or TEXT_NO_SCAN_SUB)
 end
 
+local function Focus()
+    if focus.itemID then return focus end
+end
+
+local function Want()
+    local info = C_AuctionHouse.GetItemKeyInfo(focus.itemKey)
+    focus.waiting = info == nil
+    if not info then return Listings.Want(nil) end
+    focus.commodity = info.isCommodity
+    Listings.Want(focus)
+end
+
+local function DropFocus()
+    if not focus.itemID then return end
+    listPane:Close()
+    wipe(focus)
+    Listings.Want(nil)
+end
+
+local function DrawListings()
+    if docked and focus.itemID ~= finder.picked then DropFocus() end
+    local shown = docked and focus.itemID ~= nil
+    listPane:SetShown(shown)
+    if shown then
+        listPane:SetHeight(listPane:Paint(focus))
+        finder.frame:SetPoint("BOTTOMRIGHT", listPane, "TOPRIGHT", 0, GAP)
+    else
+        finder.frame:SetPoint("BOTTOMRIGHT")
+    end
+end
+
 function Page.Draw()
     Finder.Draw(finder)
     DrawHead(finder.picked)
+    DrawListings()
 end
 
 local function Done()
@@ -143,9 +176,37 @@ local function BoughtHere(entry, count)
 end
 
 local function Picked(itemID)
-    if not Market.Window.Covering() then return end
     local e = Page.Picked()
-    Market.Browse.PickItem(itemID, e and e.owner, e and e.who)
+    local owner, who = e and e.owner, e and e.who
+    if Market.Window.Covering() then return Market.Browse.PickItem(itemID, owner, who) end
+    if focus.itemID == itemID and focus.owner == owner then return end
+    DropFocus()
+    focus.key, focus.itemID, focus.link = itemID, itemID, itemID
+    focus.itemKey = C_AuctionHouse.MakeItemKey(itemID)
+    focus.owner, focus.who = owner, who
+    Want()
+end
+
+local function OnItemInfo(_, _, itemID)
+    if focus.waiting and itemID == focus.itemID then Want() end
+end
+
+local function StartDocked()
+    if docked then return end
+    docked = true
+    listPane.bought = BoughtHere
+    Market.Listed.Use(listPane)
+    Listings.Start()
+    Listings.onChange = Page.Draw
+    itemEvents:RegisterEvent("ITEM_KEY_ITEM_INFO_RECEIVED")
+end
+
+local function StopDocked()
+    if not docked then return end
+    docked = false
+    DropFocus()
+    Listings.Stop()
+    itemEvents:UnregisterAllEvents()
 end
 
 local function OnListChanged()
@@ -184,8 +245,14 @@ function Page.Build(parent)
     finder.onPick = Picked
     finder.frame:SetPoint("TOPLEFT", watch, "BOTTOMLEFT", 0, -GAP)
     finder.frame:SetPoint("BOTTOMRIGHT")
+    listPane = Market.Listed.New(column, Page.Draw, Focus)
+    listPane:SetPoint("BOTTOMLEFT")
+    listPane:SetPoint("BOTTOMRIGHT")
+    listPane:Hide()
     events = CreateFrame("Frame")
     events:SetScript("OnEvent", OnEvent)
+    itemEvents = CreateFrame("Frame")
+    itemEvents:SetScript("OnEvent", OnItemInfo)
     hooksecurefunc(_G.AuctionHouseFrame.BuyDialog, "BuyNow", OnBuyNow)
     Shopping().OnChange(OnListChanged)
 end
@@ -193,9 +260,11 @@ end
 function Page.Show()
     page:Show()
     if Market.Window.Covering() then
+        StopDocked()
         Market.Browse.Attach(page, column, BoughtHere)
     else
         Market.Browse.Detach()
+        StartDocked()
     end
     Page.Draw()
 end
@@ -206,5 +275,6 @@ end
 
 function Page.Hide()
     page:Hide()
+    StopDocked()
     Market.Browse.Detach()
 end

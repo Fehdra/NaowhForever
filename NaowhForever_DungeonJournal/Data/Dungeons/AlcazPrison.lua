@@ -13,7 +13,8 @@ ns.Journal.AddDungeon("AlcazPrison", {
             { npc = 255997, name = "Tidemistress Ca'zass", encounters = { 3410 }, loot = { 276737, 276735, 276736 } },
             { npc = 257016, name = "Katerina the Cleaner", encounters = { 3418 }, loot = { 276740, 276738, 276739 } },
             { npc = 256236, name = "The Questioner", encounters = { 3415 }, loot = { 276741, 276742, 276743 } },
-            { npc = 255702, name = "Blazeroar", encounters = { 3409 } },
+            { npc = 255702, name = "Blazeroar", encounters = { 3409 }, loot = { 276744, 276745, 276746 } },
+            { npc = nil, name = "Trash", trash = true, loot = { 287021, 287019, 287018, 287020 } },
         } },
     },
 })

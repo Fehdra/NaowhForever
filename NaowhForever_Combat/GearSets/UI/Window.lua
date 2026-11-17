@@ -171,4 +171,4 @@ function ns.ToggleGearSetsWindow()
     if window and window:IsShown() then window:Hide() else ns.OpenGearSetsWindow() end
 end
 
-hooksecurefunc(ns, "Apply", OnApply)
+ns.OnApply(OnApply)

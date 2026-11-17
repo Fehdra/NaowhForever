@@ -206,16 +206,19 @@ local function PaintIcon(button, slot, id)
     end
 end
 
-local function PaintButton(button, list)
+local function PaintButton(button, list, look)
     local slot = button.slot
     local id = list.slots[slot]
-    PaintIcon(button, slot, id)
-    local edge = id and Items.QualityColor(id) or BORDER_RGB
+    local shown = id
+    if look == "now" then shown = GetInventoryItemID("player", slot) end
+    PaintIcon(button, slot, shown)
+    local edge = shown and Items.QualityColor(shown) or BORDER_RGB
     button.edge:SetColor(edge.r, edge.g, edge.b, 1)
-    button.icon:SetDesaturated(slot == OFF_HAND and B.OffHandIdle(list))
+    button.icon:SetDesaturated(look == "bis" and slot == OFF_HAND and B.OffHandIdle(list))
     button.worn:SetShown(id ~= nil and Items.Wearing(slot, id))
-    Parts.PaintItemMarks(button.marks, id and (B.Rankings.ItemLevel(id) or C_Item.GetDetailedItemLevelInfo(id)),
-        nil, Parts.IsForever(FOREVER_KIND, id))
+    Parts.PaintItemMarks(button.marks,
+        shown and (B.Rankings.ItemLevel(shown) or C_Item.GetDetailedItemLevelInfo(shown)),
+        nil, Parts.IsForever(FOREVER_KIND, shown))
     B.View.PaintEnchantBadge(button.wand, slot)
 end
 
@@ -256,7 +259,7 @@ end
 
 function Doll:Paint(list)
     self.list = list
-    for _, button in ipairs(self.buttons) do PaintButton(button, list) end
+    for _, button in ipairs(self.buttons) do PaintButton(button, list, self.look) end
     local outfit = Outfit(list)
     if outfit == self.outfit then return end
     self.outfit = outfit
@@ -271,6 +274,7 @@ end
 function Doll:SetLook(key)
     self.look = key
     Parts.PaintTabs(self.looks, key)
+    for _, button in ipairs(self.buttons) do PaintButton(button, self.list, key) end
     Dress(self.model)
     B.View.PaintScoreLook(self.gainsBlock, key)
 end

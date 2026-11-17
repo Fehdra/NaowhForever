@@ -26,6 +26,7 @@ local BUTTON_EDGE = 10
 local BUTTON_GAP = 6
 local CANCEL_W, PRIMARY_W = 80, 110
 local PERCENT = C.PERCENT
+local CAREFUL_MOST = 999999
 local EVENTS = { "COMMODITY_SEARCH_RESULTS_UPDATED", "ITEM_SEARCH_RESULTS_UPDATED", "COMMODITY_PRICE_UPDATED",
     "COMMODITY_PRICE_UNAVAILABLE", "COMMODITY_PURCHASE_SUCCEEDED", "COMMODITY_PURCHASE_FAILED",
     "AUCTION_HOUSE_CLOSED" }
@@ -112,8 +113,8 @@ end
 local function PriceWarning(each, total, scanEach)
     if GetMoney() < total then return Text.Hex(Style.RED_RGB) .. TEXT_NO_GOLD, true end
     if scanEach and each > scanEach * C.OVERPRICED then
-        return TEXT_CAREFUL:format(Text.Hex(Style.RED_RGB), math.floor((each / scanEach - 1) * PERCENT + ROUND),
-            Text.Money(scanEach))
+        local above = math.min(math.floor((each / scanEach - 1) * PERCENT + ROUND), CAREFUL_MOST)
+        return TEXT_CAREFUL:format(Text.Hex(Style.RED_RGB), above, Text.Money(scanEach))
     end
     if scanEach then return Text.Hex(T.muted) .. TEXT_LAST_SCAN:format(Text.Money(scanEach)) .. "|r" end
     return ""

@@ -29,6 +29,7 @@ local GOLD = "|cffffd100"
 local SCORE_FORMAT = "%.1f"
 local CODE_FORMAT = "|cff%02x%02x%02x"
 local OF_LEVEL_FORMAT = ns.L("%s%d%% of level %d|r")
+local OVERALL_FORMAT = ns.L("%s%d%% overall|r")
 local GAP = "  "
 local ORDER = { 1, 2, 3, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18 }
 local CATEGORY = {
@@ -58,7 +59,7 @@ for _, slot in ipairs(ORDER) do TOTAL = TOTAL + Score.SLOTS[slot] end
 local unitLinks = {}
 local bestAt = {}
 local rampCodes = {}
-local percents, ofLevels = {}, {}
+local percents, overalls, ofLevels = {}, {}, {}
 
 local function Worth(level, quality)
     return level * (Score.SCALE[quality] or EPIC_SCALE) + (Score.SHIFT[quality] or EPIC_SHIFT)
@@ -132,6 +133,16 @@ local function Percent(share)
     if not text then
         text = Score.Code(percent / PERCENT) .. percent .. "%|r"
         percents[percent] = text
+    end
+    return text
+end
+
+local function Overall(share)
+    local percent = Percentage(share)
+    local text = overalls[percent]
+    if not text then
+        text = OVERALL_FORMAT:format(Score.Code(percent / PERCENT), percent)
+        overalls[percent] = text
     end
     return text
 end
@@ -246,7 +257,9 @@ function Score.Tooltip(score, level)
     local text = Score.Colored(score, level, against)
     if compare == COMPARE.BOTH and level then
         local best, top = Score.Best(level), Score.Best()
-        if best and top and best < top then return text .. GAP .. OfLevel(math.min(1, score / best), level) end
+        if best and top and best < top then
+            return text .. GAP .. Overall(score / top) .. GAP .. OfLevel(math.min(1, score / best), level)
+        end
     end
     local share = Score.Grade(score, level, against)
     return share and (text .. GAP .. Percent(share)) or text

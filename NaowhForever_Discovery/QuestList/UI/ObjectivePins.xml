@@ -1,0 +1,13 @@
+<Ui xmlns="http://www.blizzard.com/wow/ui/">
+    <!-- ObjectivePins.xml: the quest objective pin's template, and the file that fills it. -->
+    <Script file="ObjectivePins.lua"/>
+    <Button name="NaowhForeverQuestObjectivePinTemplate" mixin="NaowhForeverQuestObjectivePinMixin" enableMouse="true" registerForClicks="LeftButtonUp, RightButtonUp" virtual="true">
+        <Size x="18" y="18"/>
+        <Layers>
+            <Layer level="ARTWORK">
+                <Texture parentKey="Icon" setAllPoints="true"/>
+            </Layer>
+        </Layers>
+        <Scripts><OnClick method="OnClick"/></Scripts>
+    </Button>
+</Ui>

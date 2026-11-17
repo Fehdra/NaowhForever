@@ -261,4 +261,4 @@ local function OnSettingChanged(key)
 end
 
 S.OnChange(OnSettingChanged)
-hooksecurefunc(ns, "Apply", Sync)
+ns.OnApply(Sync)

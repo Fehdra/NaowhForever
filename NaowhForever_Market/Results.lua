@@ -1,4 +1,4 @@
--- Results.lua: what the auction house's last browse search found, however it was sent, and more of it as you scroll (Market.Results).
+-- Results.lua: what the auction house's last browse search found, however it was sent bar a price scan's, and more of it as you scroll (Market.Results).
 local ns = _G.NaowhForever
 
 local Market = ns.Market
@@ -12,8 +12,16 @@ local events, moreAsked
 local Results = { list = list }
 Market.Results = Results
 
+local function Scan()
+    return ns.AuctionScanBrowsed ~= nil and ns.AuctionScanBrowsed()
+end
+
 local function OnEvent(_, event, added)
-    if event == "AUCTION_HOUSE_BROWSE_RESULTS_UPDATED" then
+    if Scan() then
+        if not (Results.searched or Results.searching) then return end
+        wipe(list)
+        Results.searching, Results.searched, moreAsked = false, false, false
+    elseif event == "AUCTION_HOUSE_BROWSE_RESULTS_UPDATED" then
         wipe(list)
         for i, result in ipairs(C_AuctionHouse.GetBrowseResults()) do list[i] = result end
         Results.searching, Results.searched, moreAsked = false, true, false
@@ -32,7 +40,8 @@ function Results.Sent()
 end
 
 function Results.More()
-    if moreAsked or Results.searching or not Results.searched or C_AuctionHouse.HasFullBrowseResults() then return end
+    if moreAsked or Results.searching or not Results.searched or Scan() then return end
+    if C_AuctionHouse.HasFullBrowseResults() then return end
     moreAsked = true
     C_AuctionHouse.RequestMoreBrowseResults()
 end

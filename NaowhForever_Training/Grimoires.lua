@@ -148,7 +148,7 @@ local function OnLogin(self)
 end
 
 S.OnChange(OnSettingChanged)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 
 local boot = CreateFrame("Frame")
 boot:RegisterEvent("PLAYER_LOGIN")

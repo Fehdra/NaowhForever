@@ -595,4 +595,4 @@ local function OnSettingChanged(key)
 end
 
 hooksecurefunc(S, "Set", OnSettingChanged)
-hooksecurefunc(ns, "Apply", Sync)
+ns.OnApply(Sync)

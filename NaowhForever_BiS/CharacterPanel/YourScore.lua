@@ -102,4 +102,4 @@ end
 CP.ApplyScore = Apply
 
 S.OnChange(OnSetting)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)

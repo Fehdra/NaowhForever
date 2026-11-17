@@ -10,8 +10,9 @@ local Quests = J.Quests
 local Rep = J.Reputation
 local KnownLowerName = Loot.KnownLowerName
 local St = J.Style
-local COMPACT_W, FADED, BORDER_RGB = St.COMPACT_W, St.FADED, St.BORDER_RGB
+local COMPACT_W, FADED, BORDER_RGB, RARE_RGB = St.COMPACT_W, St.FADED, St.BORDER_RGB, St.RARE_RGB
 
+local STRIP_REST, STRIP_HOVER, STRIP_MARKED = 0.22, 0.10, 0.16
 local STATE_EVENTS = {
     "PLAYER_EQUIPMENT_CHANGED", "BAG_UPDATE_DELAYED", "PLAYER_LEVEL_UP", "TRANSMOG_COLLECTION_SOURCE_ADDED",
     "ENCOUNTER_END",
@@ -151,9 +152,17 @@ function ViewMixin:ApplyPin()
     for i = 1, bosses.used do
         local row = bosses[i]
         local isPinned = row.boss == pinned
-        local color = isPinned and T.accent or row.hovered and T.accentSoft or T.fg
+        local rest = row.run == "killed" and T.muted or T.fg
+        local color = isPinned and T.accent or row.hovered and T.accentSoft or rest
         row.name:SetTextColor(color.r, color.g, color.b)
-        local edge = isPinned and T.accent or BORDER_RGB
+        local marked = row.boss == self.marked
+        local lit = isPinned or row.run == "next" or marked
+        local edge = lit and T.accent or row.boss.rare and RARE_RGB or BORDER_RGB
+        if marked or row.hovered then
+            row.strip:SetColorTexture(T.accent.r, T.accent.g, T.accent.b, marked and STRIP_MARKED or STRIP_HOVER)
+        else
+            row.strip:SetColorTexture(0, 0, 0, STRIP_REST)
+        end
         row.card.edge:SetColor(edge.r, edge.g, edge.b, 1)
     end
 end
@@ -169,6 +178,7 @@ function ViewMixin:Begin(dungeon, boss, query, page)
     end
     if dungeon and dungeon ~= self.dungeon then J.FollowDungeonMap(self, dungeon) end
     self.dungeon, self.boss, self.query, self.page = dungeon, boss, query, page
+    self.finding = false
     self:Clear()
     self.questsDrawn = false
     self.compact = self.width < COMPACT_W
@@ -177,8 +187,9 @@ function ViewMixin:Begin(dungeon, boss, query, page)
     self.showChance, self.showTips, self.showKills = true, true, true
     self.bare, self.striped, self.tight, self.column = false, false, false, nil
     self.dense, self.tightTitles = false, false
-    self.factionLinks, self.watchMoney = false, false
+    self.factionLinks, self.watchMoney, self.watchLockouts = false, false, false
     self.watchQuestLog = false
+    self.inside, self.nextBoss = false, nil
     wipe(self.shownCache)
     wipe(self.rankCache)
     wipe(self.upgradeCache)
@@ -196,6 +207,7 @@ function ViewMixin:Finish()
     local page = self.page
     if page or self.watchFactions or self.factionLinks then self:RegisterEvent("UPDATE_FACTION") end
     if self.watchMoney then self:RegisterEvent("PLAYER_MONEY") end
+    if self.watchLockouts then self:RegisterEvent("UPDATE_INSTANCE_INFO") end
     if page and page.rank then
         for i = 1, #RANK_EVENTS do self:RegisterEvent(RANK_EVENTS[i]) end
     end
@@ -215,6 +227,10 @@ function ViewMixin:Redraw()
     if not self:IsVisible() then return end
     if self.tracker then
         if self.dungeon then self:DrawTracker(self.dungeon) end
+    elseif self.part then
+        if self.dungeon then self[self.part](self, self.dungeon) end
+    elseif self.finding then
+        self:DrawFinder(self.onFound)
     elseif self.query then
         self:DrawSearch(self.query, self.onOpen)
     elseif self.page then
@@ -227,6 +243,7 @@ function ViewMixin:Redraw()
 end
 
 function ViewMixin:QuestsUnchanged()
+    if self.openQuest then return false end
     if self.dungeon and self.dungeon.quests and Quests.Signature(self.dungeon.quests) == self.questSignature then
         return true
     end
@@ -282,6 +299,8 @@ function View.New(parent)
     view.questList, view.questPool = {}, {}
     view.skipped, view.skippedBoss = {}, {}
     view.trash = {}
+    view.found = {}
+    view.searchRecord = {}
     view.hiddenWhy = {}
     return view
 end

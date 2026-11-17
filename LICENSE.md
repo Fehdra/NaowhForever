@@ -1,7 +1,5 @@
 ## NaowhForever
 
-**Source**: [https://github.com/naowh-gaming/NaowhForever](https://github.com/naowh-gaming/NaowhForever)
-
 ```
 Copyright © 2026 The contents of this addon, excluding externals listed below, are
 copyrighted to their authors with all rights reserved.
@@ -678,7 +676,8 @@ levels and skinning loot, each zone's fishing catches and the fishing pools), Na
 (creatures' abilities, armor, resistances, immunities and tameable beasts) and NaowhForever_DiscoveryData/Quests.lua
 (the levels, races, classes and prerequisites of dungeon, class and battleground quests) and
 NaowhForever_Discovery/Data/FieldJournal.lua (where each fish is caught, and the fish fishing pools
-give), from https://github.com/cmangos/classic-db, reduced to those facts
+give) and NaowhForever_DungeonJournal/Data/Maps.lua (where quest NPCs, objects, rares and bosses stand inside
+their dungeons), from https://github.com/cmangos/classic-db, reduced to those facts
 
 ### License
 

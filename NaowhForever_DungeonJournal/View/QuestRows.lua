@@ -45,6 +45,7 @@ local HEX_CODE = "^|c%x%x(%x%x)(%x%x)(%x%x)"
 local STATUS = {
     prereq = ns.L("Prerequisite"), prereqLog = ns.L("Prerequisite"), low = ns.L("Level %d to pick up"), pickup = ns.L("To pick up"),
     tooHigh = ns.L("Too high (%d)"), next = ns.L("Next step"), active = ns.L("In log"), ready = ns.L("Complete"),
+    lost = ns.L("No longer offered: you took %s"), done = ns.L("Handed in"),
 }
 local CHAIN_STATE = {
     active = QUEST_CODE.active .. ns.L("In log|r"), done = QUEST_CODE.done .. ns.L("Finished|r"),
@@ -118,6 +119,7 @@ local TEXT_BLANK = " "
 
 local CHECK_ICON = "|T" .. CHECK .. ":0|t "
 local EMPTY = {}
+local warnings = {}
 
 local function RGB(code)
     local r, g, b = code:match(HEX_CODE)
@@ -129,8 +131,8 @@ local YELLOW = RGB(QUEST_CODE.prereqLog)
 local MARKS = {
     pickup = { BANG }, next = { BANG },
     prereq = { BANG, GREY }, prereqLog = { BANG, GREY },
-    low = { BANG, RED }, tooHigh = { BANG, RED },
-    active = { QUESTION, T.muted }, ready = { QUESTION },
+    low = { BANG, RED }, tooHigh = { BANG, RED }, lost = { BANG, GREY },
+    active = { QUESTION, T.muted }, ready = { QUESTION }, done = { CHECK, HAVE_RGB },
 }
 local ROLES = {}
 for code, atlas in pairs(St.ROLE_ATLAS) do
@@ -150,6 +152,7 @@ local function StatusWords(entry)
     local text = STATUS[shown]
     if shown == "low" then text = text:format(Quests.MinLevel(entry.quest)) end
     if shown == "tooHigh" then text = text:format(entry.level) end
+    if shown == "lost" then text = text:format(Quests.StepName(entry.lostTo)) end
     return text
 end
 
@@ -187,6 +190,7 @@ local function OpenChain(owner, quest)
     local chain, own = Quests.Chain(quest)
     if not chain then return end
     local logged = Quests.LoggedID(quest)
+    GameTooltip:Hide()
     ns.ContextMenu(owner, function(_, root)
         root:CreateTitle(TEXT_CHAIN_TITLE:format(Quests.Name(quest), own, #chain))
         root:CreateTitle(ns.Color("muted", TEXT_CHAIN_HINT))
@@ -196,6 +200,8 @@ local function OpenChain(owner, quest)
         root:CreateButton(TEXT_TRACK, function() Quests.Track(logged) end)
     end)
 end
+
+View.OpenChain = OpenChain
 
 local function LinkChannel()
     if IsInGroup() then return Parts.PartyChat(), TEXT_PARTY end
@@ -231,12 +237,11 @@ local function AddLinkButton(root, linkID)
     if linkable and not reachable then link:SetTooltip(NoChatTip) end
 end
 
-local function OpenQuestMenu(row)
-    local entry = row.entry
+local function OpenQuestMenu(owner, entry)
     local quest, logged, name, canWaypoint = entry.quest, entry.loggedID, entry.name, entry.canWaypoint
     local linkID = logged or quest[QUEST.ID]
     local shareable = logged ~= nil and IsInGroup() and C_QuestLog.IsPushableQuest(logged)
-    ns.ContextMenu(row, function(_, root)
+    ns.ContextMenu(owner, function(_, root)
         root:CreateTitle(name)
         root:CreateButton(SHARE_QUEST, function()
             QuestLogPushQuest(C_QuestLog.GetLogIndexForQuestID(logged))
@@ -244,7 +249,7 @@ local function OpenQuestMenu(row)
         AddLinkButton(root, linkID)
         root:CreateDivider()
         if canWaypoint then root:CreateButton(TEXT_WAYPOINT, function() Quests.Waypoint(quest) end) end
-        if Quests.Chain(quest) then root:CreateButton(TEXT_SHOW_CHAIN, function() OpenChain(row, quest) end) end
+        if Quests.Chain(quest) then root:CreateButton(TEXT_SHOW_CHAIN, function() OpenChain(owner, quest) end) end
         if logged then root:CreateButton(TEXT_TRACK, function() Quests.Track(logged) end) end
         root:CreateDivider()
         root:CreateButton(TEXT_COPY_WOWHEAD, function()
@@ -372,6 +377,12 @@ local function TooHighLine(entry)
     if entry.tooHigh then GameTooltip:AddLine(TEXT_TOO_HARD:format(entry.level), 1, 1, 1, true) end
 end
 
+local function WarningLines(entry)
+    for _, line in ipairs(Quests.Warnings(entry.quest, warnings)) do
+        GameTooltip:AddLine(line, RED.r, RED.g, RED.b, true)
+    end
+end
+
 local function TurnInCard(entry)
     TurnInLines(entry)
     PartyLines(entry)
@@ -385,6 +396,7 @@ local function QuestCard(row, entry)
     end
     if not SAID_BELOW[entry.kind] then GameTooltip:AddLine(StatusText(entry)) end
     TooHighLine(entry)
+    WarningLines(entry)
     ProgressLines(entry)
     GameTooltip:AddLine(TEXT_BLANK)
     DetailLines(entry)
@@ -415,6 +427,7 @@ local function MarkEnter(hit)
         GameTooltip:AddLine(Plain(entry.where), 1, 1, 1, true)
     end
     TooHighLine(entry)
+    WarningLines(entry)
     ProgressLines(entry)
     GameTooltip:Show()
 end
@@ -435,7 +448,12 @@ end
 
 local function QuestMouseUp(row, button)
     if button == "RightButton" then
-        OpenQuestMenu(row)
+        OpenQuestMenu(row, row.entry)
+    elseif row:GetParent().questInline then
+        local view, entry = row:GetParent(), row.entry
+        if not (entry.loggedID or Quests.Chain(entry.quest)) then return end
+        view.openQuest = view.openQuest ~= entry.quest and entry.quest or nil
+        view:Redraw()
     elseif row.entry.loggedID then
         View.QuestPanel.Show(row.entry.loggedID, row)
     end
@@ -591,6 +609,8 @@ end
 local function SetTitle(row, entry, width, compact, tight)
     local left = TITLE_LEFT
     row.title:SetWidth(width)
+    local color = (entry.kind == "lost" or entry.kind == "done") and T.muted or T.fg
+    row.title:SetTextColor(color.r, color.g, color.b)
     row.forever = entry.quest ~= nil and IsForever("quests", entry.quest[QUEST.ID])
     row.title:SetText(row.forever and entry.name .. ForeverInline(SMALL_SIZE, CARD_DROP) or entry.name)
     row.where:SetWidth(compact and row:GetWidth() - left or width)
@@ -653,3 +673,7 @@ Kinds.quest = {
         return height
     end,
 }
+
+Parts.QuestMark = PaintMark
+Parts.QuestStatus = StatusText
+Parts.QuestMenu = OpenQuestMenu

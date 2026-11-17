@@ -60,8 +60,10 @@ local COUNT_RANGE, FREE_BELOW_RANGE, ICON_RANGE = { 1, 8, 1 }, { 0, 30, 1 }, { 1
 local TEXT_RANGE = St.HUD_TEXT_RANGE
 local MOVER_LABEL = "Bag Space"
 local SETTINGS_PAGE, SETTINGS_CARD = "QoL/Loot & Items", "QoL/Loot & Items:bagSpace"
-local ITEM_CLASS = { CONSUMABLE = 0, WEAPON = 2, REAGENT = 5, PROJECTILE = 6, QUIVER = 11, QUEST = 12, KEY = 13 }
+local ITEM_CLASS = { CONSUMABLE = 0, WEAPON = 2, REAGENT = 5, PROJECTILE = 6, TRADE_GOODS = 7, QUIVER = 11, QUEST = 12,
+    KEY = 13 }
 local FISHING_POLE = 20
+local ENCHANTING = 12
 local NEED_PATTERNS = { "^(.-):%s*%d+%s*/%s*%d+", "^%d+%s*/%s*%d+%s+(.+)$" }
 local TEXT = {
     HOLDING = ns.L("put down what you are holding first."),
@@ -154,6 +156,7 @@ local function Protected(itemID, classID, subclassID)
     if not scanProtect then return false end
     if PROTECTED_CLASS[classID] or TOOLS[itemID] or setItems[itemID] then return true end
     if classID == ITEM_CLASS.WEAPON and subclassID == FISHING_POLE then return true end
+    if classID == ITEM_CLASS.TRADE_GOODS and subclassID == ENCHANTING then return true end
     return ns.IsBisItem and ns.IsBisItem(itemID) and true or false
 end
 
@@ -949,7 +952,7 @@ local function OnSettingChanged(key)
 end
 
 hooksecurefunc(S, "Set", OnSettingChanged)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 hooksecurefunc(ns, "ShowUnlockMode", function()
     unlocked = On() == true
     Apply()
@@ -1077,8 +1080,8 @@ Settings.Page("QoL/Loot & Items", S):Card({
           help = "An item worth more at the auction house than at a vendor is valued at its auction "
               .. "price, from your last Scan Prices or TradeSkillMaster." },
         { key = "bagSpaceProtect", label = "Protect Needed Items", toggle = true,
-          help = "Never offers reagents, ammo, quest items, keys, profession tools, items in an equipment set or "
-              .. "items on your BiS list." },
+          help = "Never offers reagents, ammo, quest items, keys, profession tools, enchanting materials, items in an "
+              .. "equipment set or items on your BiS list." },
         { label = "Ignore List", button = ShowIgnoreList, buttonText = "Ignore List", always = true,
           help = "Items Bag Space never offers. Search for one, drag one in, or middle-click an icon "
               .. "on the row." },

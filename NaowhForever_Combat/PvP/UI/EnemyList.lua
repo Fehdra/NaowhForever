@@ -159,6 +159,6 @@ local function OnLock()
 end
 
 Enemies.OnChange(OnChange)
-hooksecurefunc(ns, "Apply", Replace)
+ns.OnApply(Replace)
 hooksecurefunc(ns, "ShowUnlockMode", OnUnlock)
 hooksecurefunc(ns, "HideUnlockMode", OnLock)

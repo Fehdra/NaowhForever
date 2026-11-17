@@ -9,6 +9,12 @@ local BYTE = 255
 local ZONE = Enum.UIMapType.Zone
 local COLORED = "|cff%02x%02x%02x%s|r"
 local FACTION_TABS = { "reputation", "pvp" }
+local WING_MAPS = {
+    [302] = "ScarletMonasteryGraveyard",
+    [303] = "ScarletMonasteryLibrary",
+    [304] = "ScarletMonasteryArmory",
+    [305] = "ScarletMonasteryCathedral",
+}
 local SUBZONES = {
     ["Chamber of Atonement"] = "ScarletMonasteryGraveyard",
     ["Forlorn Cloister"] = "ScarletMonasteryGraveyard",
@@ -22,6 +28,20 @@ local SUBZONES = {
     ["Hall of Champions"] = "ScarletMonasteryArmory",
     ["Chapel Gardens"] = "ScarletMonasteryCathedral",
     ["Crusader's Chapel"] = "ScarletMonasteryCathedral",
+    ["Chamber of Battle"] = "LowerBlackrockSpire",
+    ["Halycon's Lair"] = "LowerBlackrockSpire",
+    ["Mok'Doom"] = "LowerBlackrockSpire",
+    ["Skitterweb Tunnels"] = "LowerBlackrockSpire",
+    ["The Storehouse"] = "LowerBlackrockSpire",
+    ["Tazz'Alaor"] = "LowerBlackrockSpire",
+    ["Tazz'Alor"] = "LowerBlackrockSpire",
+    ["Blackrock Stadium"] = "UpperBlackrockSpire",
+    ["Dragonspire Hall"] = "UpperBlackrockSpire",
+    ["Hall of Binding"] = "UpperBlackrockSpire",
+    ["Spire Throne"] = "UpperBlackrockSpire",
+    ["The Furnace"] = "UpperBlackrockSpire",
+    ["The Molten Span"] = "UpperBlackrockSpire",
+    ["The Rookery"] = "UpperBlackrockSpire",
 }
 
 local TEXT_TURNED_ON = ns.L("Dungeon Journal turned on. Turn it off in its settings page.")
@@ -34,18 +54,31 @@ local S = ns.UI.ModuleSettings("journal", {
     mapEntrances = F.mapEntrances,
     entranceJournal = F.entranceJournal,
     itemSources = F.itemSources,
+    favourites = F.favourites,
+    rareAlert = F.rareAlert,
+    mapQuestPins = F.mapQuestPins,
+    lootFinder = F.lootFinder,
+    newLayout = F.newLayout,
+    mapSize = 1,
     mapEntranceScale = 1,
     usableOnly = true,
     myRecipes = true,
     openUnreleased = false,
     upgradesOnly = false,
     showCosmetic = true,
-    questsOpen = false,
+    bossPortraits = false,
+    dungeonArt = true,
+    showKeys = true,
+    rareAlertSound = true,
+    questHelp = true,
+    questsOpen = true,
+    showDoneQuests = false,
     bossTipOpen = true,
     bossQuestsOpen = true,
     bossAbilitiesOpen = true,
     repQuestsOpen = true,
     missingBisOnly = false,
+    hideCompleted = false,
     trackerAlpha = 1,
     trackerScale = 1,
     listHidden = false,
@@ -81,6 +114,16 @@ J.OPTION_GROUPS = {
               .. "item level you can wear." },
         { key = "showCosmetic", label = "Show Cosmetic Items", hides = false,
           tooltip = "Cosmetic items too: looks for transmog that any class can wear, with no stats." },
+        { key = "hideCompleted", label = "Hide Completed Dungeons", hides = true,
+          tooltip = "Leaves the dungeons whose quests you have all handed in off the list." },
+        { key = "showDoneQuests", label = "Show Done Quests",
+          tooltip = "Dungeon Quests also lists the ones you have handed in, with where they start." },
+    } },
+    { title = ns.L("Dungeons Listed"), newLayout = true, options = {
+        { key = "showAlliance", label = "Alliance", hides = false, other = "showHorde",
+          tooltip = "Lists the dungeons on Alliance ground. Contested ones and the raids are always listed." },
+        { key = "showHorde", label = "Horde", hides = false, other = "showAlliance",
+          tooltip = "Lists the dungeons on Horde ground. Contested ones and the raids are always listed." },
     } },
 }
 J.NEEDS_BIS = ns.L("Needs the BiS List module, which is off.")
@@ -99,6 +142,7 @@ local byMap, byName
 local factions = { reputation = {}, pvp = {} }
 local byZone, byBattleground
 local inFront = {}
+local lastWing = {}
 
 local function Localize(dungeon)
     local name = ns.L(dungeon.name)
@@ -296,13 +340,19 @@ end
 
 function J.Current()
     local inInstance, kind = IsInInstance()
-    if not (inInstance and (kind == "party" or kind == "raid")) then return end
+    if not (inInstance and (kind == "party" or kind == "raid")) then
+        wipe(lastWing)
+        return
+    end
     Joined()
     local name, _, _, _, _, _, _, id = GetInstanceInfo()
     local list = byMap[id] or byName[name]
     if not list or not list[2] then return list end
     local subzone = GetSubZoneText()
-    local key = SUBZONES[J.Names and J.Names.subzones[subzone] or subzone]
+    local key = WING_MAPS[C_Map.GetBestMapForUnit("player")]
+        or SUBZONES[J.Names and J.Names.subzones[subzone] or subzone]
+        or lastWing[id]
+    lastWing[id] = key
     if not key or list[1].key == key then return list end
     return InFront(key, list)
 end
@@ -390,4 +440,4 @@ function J.TurnOn()
     ns.Print(TEXT_TURNED_ON)
 end
 
-hooksecurefunc(ns, "Apply", SplitOpacity)
+ns.OnApply(SplitOpacity)

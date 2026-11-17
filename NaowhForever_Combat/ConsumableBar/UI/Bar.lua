@@ -472,7 +472,7 @@ local function OnMacrosChanged(key)
 end
 
 hooksecurefunc(S, "Set", OnSettingChanged)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 if ns.MacroSettings then ns.MacroSettings.OnChange(OnMacrosChanged) end
 hooksecurefunc(ns, "ShowUnlockMode", Unlock)
 hooksecurefunc(ns, "HideUnlockMode", Lock)

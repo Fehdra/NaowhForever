@@ -266,6 +266,7 @@ local function Check(unit)
     if not guid then return end
     local npc = R.NpcOf(guid)
     if not npc or not Hostile(unit) then return end
+    if ns.JournalRareHere and ns.JournalRareHere(npc) then return end
     Follow(unit, npc, guid)
     local name, level = UnitName(unit), UnitLevel(unit)
     if R.IsSecret(name) then return end
@@ -413,7 +414,7 @@ end
 events:SetScript("OnEvent", OnEvent)
 R.OnChange(OnRareChanged)
 hooksecurefunc(S, "Set", OnSet)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 hooksecurefunc(ns, "ShowUnlockMode", ShowMover)
 hooksecurefunc(ns, "HideUnlockMode", HideMover)
 

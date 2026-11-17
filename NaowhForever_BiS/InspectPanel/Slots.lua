@@ -21,7 +21,7 @@ local FOREVER_KIND = B.C.FOREVER_KIND
 
 local overs = {}
 local installed = false
-local gear = { up = {}, bare = {}, bareCount = 0, empty = 0, ups = 0 }
+local gear = { up = {}, with = {}, bare = {}, bareCount = 0, empty = 0, ups = 0 }
 
 function IP.Gear(guid)
     if guid ~= nil and gear.guid == guid then return gear end
@@ -63,6 +63,7 @@ local function ReadGear(unit, guid)
     local main = GetInventoryItemID(unit, MAIN)
     local twoHand = main and Items.IsTwoHand(main)
     wipe(gear.up)
+    wipe(gear.with)
     wipe(gear.bare)
     gear.guid, gear.bareCount, gear.empty, gear.ups = guid, 0, 0, 0
     for _, entry in ipairs(Items.GEAR_SLOTS) do
@@ -74,9 +75,10 @@ local function ReadGear(unit, guid)
         elseif not link then
             IP.Wait()
         else
-            local gain = weights and SW.BestGain(id, link, weights, power)
+            local gain, partner
+            if weights then gain, partner = SW.BestGain(id, link, weights, power) end
             if gain then
-                gear.up[slot] = gain
+                gear.up[slot], gear.with[slot] = gain, partner
                 gear.ups = gear.ups + 1
             end
             if B.Enchants.SLOTS[slot] then
@@ -110,7 +112,7 @@ local function OnItemTooltip(tooltip)
     local _, guid = IP.Current()
     local gain = guid and gear.guid == guid and gear.up[over.slot]
     if not gain then return end
-    tooltip:AddLine(Parts.UpgradeLine(gain, SpecName()))
+    tooltip:AddLine(Parts.UpgradeLine(gain, SpecName(), nil, gear.with[over.slot]))
 end
 
 local function Install()

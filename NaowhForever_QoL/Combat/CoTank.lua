@@ -472,7 +472,7 @@ local function OnSettingChanged(key)
 end
 
 hooksecurefunc(S, "Set", OnSettingChanged)
-hooksecurefunc(ns, "Apply", function() Refresh() end)
+ns.OnApply(function() Refresh() end)
 hooksecurefunc(ns, "ShowUnlockMode", function()
     unlocked = On() == true
     Refresh()

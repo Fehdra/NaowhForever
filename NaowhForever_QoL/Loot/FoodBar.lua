@@ -215,7 +215,7 @@ end
 events:SetScript("OnEvent", OnEvent)
 events:RegisterEvent("PLAYER_ENTERING_WORLD")
 hooksecurefunc(S, "Set", OnSettingChanged)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 hooksecurefunc(ns, "ShowUnlockMode", function() moving = true; Apply() end)
 hooksecurefunc(ns, "HideUnlockMode", function() moving = false; Apply() end)
 

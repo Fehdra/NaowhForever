@@ -23,8 +23,9 @@ local TEXT_RAID = ns.L("Raid, %d players")
 local TEXT_DUNGEON = ns.L("Dungeon")
 local TEXT_KIND_LEVELS = "%s, %s"
 local TEXT_CLICK = ns.L("Click for a waypoint (again to remove it).")
-local TEXT_RIGHT = ns.L("Right-click: open its map.")
-local TEXT_RIGHT_MANY = ns.L("Right-click: choose one and open its map.")
+local TEXT_OPEN = ns.L("Click: open its map.")
+local TEXT_OPEN_MANY = ns.L("Click: choose one and open its map.")
+local TEXT_RIGHT_WAYPOINT = ns.L("Right-click for a waypoint (again to remove it).")
 local TEXT_ENTRANCE = ns.L(" (entrance)")
 
 local provider, added, events
@@ -92,7 +93,7 @@ local function GroupName(dungeons, fallback)
     return #dungeons == 1 and dungeons[1].name or dungeons[1].zone or fallback
 end
 
-local function RightClickOn()
+local function MapClickOn()
     return S.Get("entranceJournal") and S.Get("mapPanel") and not ns.GamepadStandDown()
 end
 
@@ -153,9 +154,11 @@ local function MakePinMixin()
             end
         end
         local c = ns.ThemeTint("accentSoft", nil) or HINT_RGB
-        GameTooltip:AddLine(TEXT_CLICK, c.r, c.g, c.b)
-        if RightClickOn() then
-            GameTooltip:AddLine(#dungeons > 1 and TEXT_RIGHT_MANY or TEXT_RIGHT, c.r, c.g, c.b)
+        if MapClickOn() then
+            GameTooltip:AddLine(#dungeons > 1 and TEXT_OPEN_MANY or TEXT_OPEN, c.r, c.g, c.b)
+            GameTooltip:AddLine(TEXT_RIGHT_WAYPOINT, c.r, c.g, c.b)
+        else
+            GameTooltip:AddLine(TEXT_CLICK, c.r, c.g, c.b)
         end
         GameTooltip:Show()
     end
@@ -165,11 +168,9 @@ local function MakePinMixin()
     end
 
     function Pin:OnClick(button)
-        if button == "RightButton" then
-            if RightClickOn() then OpenJournal(self) end
-            return
-        end
-        if button ~= "LeftButton" then return end
+        local mapClick = MapClickOn()
+        if button == "LeftButton" and mapClick then return OpenJournal(self) end
+        if button ~= (mapClick and "RightButton" or "LeftButton") then return end
         local dungeons = self.group.dungeons
         local entrance = dungeons[1].entrance
         ns.ToggleWaypoint(GroupName(dungeons, dungeons[1].name), entrance.map, entrance.x, entrance.y, TEXT_ENTRANCE, nil, true)
@@ -272,4 +273,4 @@ local function OnSettingChanged(key)
 end
 
 S.OnChange(OnSettingChanged)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)

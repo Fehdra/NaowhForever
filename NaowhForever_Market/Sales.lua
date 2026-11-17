@@ -9,7 +9,7 @@ local SOLD = Enum.AuctionStatus.Sold
 local OWNED_SORTS = { { sortOrder = Enum.AuctionHouseSortOrder.Name, reverseSort = false } }
 local EVENTS = { "AUCTION_HOUSE_SHOW", "AUCTION_HOUSE_CLOSED", "AUCTION_HOUSE_THROTTLED_SYSTEM_READY",
     "OWNED_AUCTIONS_UPDATED" }
-local SEEN_KEY = "%d:%d"
+local SEEN_KEY = "%.0f:%d"
 
 local events
 local wanted = false
@@ -108,4 +108,4 @@ end
 Market.Settings.OnChange(function(key)
     if key == "enabled" then Apply() end
 end)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)

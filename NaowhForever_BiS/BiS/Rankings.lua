@@ -22,6 +22,7 @@ local WORLD_DROP = "World drop"
 local DUAL_WIELD = { WARRIOR = true, ROGUE = true, HUNTER = true }
 local NOT_A_PLACE = { Crafted = true, Quest = true, ["Quest (Horde)"] = true, ["Quest (Alliance)"] = true,
     ["Quest Reward"] = true, [WORLD_DROP] = true, Reputation = true }
+local OTHER_SIDE_QUEST = { Alliance = "Quest (Horde)", Horde = "Quest (Alliance)" }
 local VIA_DETAIL = { quest = true, recipe = true }
 local EMPTY = {}
 
@@ -195,8 +196,11 @@ end
 
 function R.Candidates(slot, spec)
     local ids = {}
+    local otherQuest = OTHER_SIDE_QUEST[UnitFactionGroup("player")]
     for _, id in ipairs(spec and spec.slots[slot] or EMPTY) do
-        if C_Item.GetItemInfoInstant(id) then ids[#ids + 1] = id end
+        if C_Item.GetItemInfoInstant(id) and Place(ns.BiSSource(id) or WORLD_DROP) ~= otherQuest then
+            ids[#ids + 1] = id
+        end
     end
     return ids
 end

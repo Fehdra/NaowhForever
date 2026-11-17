@@ -6,7 +6,8 @@ share Discovery's switch: the Quest List follows Discovery's `enabled`, and an o
 Completo on turns Discovery on. Both are tabs of the Discovery window, next to Library Books and Sleeping Bag.
 The Quest List tab has every quest of every zone for your character, how many you have done per zone, and for each quest chain the step
 you are on; its Rares tab every rare of every zone and which of them this character has killed.
-Map Pins put a ! on the world map at each quest giver with a quest for you, and a star where each
+Map Pins put a ! on the world map at each quest giver with a quest for you, a mark where each
+unfinished objective of a quest in your log is and a ? where a done one is handed in, and a star where each
 rare spawns; Rare Alerts warn you when a rare is near, and a left-click on the alert targets it. Off by default, every feature too: players
 turn it on in Discovery's settings pages (Discovery/Quest List and Discovery/Rares).
 
@@ -20,10 +21,16 @@ NaowhForever_Discovery/QuestList/
   Constants.lua               the numbers several files share: a rare drop's fields, the sample rare
   Data/
     AlertSounds.lua           the game's sounds Rare Alerts offers
+  Holidays.lua                which of the game's holidays are on now, from its calendar (Completo.Holidays)
   Quests.lua                  the quest rules: yours, done, chains, givers, search (Completo.Quests)
   Givers.lua                  learns which quests a quest giver really offers you
+  History.lua                 Quest History: the quests you take, hand in and drop, and your levels (Completo.History)
+  Objectives.lua              where the quests in your log send you: objectives and hand-ins (Completo.Objectives)
+  Party.lua                   Share Quest Progress: your party's quest objectives, by addon message (Completo.Party)
   Rares.lua                   the rare rules: yours, zones, spots, drops, your kills (Completo.Rares)
   Kills.lua                   counts the rares you kill and what they drop for you
+  Find.lua                    the quests, rares, and quest creatures and objects QoL's Find window searches
+                              (ns.FindQuestsAndRares)
   Sounds.lua                  plays the alert's sound and lists the choices (Completo.Sounds)
   KeyBinding.lua              binds Shift-L once per character, if it is free
   View/
@@ -34,12 +41,16 @@ NaowhForever_Discovery/QuestList/
     QuestRow.lua              a quest, and a chain's tree line
     RareRow.lua               a rare
     DropRow.lua               a rare's drop, under it while open
+    HistoryRow.lua            a line of Quest History
     AlertCard.lua             the Rare Alert's card, live or in its preview (Completo.AlertCard)
   UI/
     RareAlert.lua             the alert on screen: seeing a rare, the card, its place, its click that
                               targets the rare (Completo.RareAlert)
     Window.lua                the Quest List and Rares tabs of the Discovery window (Completo.Tabs), and the key binding's toggle
     QuestPins.lua, .xml       the quest giver pins on the world map, and their template
+    ObjectivePins.lua, .xml   the objective and hand-in pins on the world map, and their template
+    MinimapPins.lua           the same quest givers and objectives on the minimap, near you
+    UnitTips.lua              Quest Tooltips: a creature's quests and your progress on its tooltip
     RarePins.lua, .xml        the rare stars on the world map, and their template
     GeneralSettings.lua       the key binding card, on the Discovery/Quest List page
     QuestsSettings.lua        the quest cards on the Discovery/Quest List page, and the quest pins on QoL > Map & Pins
@@ -49,7 +60,8 @@ NaowhForever_Discovery/QuestList/
 Each layer only uses the ones above it: `Data` fills the rules, `View` draws what they decide,
 and `UI` places it on screen. Everything the module shares hangs off `ns.Completo`; only what
 the rest of the addon calls is on `ns` (`CompletoSettings`, `OpenCompletoWindow`,
-`ToggleCompletoWindow`, and the binding's `NaowhForever_ToggleCompleto`).
+`ToggleCompletoWindow`, `FindQuestsAndRares` for QoL's Find window, and the binding's
+`NaowhForever_ToggleCompleto`).
 
 ## The data
 
@@ -81,13 +93,23 @@ quest and creature pages. Do not edit them by hand: change the tool and run it a
   On the maps Forever redrew (Stormwind, Mulgore, Redridge, the Eastern Plaguelands) many of
   its spots are Classic's positions unconverted (Bolvar Fordragon at 78, 18), so a giver there
   is never taken from it: those quests keep Wowhead's spot.
-- Holiday and world event quests are left out: their givers stand only while the event runs, so their
-  ! would show all year. They are the ones ForeverChanges files under Seasonal, Lunar Festival,
-  Midsummer, Darkmoon Faire or Ahn'Qiraj War (`EVENT_SORTS` in `Tools/build/completo_quests.py`), and
-  the ones `completo_fixes.json`'s `events` names: Children's Week, filed under Special with quests given
-  all year, the War Effort's and the Faire's quests filed under a zone or Reputation, and the Scourge
-  Invasion's and the Stranglethorn Fishing Extravaganza's, filed under Invasion and Fishing beside quests
-  given all year.
+- Holiday quests are in, and taken only while their holiday is on: `D.Events[questID]` lists the holidays that
+  give one (the game's Holidays IDs on Forever, from wago.tools), `D.Holidays` names them, and
+  `D.FaireSpots[questID]` says where a Darkmoon Faire quest's giver stands for each Faire (Elwynn Forest's, 263,
+  and Mulgore's, 264, from their descriptions in the game's HolidayDescriptions). The event quests are the ones
+  ForeverChanges files under Seasonal, Lunar Festival, Midsummer, Darkmoon Faire or Ahn'Qiraj War
+  (`EVENT_SORTS` in `Tools/build/completo_quests.py`), and the ones `completo_fixes.json`'s `events` names; each
+  quest's holiday comes from its Wowhead category (`HOLIDAY_CATEGORIES`, its page's breadcrumb, cached in
+  `Tools/data/event_quests.json`), or the `holidays` of the fixes group naming it. The Ahn'Qiraj War Effort, the
+  Scourge Invasion and the New Year have no holiday on Forever's calendar, so their quests are still left out:
+  their ! would show all year. A giver Wowhead places and ForeverChanges does not (the Lunar Festival's Elders)
+  takes Wowhead's spot.
+- `D.Objectives[questID]`: one entry per objective with spots, `{ place, item (1 or 0), source, ... }`, each
+  source `{ kind (1 creature, 2 object), name, uiMapID, x, y, ... }`, its spawns grouped into camps. From
+  `Tools/build/quest_objectives.py`: each Wowhead quest page's map names, for every point, the objective it is
+  for. `D.HandIns[questID]`: `{ name, uiMapID, x, y }`, who takes it back. `D.Creatures[npcID]`:
+  `{ questID, place, item, ... }`, the objectives each creature is for, for Quest Tooltips. The same pages give Journeys its quest
+  spots (`NaowhForever_JourneysData`), but those keep no objective, so this has its own cache.
 - `D.Repeatable[questID] = true`: quests you can do again and again (Wowhead's repeatable flag).
 - `D.Dungeon[questID] = true`: dungeon, raid and battleground quests, listed in the zone their quest
   giver stands in. Wowhead files them under the instance, so no zone page has them: they come from
@@ -233,6 +255,69 @@ quest and creature pages. Do not edit them by hand: change the tool and run it a
 - A battleground quest is in `D.Dungeon` as an instance quest (out of a zone's progress, kept with
   Chains Only), but its giver gets the plain ! and its tooltip line no "Dungeon": it is no dungeon or
   raid.
+- An objective pin is matched to the game's objective by its place among the quest's objectives of its kind:
+  items (`type` "item") apart from the rest. Wowhead's map gives an item objective its place among the items,
+  but a kill or use objective only its creature or object, so a kill's place comes from the catalog's
+  objective list, which keeps the quest's order (Wowhead's points are in ID order). Where the catalog cannot
+  say (none listed, or creatures and objects both), the place is 0: its pins stay until every objective of
+  that kind is done, so a pin is never put away while its objective is still to do. A quest with one such
+  objective needs no place.
+- Wowhead lists every creature that drops an item, the world over (Westfall Stew's vulture meat names
+  Thousand Needles' vultures), so an objective with sources on the quest's giver's or hand-in's map keeps only
+  those, and at most `SOURCES` of them, the most spawns first. Spawns within `CAMP` (3) map percent share a pin.
+- Objective pins redraw on `QUEST_LOG_UPDATE`, which comes with every kill and loot, but only while the world
+  map is open; the spots are read again then, from `C_QuestLog.GetQuestObjectives`. Spots of several quests at
+  one place share a pin, whose tooltip names each quest and its objective.
+- Quests on Minimap shows what the world map's Quest Givers and Quest Objectives show, for the map you stand on,
+  through `Parts.MinimapLayer`. The layer reads its spots again each time you move, so it is handed lists only it
+  uses: its own `Objectives.List()` and copies of the givers, which `Q.Givers` reuses on every world map redraw.
+  Its pins are the world map pins' `Paint`, tooltip and click on a minimap button. The objective pin keeps its
+  spot in `target`, not `spot`: the minimap layer keeps the index it painted in `pin.spot` and repaints a pin
+  whenever that changes, which a table there would make every tick.
+- A quest log update redraws only the minimap's objectives; the givers wait for a quest taken, handed in or
+  dropped, a level, or a new map. `ZONE_CHANGED` comes with every subzone, so it redraws only when the map
+  under you changes.
+- A holiday's quest out of season is "Only during its holiday", with its holiday named on its row, and gets no
+  !. The holidays on now are read from the game's calendar (`C_Calendar`, opened once with `OpenCalendar` as
+  Blizzard's guild news does) on each refresh, for today whatever month the calendar shows: a holiday starting
+  or ending today counts from its start time to its end time. The calendar fills in after login
+  (`CALENDAR_UPDATE_EVENT_LIST`), so the pins redraw then. Holiday quests count toward no zone, as repeatable
+  ones do: most come back each year.
+- Keep Quest History records, per character (`completoHistory`), each quest taken (`QUEST_ACCEPTED`), handed in
+  (`QUEST_TURNED_IN`, with its experience and money) and dropped, and each level reached, with the time, the
+  quest's title and its level then: a quest out of the log has neither to read later. It keeps the latest
+  `KEEP` (5000), about a character's whole levelling. A drop is the quest `C_QuestLog.SetAbandonQuest` was given
+  when `C_QuestLog.AbandonQuest` runs (secure hooks on both): `QUEST_REMOVED` comes for a hand-in too, and
+  which comes first is not documented. It keeps nothing from before it is turned on.
+- The Quest History tab shows the latest `HISTORY_SHOWN` (300) lines, newest first, a section per day; a
+  search reads every line's title.
+- Find's Creatures & Objects are every hand-in NPC and objective creature or object the data places, one per
+  name and map at its first spot, named for the first of its quests that is yours and not done; one with none
+  is left out. Quest givers are not among them: Find's Quests section already finds a quest by its giver's name.
+  They are indexed on the first search, not at load.
+- Quest Tooltips add your own quest lines to a creature's tooltip only when the game's has none
+  (`Enum.TooltipDataLineType.QuestObjective` or `QuestTitle`): the client can show those from the server, so a
+  creature never names its quest twice. Your party's progress (Share Quest Progress) is added either way. Its NPC ID comes from the tooltip's GUID, skipped while secret. The
+  tooltip hook cannot be taken off, so it is added the first time Quest Tooltips is on and does nothing while off.
+- Share Quest Progress says, under the `NaowhQuests` prefix to your party (`PARTY`, or `INSTANCE_CHAT` in an
+  instance group; never a raid), each quest in your log and its objectives' counts, each marked as an item
+  objective or not, so the receiver places them as it places its own (`Objectives.Progress`). Version 1:
+  `1 <GUID> <quest>:<i|o><have>/<need>,...;<quest>:-` for a quest gone. After the first, only what changed is
+  said, `SEND_DELAY` (2) seconds after the last quest log change, never in combat or chat lockdown (then once it
+  ends), split under `MESSAGE_MAX` (250) bytes. A message the channel refuses (`SendAddonMessage`'s result, a
+  throttle) makes the next send the whole log again. Someone joining makes everyone ask (`1 ? <GUID>`) and say
+  the whole log; any other roster change says nothing. An ask is answered only from a party member, never your
+  own: the party channel brings your own messages back.
+- A message is taken only from a party member whose name and GUID match (`ns.SenderIs`), with every field
+  readable; one with any entry past `MAX_QUESTS`, `MAX_OBJECTIVES` or `MAX_COUNT` is dropped whole, as only
+  changes are said and a part taken would leave the rest stale. A member who leaves is forgotten.
+  Their progress shows under each objective pin's and Quest Tooltips' quest, for the objectives still to do.
+- A right-click on a quest pin, on the map or the minimap, offers to hide each of its quests: a hidden quest gets
+  no !, no objective pins and no hand-in, but stays in the Quest List's pages. It is kept per character
+  (`completoHidden`), and Hidden Quests' Show All on the Map Pins card puts them all back. The pins listen to
+  `Q.SetHidden` and `Q.ShowHidden` (secure hooks, as for the settings), so a hide redraws at once.
+- A done quest (`C_QuestLog.IsComplete`, which a quest with no objectives is from the start) shows only its
+  hand-in; a failed one shows nothing.
 - The game keeps no record of the rares you killed, so Completo counts them itself, per character
   by GUID (`completoRareKills`, `completoRareDrops`), from when it is on: a rare you targeted dying
   while it was yours (not tapped by someone else), or a corpse you loot. Each creature counts once,
@@ -247,6 +332,8 @@ quest and creature pages. Do not edit them by hand: change the tool and run it a
   `issecretvalue` before it is compared or used, and a secret one is skipped.
 - A rare's waypoint goes to the spawn spot or patrol dot nearest you while you are on its map,
   else to where it spawns most (its first spot).
+- Inside a dungeon, a rare the Dungeon Journal's Rare Alert covers there is left to it
+  (`ns.JournalRareHere`), so one rare never brings two alerts.
 - Rare Alerts check a unit's classification first, before anything that makes a string, since
   every nameplate comes through. Any creature the game calls rare counts, in the data or not.
 - `AGAIN_AFTER` is 300: each rare alerts once in five minutes, not every time its nameplate comes
@@ -315,6 +402,17 @@ quest and creature pages. Do not edit them by hand: change the tool and run it a
   every zone's count stays cheap.
 - `lua Tools/regression/test-completo-quest-pins.lua`: the quest pins are Pin Size and keep one
   size on screen as the map zooms.
+- `lua Tools/regression/test-completo-objective-pins.lua`: objective pins match the game's objectives by their
+  place, go once done, give way to the hand-in, share a spot, and cost nothing while off.
+- `lua Tools/regression/test-completo-quest-holidays.lua`: the holidays on today, a holiday's quests while it is
+  on and off, the Faire's givers following the Faire, and the shipped data's holidays.
+- `lua Tools/regression/test-completo-quest-history.lua`: what Quest History keeps, per character, and that it
+  listens to nothing while off.
+- `lua Tools/regression/test-completo-unit-tips.lua`: what a creature's tooltip adds, and when it adds nothing.
+- `lua Tools/regression/test-completo-party-progress.lua`: what is said and when, what is taken, and each
+  member's progress by an objective's place.
+- `lua Tools/regression/test-completo-minimap-pins.lua`: the minimap shows what the map's switches show, from
+  its own copies, and redraws only what an event changes.
 - `lua Tools/regression/test-discovery-data-load.lua`: the quests and rares load once on the first
   read, and read as empty lists when `NaowhForever_DiscoveryData` does not load.
 - In game: `/reload` after changing a file. A new file needs a restart.

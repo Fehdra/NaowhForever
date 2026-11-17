@@ -58,27 +58,31 @@ Kinds.links = {
     New = function(view)
         local row = CreateFrame("Frame", nil, view)
         row.label = ns.Font(row, TEXT_SIZE, nil, T.muted)
-        row.label:SetPoint("LEFT", 0, 0)
+        row.label:SetPoint("LEFT", row, "TOPLEFT", 0, -LINKS_H / 2)
         row.links, row.after = {}, {}
         return row
     end,
     Set = function(row, label, targets)
         row.label:SetText(label)
-        local anchor, gap = row.label, FIRST_GAP
+        local indent = label ~= "" and math.ceil(row.label:GetStringWidth()) + FIRST_GAP or 0
+        local x, line = indent, 0
         for i, target in ipairs(targets) do
             local link = LinkAt(row, i)
             link.target = target
             Parts.SetLink(link, target.name)
+            local after = SetAfter(row, i, link, target)
+            local w = link:GetWidth()
+            if after ~= link then w = w + STANDING_GAP + math.ceil(after:GetStringWidth()) end
+            if x > indent and x + w > row:GetWidth() then x, line = indent, line + 1 end
             link:ClearAllPoints()
-            link:SetPoint("LEFT", anchor, "RIGHT", gap, 0)
+            link:SetPoint("LEFT", row, "TOPLEFT", x, -(line * LINKS_H + LINKS_H / 2))
             link:Show()
-            gap = LINK_GAP
-            anchor = SetAfter(row, i, link, target)
+            x = x + w + LINK_GAP
         end
         for i = #targets + 1, #row.links do
             row.links[i]:Hide()
             row.after[i]:Hide()
         end
-        return LINKS_H
+        return (line + 1) * LINKS_H
     end,
 }

@@ -155,7 +155,7 @@ local function Build()
     Listen()
 end
 
-function ns.OpenGroupFinder()
+function ns.OpenGroupFinder(pick)
     if not GF.On() then
         S.Set("enabled", true)
         ns.Print(TURNED_ON)
@@ -164,6 +164,10 @@ function ns.OpenGroupFinder()
     window:SetScale(ns.UIScale())
     window:Show()
     window.backdrop:Paint(1)
+    if pick then
+        Search.Run(pick)
+        shown = BROWSE
+    end
     ShowPage(shown)
 end
 
@@ -179,7 +183,7 @@ S.OnChange(function(key)
     if key == "enabled" and window and not GF.On() then window:Hide() end
     if key == "leaderZone" then Refresh() end
 end)
-hooksecurefunc(ns, "Apply", function()
+ns.OnApply(function()
     if window and window:IsShown() then
         window.backdrop:Paint(1)
         PaintPage(false)

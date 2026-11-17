@@ -478,7 +478,7 @@ local function EnableRuntime()
     end
     if not hooked then
         hooksecurefunc(C_TradeSkillUI, "CraftRecipe", OnCraftRequested)
-        hooksecurefunc(ns, "Apply", Apply)
+        ns.OnApply(Apply)
         hooked = true
     end
     return true

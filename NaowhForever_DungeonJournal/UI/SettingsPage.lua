@@ -13,10 +13,12 @@ local TO_ENTRANCE_SCALE = 1 / ns.Shared.Style.PIN_SIZE_DEFAULT
 local TO_FRACTION = J.Style.PERCENT_SCALE
 local PERCENT = J.C.PERCENT
 local ROUND_HALF = J.C.ROUND_HALF
-local ORDER_FIRST, ORDER_THIRD, ORDER_FOURTH, ORDER_LAST = 10, 20, 30, 90
+local ORDER_FIRST, ORDER_SECOND, ORDER_THIRD, ORDER_FOURTH, ORDER_LAST = 10, 15, 20, 30, 90
+local MAP_SIZE_RANGE = { 100, 200, 10 }
 
 local TEXT_JOURNAL_OFF = ns.L("Turn on the Dungeon Journal")
 local TEXT_AUTO_OFF = ns.L("Needs %s", ns.L("Open Tracker in Dungeons"))
+local TEXT_NEW_LAYOUT_OFF = ns.L("Needs %s", ns.L("New Layout"))
 local TEXT_BIS_OFF = ns.L("Needs the BiS List")
 local TEXT_ENTRANCES_OFF = ns.L("Turn on Dungeon and Raid Entrances")
 local TEXT_EVERY_DUNGEON = ns.L("Every dungeon and raid: what drops, your quests, and more.")
@@ -73,12 +75,24 @@ local function JournalOn()
     return S.Get("enabled") == true
 end
 
+local function NewLayoutOn()
+    return JournalOn() and S.Get("newLayout") == true
+end
+
+local function NewLayoutWhy()
+    return JournalOn() and TEXT_NEW_LAYOUT_OFF or TEXT_JOURNAL_OFF
+end
+
 local function AutoOn()
     return JournalOn() and S.Get("trackerAuto") == true
 end
 
 local function AutoWhy()
     return JournalOn() and TEXT_AUTO_OFF or TEXT_JOURNAL_OFF
+end
+
+local function JournalWhy()
+    if not JournalOn() then return TEXT_JOURNAL_OFF end
 end
 
 local function PadFree()
@@ -205,12 +219,44 @@ local function DeclareJournal()
         rows = ListRows(),
     })
     page:Card({
+        id = "pages", name = "Dungeon Pages", order = ORDER_SECOND,
+        help = "What a dungeon's page shows besides its loot.",
+        rows = {
+            Toggle("newLayout", "New Layout", "Tries the Journal's new look: every dungeon as a card, then its map beside all of its loot."),
+            { key = "mapSize", label = "Map Size", slider = MAP_SIZE_RANGE, unit = "%", scale = TO_FRACTION,
+              needs = NewLayoutOn, why = NewLayoutWhy,
+              help = "How big the map is on a dungeon's page. The window grows to fit it, so the loot beside it keeps its room." },
+            Toggle("bossPortraits", "Boss Portraits", "Shows each boss's face beside its name."),
+            Toggle("dungeonArt", "Dungeon Art", "Shows the dungeon's loading screen behind its name."),
+            Toggle("showKeys", "Keys and Attunements", "Shows the keys a dungeon needs, and whether you have them."),
+            Toggle("lootFinder", "Loot Finder", "A bag on the title bar finds loot from every dungeon by slot, armor and stats.",
+                "search find item slot armor stat resistance"),
+            Toggle("questHelp", "Quest Help", "Warns before a quest is lost, and shows what quests and summons need."),
+        },
+    })
+    page:Card({
         id = "tooltips", name = "Item Tooltips", order = ORDER_THIRD,
         help = "What the Journal adds to an item's tooltip anywhere in the game.",
         search = "drops from source boss dungeon chance",
         rows = {
             Toggle("itemSources", "Where It Drops",
                 "Adds the bosses that drop an item, their dungeon and the chance, to its tooltip."),
+        },
+    })
+    page:Card({
+        id = "favourites", name = "Favourites", order = ORDER_THIRD,
+        help = "A wishlist of items from any dungeon or faction.",
+        rows = {
+            Toggle("favourites", "Favourites",
+                "Right-click an item to star it; the star on the title bar lists them all."),
+        },
+    })
+    page:Card({
+        id = "rareAlert", name = "Rare Alert", order = ORDER_THIRD, switch = "rareAlert", switchWhy = JournalWhy,
+        help = "A toast and a chime when you come across one of the dungeon's rares; its button targets it.",
+        rows = {
+            { key = "rareAlertSound", label = "Play a Sound", toggle = true,
+              help = "Chimes now and then until you target the rare or close the toast." },
         },
     })
     page:Card({
@@ -273,6 +319,9 @@ local function DeclareMap()
                 "dungeon map on the world map quest log fold"),
             Toggle("mapFactions", "Factions Beside the Map",
                 "Shows the factions earned where you are beside the world map."),
+            Toggle("mapQuestPins", "Quest Pins",
+                "Marks the quest givers, hand-ins and quest objects inside a dungeon on its map.",
+                "quest giver turn in hand in npc object exclamation question mark dungeon map"),
         },
     })
     map:Card({
@@ -287,11 +336,12 @@ end
 
 local function DeclareMapPins()
     local entrances = Toggle("mapEntrances", "Dungeon and Raid Entrances", "A door on each dungeon and raid "
-        .. "entrance on the world map, for the sides the Journal lists. Hover it for the levels, left-click for "
-        .. "a waypoint, and right-click for its map and journal when that is on.")
+        .. "entrance on the world map, for the sides the Journal lists. Hover it for the levels and click for "
+        .. "a waypoint, or for its map and journal when that is on.")
     entrances.store, entrances.always = S, true
-    local entranceJournal = Toggle("entranceJournal", "Right-click entrance to open the dungeon map",
-        "Right-click an entrance to open its dungeon map and journal; needs Bosses and Loot in Dungeons.")
+    local entranceJournal = Toggle("entranceJournal", "Click entrance to open the dungeon map",
+        "Click an entrance to open its dungeon map and journal, and right-click it for a waypoint; needs Bosses "
+        .. "and Loot in Dungeons.")
     entranceJournal.store, entranceJournal.always = S, true
     entranceJournal.needs, entranceJournal.why = EntrancesOn, TEXT_ENTRANCES_OFF
     table.insert(ns.Shared.MapPins, {

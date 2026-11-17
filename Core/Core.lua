@@ -22,7 +22,7 @@ local RELOAD_GLOW_ALPHA = 0.08
 local STEM_INSET = 0.075
 local MAX_FRAME_LEVEL = 9999
 local OFFSCREEN = 0.9
-local BUTTON_TEXT_SIZE, BUTTON_REST_ALPHA = 12, 0.9
+local BUTTON_TEXT_SIZE, BUTTON_REST_ALPHA, BUTTON_TEXT_PAD = 12, 0.9, 8
 local SKIN_CLASSIC, SKIN_FOREVER = "classic", "forever"
 local FONT_NAOWH, FONT_CLASSIC, FONT_DATA = "Naowh", "Friz Quadrata TT", "Arial Narrow"
 local FONT_HEADING = FONT_CLASSIC
@@ -141,7 +141,7 @@ function ns.Lower(text)
     return (text:lower():gsub(LATIN_CAPITAL, LatinLower))
 end
 
-ns.CODE_BUILD = "1.2.30"
+ns.CODE_BUILD = "1.2.32"
 
 ns.THEME = {
     bg     = { r = 0x19 / 255, g = 0x1b / 255, b = 0x1d / 255 },
@@ -747,6 +747,10 @@ function ns.Button(parent, text, w, h, onClick, template, name)
     btn._bg = bg
     local lbl = ns.Font(btn, BUTTON_TEXT_SIZE, nil, nil, true)
     lbl:SetPoint("CENTER")
+    hooksecurefunc(lbl, "SetText", function()
+        local need = lbl:GetStringWidth()
+        if need > btn:GetWidth() then btn:SetWidth(need + 2 * BUTTON_TEXT_PAD) end
+    end)
     lbl:SetText(ns.L(text))
     btn.label = lbl
     btn._onClick = onClick

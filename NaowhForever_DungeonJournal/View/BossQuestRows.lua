@@ -20,6 +20,7 @@ local CHIP_FILL = 0.04
 local STATE = {
     prereq = ns.L("Prerequisite"), prereqLog = ns.L("Prerequisite"), low = ns.L("Level %d to pick up"), pickup = ns.L("To pick up"),
     next = ns.L("Next step"), active = ns.L("In log"), ready = ns.L("Complete"), done = ns.L("Done"),
+    lost = ns.L("No longer offered"),
 }
 
 local TEXT_QUESTS = ns.L("QUESTS")

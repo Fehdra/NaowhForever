@@ -1,4 +1,4 @@
--- MapTools.lua: /nf mappins (placing the bosses' pins, and Copy for Data/Maps.lua) and /nf mapcheck (the client's map art).
+-- MapTools.lua: /nf mappins (placing the bosses' and quest pins, and Copy for Data/Maps.lua) and /nf mapcheck (the client's map art).
 local ns = _G.NaowhForever
 
 local J = ns.Journal
@@ -33,6 +33,12 @@ local ENTRANCE_LINE = "        entrance = %s,"
 local PINS_OPEN = "        pins = {"
 local PIN_LINE = "            [%d] = %s,   -- %s"
 local PINS_CLOSE = "        },"
+local QUESTS_OPEN = "        quests = {"
+local QUEST_LINE = "            { %s = %d, name = %q%s },"
+local LIST_FIELD = ", %s = { %s }"
+local SIDED = "{ %s = %d }"
+local SIDED_PAIR = "{ A = %d, H = %d }"
+local QUEST_ROLES = { "start", "finish", "use" }
 local MAP_CLOSE = "    },"
 local COPY_TITLE = "%s: Data/Maps.lua"
 
@@ -51,6 +57,7 @@ local MAPCHECK = "mapcheck"
 
 local probe
 local lines = {}
+local ids = {}
 local copying
 
 local function Number(v)
@@ -80,6 +87,31 @@ end
 local function PinLine(boss, _, key)
     local spot = Map.Spot(copying, key)
     if spot then lines[#lines + 1] = PIN_LINE:format(key, SpotText(spot), boss.english) end
+end
+
+local function QuestPinLine(data)
+    local spot = Map.Spot(copying, Map.QuestKey(data))
+    if spot then lines[#lines + 1] = PIN_LINE:format(Map.QuestKey(data), SpotText(spot), data.name) end
+end
+
+local function QuestID(id)
+    if type(id) ~= "table" then return id end
+    if id.A and id.H then return SIDED_PAIR:format(id.A, id.H) end
+    return id.A and SIDED:format("A", id.A) or SIDED:format("H", id.H)
+end
+
+local function QuestLine(data)
+    local fields = ""
+    for _, role in ipairs(QUEST_ROLES) do
+        local list = data[role]
+        if list then
+            wipe(ids)
+            for i, id in ipairs(list) do ids[i] = QuestID(id) end
+            fields = fields .. LIST_FIELD:format(role, table.concat(ids, LIST))
+        end
+    end
+    local kind = data.npc and "npc" or "object"
+    return QUEST_LINE:format(kind, data.npc or data.object, data.name, fields)
 end
 
 local function FloorsOf(art)
@@ -135,7 +167,14 @@ function Map.Copy(dungeon)
     lines[#lines + 1] = PINS_OPEN
     copying = dungeon
     Map.EachBoss(dungeon, PinLine)
+    local quests = map.quests
+    for i = 1, quests and #quests or 0 do QuestPinLine(quests[i]) end
     lines[#lines + 1] = PINS_CLOSE
+    if quests then
+        lines[#lines + 1] = QUESTS_OPEN
+        for i = 1, #quests do lines[#lines + 1] = QuestLine(quests[i]) end
+        lines[#lines + 1] = PINS_CLOSE
+    end
     lines[#lines + 1] = MAP_CLOSE
     ns.ShowCopyBox(COPY_TITLE:format(dungeon.name), table.concat(lines, LINE_BREAK))
 end

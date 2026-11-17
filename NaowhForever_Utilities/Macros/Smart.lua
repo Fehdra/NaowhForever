@@ -354,4 +354,4 @@ hooksecurefunc(S, "Set", SettingChanged)
 hooksecurefunc(ns.QoLSettings, "Set", function(key)
     if key == "foodBarConjuredFirst" then Update() end
 end)
-hooksecurefunc(ns, "Apply", Reapply)
+ns.OnApply(Reapply)

@@ -17,7 +17,8 @@ local CONTENT_LEFT = SIDE_W + PAD + 14
 local CARD_IN = 6
 local CONTENT_RIGHT = 4
 local DOLL_GAP = 12
-local PAGES_W = 360
+local PAGES_W = 240
+local GENERATE_W, GENERATE_GAP = 120, 8
 local PAGES_TOP = 4
 local PAGES_GAP = 8
 local SCROLL_IN = 4
@@ -33,14 +34,16 @@ local TEXT_WEIGHTS = ns.L("Stat Weights")
 local TEXT_WEIGHTS_TIP = ns.L("What each stat is worth to your spec: the upgrade percents and enchants come from them. Set your own.")
 local TEXT_EXPORT, TEXT_EXPORT_TIP = ns.L("Export this list"), ns.L("A string to share it with.")
 local TEXT_IMPORT, TEXT_IMPORT_TIP = ns.L("Import a list"), ns.L("Paste a shared list: it is added as a new list.")
+local TEXT_SIM, TEXT_SIM_TIP = ns.L("Sim on MythicSim"), ns.L("Your gear, bags and talents to paste in MythicSim's Forever sim.")
 local TEXT_RANKED_FOR = ns.L("Ranked for %s. Each spec keeps its own picks on this list.")
 local TEXT_UPDATED = ns.L("Rankings updated ")
 local TEXT_QUESTS, TEXT_QUESTS_COUNT = ns.L("Quests"), ns.L("Quests (%d)")
 local TEXT_TURNED_ON = ns.L("BiS List turned on. Turn it off in its settings page.")
+local TEXT_GENERATE = ns.L("Generate BiS List")
+local TEXT_GENERATE_TIP = ns.L("A list of your best gear for your level, which keeps up as you level.")
 local PAGES = {
     { key = "list", label = "Your List", tip = "Your picks for every slot, and where to run next." },
     { key = "quests", label = "Quests", tip = "The quests that reward a pick you do not have yet." },
-    { key = "levels", label = "Leveling", tip = "The best gear you can get by each level. Load one as your list for this spec." },
 }
 
 local window, view, doll
@@ -129,10 +132,6 @@ local function DrawPage()
         view:DrawList()
         return
     end
-    if page == "levels" then
-        view:DrawLevels()
-        return
-    end
     PaintSide()
     if questsView then
         questsView:Redraw()
@@ -156,13 +155,18 @@ local function ShowPage(key)
     local hidden = shown == view and questsView or view
     if hidden then hidden:Hide() end
     shown:Show()
-    local summary = shown == view and key ~= "levels"
+    local summary = shown == view
     view.summary:SetShown(summary)
     scroll:SetPoint("TOPLEFT", scrollLeft, -(scrollTop + (summary and B.View.SUMMARY_H or 0)))
     scroll:SetScrollChild(shown)
     scroll:SetVerticalScroll(0)
     Parts.PaintTabs(window.pages, page)
     DrawPage()
+end
+
+local function Generate()
+    ns.LoadBisAuto()
+    ShowPage("list")
 end
 
 local function IsQuest(row, questID)
@@ -195,6 +199,8 @@ local function TitleBar()
     export:SetPoint("RIGHT", weights, "LEFT", -BAR_GAP, 0)
     local import = Parts.BarButton(window, St.IMPORT, TEXT_IMPORT, TEXT_IMPORT_TIP, A.Import)
     import:SetPoint("RIGHT", export, "LEFT", -BAR_GAP, 0)
+    local sim = Parts.BarButton(window, St.PLAY, TEXT_SIM, TEXT_SIM_TIP, A.Sim)
+    sim:SetPoint("RIGHT", import, "LEFT", -BAR_GAP, 0)
 end
 
 local function Side()
@@ -215,6 +221,9 @@ local function Pages()
     local top = HEADER + PAD + PAGES_TOP
     window.pages = Parts.Tabs(window, PAGES_W, PAGES, ShowPage)
     window.pages:SetPoint("TOPLEFT", left, -top)
+    window.generate = ns.Button(window, TEXT_GENERATE, GENERATE_W, TAB_H, Generate)
+    window.generate:SetPoint("LEFT", window.pages, "RIGHT", GENERATE_GAP, 0)
+    ns.Tooltip(window.generate, TEXT_GENERATE, TEXT_GENERATE_TIP)
     top = top + TAB_H + TAB_GAP + PAGES_GAP
     scrollLeft, scrollTop = left, top
     scroll = ns.UI.SlimScroll(window)
@@ -313,4 +322,4 @@ end
 
 S.OnChange(OnSetting)
 B.OnListChange(ListChanged)
-hooksecurefunc(ns, "Apply", Reapply)
+ns.OnApply(Reapply)

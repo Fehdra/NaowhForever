@@ -64,6 +64,7 @@ local CATEGORIES = {
     vendor     = { "townVendors", "Interface\\Icons\\INV_Misc_Bag_07", ns.L("Vendor") },
     mail       = { "townMail", "Interface\\Icons\\INV_Letter_15", ns.L("Send and collect mail") },
 }
+ns.TownCategories = CATEGORIES
 local EVERYWHERE = { flight = true, inn = true, stable = true }
 local STABLE_CLASS = "HUNTER"
 local PIN_ROWS = {
@@ -678,7 +679,7 @@ audit:SetScript("OnEvent", OnAuditEvent)
 hooksecurefunc(S, "Set", function(key)
     if key == "enabled" or key == "transportTimers" or key:find("^town") then Apply() end
 end)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 
 local boot = CreateFrame("Frame")
 boot:RegisterEvent("PLAYER_LOGIN")

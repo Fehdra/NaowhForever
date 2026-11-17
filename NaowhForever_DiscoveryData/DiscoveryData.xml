@@ -1,5 +1,6 @@
 <Ui xmlns="http://www.blizzard.com/wow/ui/">
     <!-- DiscoveryData.xml: the Quest List's generated quests and rares. -->
     <Script file="Quests.lua"/>
+    <Script file="Objectives.lua"/>
     <Script file="Rares.lua"/>
 </Ui>

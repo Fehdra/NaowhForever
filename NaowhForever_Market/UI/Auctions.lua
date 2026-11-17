@@ -96,7 +96,7 @@ local function CancelClicked(row)
     if not auction then return end
     local id, name, cost = auction.auctionID, row.name:GetText(), Auctions.CancelCost(auction)
     local text = cost and cost > 0 and TEXT_CANCEL_ASK:format(name, Coins(cost)) or TEXT_CANCEL_FREE:format(name)
-    ns.Confirm(text, function() Auctions.Cancel(id) end)
+    ns.Confirm(text, function() Auctions.Cancel(id) end, nil, nil, nil, true)
 end
 
 local function Name(auction)

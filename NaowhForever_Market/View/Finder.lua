@@ -14,6 +14,7 @@ local LIST_GAP, NOTE_H, SCROLL_IN = 8, 18, 4
 local ROW_H, ROW_ICON, ROW_IN, ICON_GAP, GAP, MARK_W = 30, 22, 8, 8, 6, 3
 local STOP_W = 22
 local MIN_LETTERS, MAX_RESULTS = 2, 50
+local WARM_CHUNK, REDRAW_DELAY = 200, 0.2
 local WATCH_LABEL_H, WATCH_GAP = 16, 12
 local TEXT_SEARCH = ns.L("Search your scans by name")
 local TEXT_FOUND = ns.L("%d found")
@@ -42,25 +43,44 @@ local function Step(price)
     return math.max(step, price - step)
 end
 
+local function Warm(finder, ids)
+    local first = 1
+    local function Batch()
+        local last = math.min(first + WARM_CHUNK - 1, #ids)
+        local chunk = {}
+        for i = first, last do chunk[#chunk + 1] = ids[i] end
+        first = last + 1
+        Items.OnLoaded(chunk, finder.later)
+        if first <= #ids then C_Timer.After(0, Batch) end
+    end
+    Batch()
+end
+
 local function FromScans(finder, text)
-    local found, names, only = finder.found, finder.names, finder.only
+    local found, names, only, asked = finder.found, finder.names, finder.only, finder.asked
     wipe(found)
     local prices = ns.AuctionPriceList and ns.AuctionPriceList()
     if not prices then return TEXT_NO_SCAN end
     local want = ns.Lower(text)
-    local more = false
+    local cold = {}
     for id in pairs(prices) do
-        local name = (not only or only[id]) and IsItemDataCachedByID(id) and GetItemNameByID(id)
-        if name and ns.Lower(name):find(want, 1, true) then
-            if #found >= MAX_RESULTS then
-                more = true
-                break
+        if not only or only[id] then
+            if IsItemDataCachedByID(id) then
+                local name = GetItemNameByID(id)
+                if name and ns.Lower(name):find(want, 1, true) then
+                    found[#found + 1] = id
+                    names[id] = name
+                end
+            elseif not asked[id] then
+                asked[id] = true
+                cold[#cold + 1] = id
             end
-            found[#found + 1] = id
-            names[id] = name
         end
     end
+    if cold[1] then Warm(finder, cold) end
     table.sort(found, finder.byName)
+    local more = #found > MAX_RESULTS
+    for i = #found, MAX_RESULTS + 1, -1 do found[i] = nil end
     if more then return TEXT_MORE:format(MAX_RESULTS) end
     return #found > 0 and TEXT_FOUND:format(#found) or TEXT_NOTHING
 end
@@ -204,6 +224,16 @@ end
 
 function Finder.New(parent, width, empty, redraw, stop)
     local finder = { found = {}, names = {}, asked = {}, rows = {}, empty = empty, redraw = redraw, stop = stop }
+    local queued = false
+    local function Later()
+        queued = false
+        redraw()
+    end
+    finder.later = function()
+        if queued then return end
+        queued = true
+        C_Timer.After(REDRAW_DELAY, Later)
+    end
     local names = finder.names
     finder.byName = function(a, b) return names[a] < names[b] end
     local frame = CreateFrame("Frame", nil, parent)

@@ -18,14 +18,14 @@ local PICKS = 3
 local REFRESH_DELAY = 0.5
 local PAIR = Items.PAIR
 local AFTER = { [12] = 11, [14] = 13, [OFF_HAND] = MAIN_HAND }
+local TRINKETS = { [13] = true, [14] = true }
 local EVENTS = { "PLAYER_LEVEL_UP", "PLAYER_EQUIPMENT_CHANGED" }
 local LOADED = "GET_ITEM_INFO_RECEIVED"
 local NONE = {}
 
 local pool, pending = {}, {}
 local scores, ranked, chosen, current = {}, {}, {}, {}
-local wornAt = {}
-local builtSpec, builtLevel
+local simRank = {}
 local sortBy
 local waiting = false
 local watching
@@ -37,12 +37,23 @@ local function ByScore(a, b)
     return a < b
 end
 
+local function BySim(a, b)
+    local ra, rb = simRank[a], simRank[b]
+    if ra and rb then return ra < rb end
+    if ra or rb then return ra ~= nil end
+    return ByScore(a, b)
+end
+
 local function AddAll(ids)
     for i = 1, #ids do pool[ids[i]] = true end
 end
 
 local function Gather(spec)
     wipe(pool)
+    wipe(simRank)
+    for i, id in ipairs(spec.trinkets or NONE) do
+        pool[id], simRank[id] = true, i
+    end
     for _, gear in ipairs(Items.GEAR_SLOTS) do
         AddAll(R.Candidates(gear[1], spec))
         AddAll(R.DungeonDrops(gear[1], NONE, true))
@@ -95,7 +106,7 @@ local function Rank(slot, weights)
     ranked[slot] = order
     for id in pairs(byID) do order[#order + 1] = id end
     sortBy = byID
-    table.sort(order, ByScore)
+    table.sort(order, TRINKETS[slot] and BySim or ByScore)
 end
 
 local function PairWeapons()
@@ -123,14 +134,6 @@ local function Same(list, slot, picks)
     if #old ~= #picks then return false end
     for i = 1, #picks do
         if old[i] ~= picks[i] then return false end
-    end
-    return true
-end
-
-local function Fresh(spec)
-    if builtSpec ~= spec.key or builtLevel ~= UnitLevel("player") then return false end
-    for _, gear in ipairs(Items.GEAR_SLOTS) do
-        if wornAt[gear[1]] ~= GetInventoryItemID("player", gear[1]) then return false end
     end
     return true
 end
@@ -167,16 +170,9 @@ function Auto.Build(spec)
         local slot = gear[1]
         local before = AFTER[slot] and chosen[AFTER[slot]][1]
         chosen[slot] = Take(ranked[slot], before, chosen[slot] or {})
-        wornAt[slot] = GetInventoryItemID("player", slot)
     end
-    builtSpec, builtLevel = spec.key, UnitLevel("player")
     Listen()
     return chosen, waiting
-end
-
-function Auto.Preview(spec)
-    if Fresh(spec) then return chosen end
-    return (Auto.Build(spec))
 end
 
 function Auto.Fill(list)
@@ -196,12 +192,7 @@ end
 local function Refresh()
     queued = false
     local list = watching and L.List()
-    if list and list.auto then
-        if Auto.Fill(list) then L.Changed() end
-    elseif builtSpec then
-        builtSpec = nil
-        B.ListChanged()
-    end
+    if list and list.auto and Auto.Fill(list) then L.Changed() end
 end
 
 local function Queue()
@@ -227,7 +218,6 @@ local function Watch()
 end
 
 local function OnWeights()
-    builtSpec = nil
     if watching then Queue() end
 end
 
@@ -238,4 +228,4 @@ end
 B.OnListChange(Watch)
 SW.OnChange(OnWeights)
 S.OnChange(OnSetting)
-hooksecurefunc(ns, "Apply", Watch)
+ns.OnApply(Watch)

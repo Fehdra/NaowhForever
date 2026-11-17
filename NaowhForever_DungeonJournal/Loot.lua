@@ -64,6 +64,7 @@ end
 
 local Loot = {}
 J.Loot = Loot
+Loot.Have = Have
 
 function Loot.BisOn()
     return IsBisItem ~= nil and ns.QoLSettings.Get("bis") == true

@@ -23,6 +23,7 @@ local ROUND = J.C.ROUND_HALF
 local READY_WEIGHT, LOGGED_WEIGHT = 2, 1
 local TAKE_STRIDE = 2
 local ALLIANCE_RANKS, HORDE_RANKS = 1, 0
+local RANK_CITY = { Alliance = "Stormwind", Horde = "Orgrimmar" }
 local SECONDS_PER_DAY, SECONDS_PER_HOUR, SECONDS_PER_MINUTE = 86400, 3600, J.C.SECONDS_PER_MINUTE
 local BAND = { [1] = 36000, [2] = 3000, [3] = 3000, [4] = 3000, [5] = 6000, [6] = 12000, [7] = 21000 }
 
@@ -182,6 +183,10 @@ function Rep.RankTitle(rank)
     if not rank or rank <= 0 then return PVP_RANK_0_NAME end
     local side = UnitFactionGroup("player") == "Alliance" and ALLIANCE_RANKS or HORDE_RANKS
     return GetText(RANK_LABEL:format(Enum.PvPRanks.Rank_1 + rank - 1, side), UnitSex("player"))
+end
+
+function Rep.RankCity()
+    return RANK_CITY[UnitFactionGroup("player")]
 end
 
 function Rep.RankRewards(rank)

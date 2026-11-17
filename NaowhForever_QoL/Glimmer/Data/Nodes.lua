@@ -259,6 +259,8 @@ ns.Glimmer.NODES = {
     [456883] = { "chest", 0, "Adon's Trunk" },
     [562111] = { "ore", 1, "Poor Copper Vein" },
     [566779] = { "ore", 300, "Heavy Thorium Vein" },
+    [566786] = { "herb", 300, "Demonsage" },
+    [618987] = { "herb", 85, "Stranglekelp" },
     [626718] = { "chest", 0, "Dented Chest" },
     [626752] = { "chest", 0, "Dented Chest" },
     [629472] = { "chest", 0, "Admiral's Treasure Chest" },
@@ -272,6 +274,7 @@ ns.Glimmer.NODES = {
     [656333] = { "ore", 1, "Large Chunk of Amber" },
     [670427] = { "chest", 0, "Warden's Footlocker" },
     [674124] = { "chest", 1, "Traveler's Cache" },
+    [676349] = { "chest", 1, "Narassin's Strongbox" },
     [694732] = { "herb", 1, "Tomb Weed" },
     [702301] = { "chest", 1, "A Small Pack" },
 }

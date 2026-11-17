@@ -104,4 +104,4 @@ end
 S.OnChange(function(key)
     if key == "enabled" then Sync() end
 end)
-hooksecurefunc(ns, "Apply", Sync)
+ns.OnApply(Sync)

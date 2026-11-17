@@ -7,14 +7,18 @@ local IsDone = C_QuestLog.IsQuestFlaggedCompleted
 local GetTitle = C_QuestLog.GetTitleForQuestID
 
 local J = ns.Journal
+local S = J.Settings
 local QUEST = J.C.QUEST
 local PERCENT = J.C.PERCENT
 local ID, NAME, LEVEL, SIDE, WHERE = QUEST.ID, QUEST.NAME, QUEST.LEVEL, QUEST.SIDE, QUEST.WHERE
 local MAP, X, Y = QUEST.MAP, QUEST.X, QUEST.Y
 
-local RANK = { prereq = 1, prereqLog = 2, low = 3, pickup = 4, next = 5, active = 6, ready = 7, done = 8 }
+local RANK = { prereq = 1, prereqLog = 2, low = 3, pickup = 4, next = 5, active = 6, ready = 7, lost = 8, done = 9 }
+local PIN_RANK = { ready = 1, pickup = 2, tooHigh = 3, active = 4, low = 5, prereq = 6, none = 7 }
+local PIN_ROLES = { "finish", "start", "use" }
+local FACTION_CODE = { Alliance = "A", Horde = "H" }
 local TOO_HIGH = 5
-local SIGNATURE_BASE = 9
+local SIGNATURE_BASE = 10
 local SIGNATURE_MOD = 2147483647
 local BOTH = "B"
 local FOLLOW_UP = "^Follow%-up from (.+)$"
@@ -37,11 +41,18 @@ local TEXT_NOT_YET = ns.L("None to pick up right now: the rest are not for your 
 local TEXT_NONE_HERE = ns.L("None for you here. The rest: %s.")
 local TEXT_COUNT = "%d %s"
 local TEXT_JOIN = ", "
+local TEXT_LOST_IF = ns.L("Lost if you take %s first.")
+local TEXT_LOSES = ns.L("Taking it loses %s for good.")
+local TEXT_ONE_VERSION = ns.L("Only one of its versions can be done: taking another loses it.")
 
 local requested = {}
 local paths = {}
+local stubs = {}
+local stepAfter
 local byID, dungeonOf
 local noneParts, noneClasses, noneOrder = {}, {}, {}
+local closes
+local EMPTY = {}
 
 local function StepAny(step, check)
     if type(step) ~= "table" then return check(step) and step or nil end
@@ -191,6 +202,36 @@ local function QuestByID(id)
     return byID[id]
 end
 
+local function Taken(id)
+    return IsOnQuest(id) or IsDone(id)
+end
+
+local function LostTo(quest)
+    local list = J.QuestClosedBy[quest[ID]]
+    if not (list and S.Get("questHelp")) then return end
+    for i = 1, #list do
+        if Taken(list[i]) then return list[i] end
+    end
+end
+
+local function DataName(id)
+    local quest = QuestByID(id)
+    return quest and quest[NAME] or J.QuestClosedByNames[id]
+end
+
+local function Closes(id)
+    if not closes then
+        closes = {}
+        for closed, list in pairs(J.QuestClosedBy) do
+            for _, other in ipairs(list) do
+                closes[other] = closes[other] or {}
+                table.insert(closes[other], closed)
+            end
+        end
+    end
+    return closes[id] or EMPTY
+end
+
 local function SpotOf(id)
     local quest = QuestByID(id)
     if quest and quest[MAP] then return quest[MAP], quest[X], quest[Y], TEXT_QUEST_GIVER end
@@ -302,6 +343,7 @@ function Q.Kind(quest)
     local all, any = ChainDone(quest)
     if all then return "done" end
     if any then return "next" end
+    if LostTo(quest) then return "lost" end
     local step = NextPrereq(quest)
     if step then return StepAny(step, IsOnQuest) and "prereqLog" or "prereq" end
     local need = Q.MinLevel(quest)
@@ -341,8 +383,8 @@ local function Grey(quest)
     return level ~= nil and GetQuestDifficultyColor(level) == QuestDifficultyColors.trivial
 end
 
-local function Listed(quest, kind, class, faction)
-    return ForMe(quest, class, faction) and kind ~= "done"
+local function Listed(quest, kind, class, faction, withDone)
+    return ForMe(quest, class, faction) and (withDone or kind ~= "done")
         and not (ToPickUp(kind) and Grey(quest) and not quest.turnin)
 end
 
@@ -480,9 +522,10 @@ function Q.Progress(data)
     local quests = data and data.quests
     for i = 1, quests and #quests or 0 do
         local quest = quests[i]
-        if ForMe(quest, class, faction) then
+        local kind = ForMe(quest, class, faction) and Kind(quest)
+        if kind and kind ~= "lost" then
             total = total + 1
-            if Kind(quest) == "done" then done = done + 1 end
+            if kind == "done" then done = done + 1 end
         end
     end
     return done, total
@@ -512,21 +555,22 @@ local function FillEntry(entry, quest, kind, index, level)
     entry.name, entry.level = Q.Name(quest), questLevel
     entry.tooHigh = kind == "pickup" and questLevel ~= nil and questLevel >= level + TOO_HIGH
     entry.where, entry.inLog = where, InLog(kind)
-    entry.canWaypoint = map ~= nil or kind == "prereqLog" or entry.inLog
+    entry.canWaypoint = kind ~= "lost" and (map ~= nil or kind == "prereqLog" or entry.inLog)
+    entry.lostTo = kind == "lost" and LostTo(quest) or nil
     entry.loggedID = LoggedID(quest)
     entry.party = PartyCount(quest, entry.loggedID)
     local chain, step = Chain(quest)
     entry.step, entry.steps = step, chain and #chain
 end
 
-function Q.List(data, out, pool)
+function Q.List(data, out, pool, withDone)
     wipe(out)
     local _, class = UnitClass("player")
     local faction = UnitFactionGroup("player")
     local level = UnitLevel("player")
     for index, quest in ipairs(data.quests) do
         local kind = Kind(quest)
-        if Listed(quest, kind, class, faction) then
+        if Listed(quest, kind, class, faction, withDone) then
             local n = #out + 1
             local entry = pool[n] or {}
             pool[n] = entry
@@ -561,4 +605,123 @@ function Q.Count(data)
         end
     end
     return toPickUp, inLog
+end
+
+local function IndexSteps()
+    stepAfter = {}
+    for _, dungeon in ipairs(J.QuestData) do
+        for _, quest in ipairs(dungeon.quests) do
+            local chain = Chain(quest)
+            for i = 2, chain and #chain or 0 do
+                local step = chain[i]
+                for _, id in ipairs(type(step) == "table" and step or { step }) do
+                    stepAfter[id] = stepAfter[id] or chain[i - 1]
+                end
+            end
+        end
+    end
+end
+
+local function Waiting(id)
+    local quest = QuestByID(id)
+    if quest then return NextPrereq(quest) ~= nil end
+    if not stepAfter then IndexSteps() end
+    local before = stepAfter[id]
+    return before ~= nil and not StepDone(before)
+end
+
+local function PinKind(id, role, level)
+    if IsOnQuest(id) then
+        if role == "start" then return "none" end
+        if IsComplete(id) then return role == "finish" and "ready" or "none" end
+        return "active"
+    end
+    local quest = QuestByID(id)
+    if role ~= "start" or IsDone(id) or quest and LostTo(quest) then return "none" end
+    if Waiting(id) then return "prereq" end
+    local need = J.QuestMinLevel[id]
+    if need and level < need then return "low" end
+    return "pickup"
+end
+
+local function PinName(id)
+    if not GetTitle(id) and not requested[id] then
+        requested[id] = true
+        C_QuestLog.RequestLoadQuestByID(id)
+    end
+    return StepName(id)
+end
+
+local function FillPinEntry(entry, id, kind, level)
+    local questLevel = C_QuestLog.GetQuestDifficultyLevel(id)
+    entry.tooHigh = kind == "pickup" and questLevel > 0 and questLevel >= level + TOO_HIGH
+    entry.kind, entry.rank = kind, PIN_RANK[entry.tooHigh and "tooHigh" or kind]
+    entry.level = questLevel > 0 and questLevel or nil
+    entry.loggedID = IsOnQuest(id) and id or nil
+end
+
+local function AddPinQuest(out, pool, id, role, level)
+    local quest = QuestByID(id)
+    if quest and not IsOnQuest(id) and not Q.ForMe(quest) then return end
+    local kind = PinKind(id, role, level)
+    for i = 1, #out do
+        local entry = out[i]
+        if entry.quest[ID] == id then
+            if PIN_RANK[kind] < entry.rank then FillPinEntry(entry, id, kind, level) end
+            return
+        end
+    end
+    local n = #out + 1
+    local entry = pool[n] or {}
+    pool[n] = entry
+    if not quest then
+        quest = stubs[id] or { id }
+        stubs[id] = quest
+    end
+    entry.quest, entry.index, entry.name, entry.canWaypoint = quest, n, PinName(id), false
+    FillPinEntry(entry, id, kind, level)
+    out[n] = entry
+end
+
+function Q.PinQuests(pin, out, pool)
+    wipe(out)
+    local faction = FACTION_CODE[UnitFactionGroup("player")]
+    local level = UnitLevel("player")
+    for r = 1, #PIN_ROLES do
+        local list = pin[PIN_ROLES[r]]
+        for i = 1, list and #list or 0 do
+            local id = list[i]
+            if type(id) == "table" then id = id[faction] end
+            if id then AddPinQuest(out, pool, id, PIN_ROLES[r], level) end
+        end
+    end
+    table.sort(out, ByRank)
+    return out
+end
+
+function Q.Open(kind)
+    return kind ~= "done" and kind ~= "lost" and not InLog(kind)
+end
+local Open = Q.Open
+
+function Q.Warnings(quest, out)
+    wipe(out)
+    if not (S.Get("questHelp") and Open(Kind(quest))) then return out end
+    local name, versions = quest[NAME], false
+    for _, other in ipairs(J.QuestClosedBy[quest[ID]] or EMPTY) do
+        local record = QuestByID(other)
+        if DataName(other) == name then
+            versions = true
+        elseif not record or Q.ForMe(record) then
+            out[#out + 1] = TEXT_LOST_IF:format(StepName(other))
+        end
+    end
+    if versions then out[#out + 1] = TEXT_ONE_VERSION end
+    for _, closed in ipairs(Closes(quest[ID])) do
+        local record = QuestByID(closed)
+        if record[NAME] ~= name and Q.ForMe(record) and Open(Kind(record)) then
+            out[#out + 1] = TEXT_LOSES:format(Q.Name(record))
+        end
+    end
+    return out
 end

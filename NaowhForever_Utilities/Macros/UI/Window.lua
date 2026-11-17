@@ -358,5 +358,5 @@ function ns.OpenMacroWindow(view)
     ns.OpenOptionsWindow(PAGE_KEYS[view or F.tab or "mine"])
 end
 
-hooksecurefunc(ns, "Apply", function() Render() end)
+ns.OnApply(function() Render() end)
 hooksecurefunc(S, "Set", SettingChanged)

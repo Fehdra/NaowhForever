@@ -905,7 +905,7 @@ local function AimSlash()
 end
 
 hooksecurefunc(S, "Set", OnSettingChanged)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 
 SLASH_NAOWHFOREVERAIM1 = "/nfaim"
 SlashCmdList.NAOWHFOREVERAIM = AimSlash

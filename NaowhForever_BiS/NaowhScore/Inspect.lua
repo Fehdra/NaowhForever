@@ -504,4 +504,4 @@ end
 
 events:SetScript("OnEvent", OnEvent)
 S.OnChange(OnSetting)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)

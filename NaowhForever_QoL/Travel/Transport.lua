@@ -361,7 +361,7 @@ local function SetUnlocked(on)
 end
 
 S.OnChange(OnSetting)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 hooksecurefunc(ns, "ShowUnlockMode", function() SetUnlocked(true) end)
 hooksecurefunc(ns, "HideUnlockMode", function() SetUnlocked(false) end)
 Apply()

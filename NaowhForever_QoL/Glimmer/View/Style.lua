@@ -16,6 +16,8 @@ ns.Glimmer.Style = setmetatable({
     MEDIA = "Interface\\AddOns\\NaowhForever_QoL\\Media\\Glimmer\\",
     BASE = 48,
     PLATE_Y = -40,
+    -- The game puts the bobber's nameplate on the bobber itself.
+    BOBBER_Y = 0,
     LINE_SIZE = 12,
     LINE_Y = -6,
     COG_SIZE = 16,

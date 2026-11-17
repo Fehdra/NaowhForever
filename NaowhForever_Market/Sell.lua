@@ -14,9 +14,10 @@ local ASK_CHEAP, ASK_DEAR = GOLD, 50 * GOLD
 local ASK_SHARE_CHEAP, ASK_SHARE_MID, ASK_SHARE_DEAR = 0.7, 0.5, 0.3
 local HIDDEN, FAVOURITES = "marketSellHidden", "marketSellFavourites"
 local PERCENT = 100
+local OUTLIER_SHARE, OUTLIER_QUANTITY = 0.7, 0.1
 local POSTS = "marketPosts"
 local POSTS_KEEP, POSTS_ITEMS = 10, 500
-local POST_SAME, POST_PARTS, POST_TIME = "%d:%d:%d:", "^(%d+):(%d+):(%d+):(%d+)$", "(%d+)$"
+local POST_SAME, POST_PARTS, POST_TIME = "%.0f:%d:%d:", "^(%d+):(%d+):(%d+):(%d+)$", "(%d+)$"
 local FIXED_UNDERCUTS = { silver = true, amount = true }
 local DEFAULT_MULTIPLIER = Constants.AuctionConstants.DEFAULT_AUCTION_PRICE_MULTIPLIER
 local CLASS_INDEX = 6
@@ -94,6 +95,27 @@ local function Undercut(entry, price)
         return math.max(Step(entry), math.floor(price * S.Get("undercutPercent") / PERCENT))
     end
     return Step(entry)
+end
+
+local function Going()
+    local others = Listings.Others(Listings.count)
+    local allowed = math.max(1, math.floor(others * OUTLIER_QUANTITY))
+    local going, passed, cheaper, last = nil, 0, 0, nil
+    for i = 1, Listings.count do
+        local row = Listings.rows[i]
+        local theirs = row.quantity - row.own
+        if theirs > 0 then
+            if not going then
+                going = row.price
+            elseif cheaper > allowed then
+                break
+            elseif last < row.price * OUTLIER_SHARE then
+                going, passed = row.price, cheaper
+            end
+            cheaper, last = cheaper + theirs, row.price
+        end
+    end
+    return going, passed
 end
 
 local function AskShare(going)
@@ -215,10 +237,13 @@ function Sell.Keep()
 end
 
 function Sell.Suggest(entry)
-    local other, own = Listings.Cheapest()
+    local _, own = Listings.Cheapest()
+    local other, passed = Going()
     if other and not (own and own <= other) then
-        local price = Floor(entry, other - Undercut(entry, other))
-        return price, price < other and "under" or "match", other
+        local undercut = Undercut(entry, other)
+        local price = Floor(entry, other - undercut)
+        if price < other and undercut == 0 then return price, "silver", other, passed end
+        return price, price < other and "under" or "match", other, passed
     end
     if own then return own, "yours", own end
     if entry.scan then return Floor(entry, entry.scan), "scan", entry.scan end
@@ -234,7 +259,7 @@ end
 function Sell.Risk(entry, price)
     if not S.Get("askBadPost") then return end
     if entry.vendor > 0 and entry.vendor >= Market.AfterCut(price) then return "vendor", entry.vendor end
-    local other = Listings.Cheapest()
+    local other = Going()
     local going = other or entry.scan
     if not going or price >= (Sell.Suggest(entry)) and not FIXED_UNDERCUTS[S.Get("undercut")] then return end
     if price < going * AskShare(going) then return other and "listing" or "scan", going end

@@ -14,6 +14,7 @@ local Search = { state = "idle", pick = LEVEL, LEVEL = LEVEL, ALL = ALL, SEARCH_
 GF.Search = Search
 
 local wanted = {}
+local rerun = false
 local generation = 0
 
 local function Listed(entry, id)
@@ -78,11 +79,19 @@ local function Settle(state)
     generation = generation + 1
     Search.state = state
     GF.Fire("search", state)
+    if state ~= "searching" and rerun then
+        rerun = false
+        Search.Run()
+    end
 end
 
 function Search.Run(pick)
-    if not GF.On() or Search.state == "searching" then return false end
+    if not GF.On() then return false end
     Search.pick = pick or Search.pick
+    if Search.state == "searching" then
+        rerun = pick ~= nil
+        return false
+    end
     local category = Category()
     if not category then
         Settle("unavailable")
@@ -104,6 +113,6 @@ end)
 S.OnChange(function(key)
     if key == "enabled" and not GF.On() then
         generation = generation + 1
-        Search.state, Search.pick = "idle", LEVEL
+        Search.state, Search.pick, rerun = "idle", LEVEL, false
     end
 end)

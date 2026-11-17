@@ -119,7 +119,8 @@ Shared/
   UI/Anchor.lua    anchoring a bar to a frame (Shared.Anchor): its Anchor rows, the picker that lights the
                    frame under the cursor, and the editor beside the bar
   View/View.lua    the row engine: pooled rows, cards, the card grid, one redraw per burst
-  View/Kinds.lua   the rows every page has: section title (shorter with view.tightTitles), note, card, and
+  View/Kinds.lua   the rows every page has: section title (shorter with view.tightTitles; a link at its right,
+                   and an optional second beside it), note, card, and
                    an item in a list you keep (icon, name in its quality color, a line under it, a tag, a
                    value, an X)
   Settings/

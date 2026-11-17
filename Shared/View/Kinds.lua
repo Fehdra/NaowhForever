@@ -14,6 +14,7 @@ local ICON, ITEM_H, GAP, HOVER = St.ICON, St.ITEM_H, St.GAP, St.HOVER
 local TEXT_SIZE, SMALL_SIZE = St.TEXT_SIZE, St.SMALL_SIZE
 local SECTION_ARROW, ARROW_OUT, ARROW_ROOM = 12, 2, 14
 local TITLE_RISE, LINK_RISE = 5, 4
+local LINK_GAP = 14
 local OPEN_TURN = St.OPEN_TURN
 local COUNT_GAP = "   "
 local NOTE_TOP = 2
@@ -46,6 +47,11 @@ local function SectionLinkClicked(link)
     if row.onLink then row.onLink(row.linkArg, link) end
 end
 
+local function SectionFirstClicked(link)
+    local row = link:GetParent()
+    if row.onFirst then row.onFirst(row.linkArg, link) end
+end
+
 local function PaintLink(link, text, onClick, tip, tipLine)
     Parts.SetLink(link, text)
     link.disabled, link.tip, link.tipLine = onClick == nil, tip, tipLine
@@ -63,12 +69,16 @@ local function NewSection(view)
     ns.Hairline(row.line, "h")
     row.link = Parts.Link(row, SectionLinkClicked, true)
     row.link:SetPoint("BOTTOMRIGHT", 0, LINK_RISE)
+    row.first = Parts.Link(row, SectionFirstClicked)
+    row.first:SetPoint("RIGHT", row.link, "LEFT", -LINK_GAP, 0)
+    row.first:Hide()
     row:SetScript("OnMouseUp", SectionClicked)
     return row
 end
 
-local function SetSection(row, title, count, open, onToggle, linkText, onLink, linkArg, linkTip, linkTipLine)
-    row.onToggle, row.onLink, row.linkArg = onToggle, onLink, linkArg
+local function SetSection(row, title, count, open, onToggle, linkText, onLink, linkArg, linkTip, linkTipLine,
+        firstText, onFirst)
+    row.onToggle, row.onLink, row.linkArg, row.onFirst = onToggle, onLink, linkArg, onFirst
     row:EnableMouse(onToggle ~= nil)
     row.arrow:SetShown(onToggle ~= nil)
     row.arrow:SetRotation(open and OPEN_TURN or 0)
@@ -82,6 +92,8 @@ local function SetSection(row, title, count, open, onToggle, linkText, onLink, l
         PaintLink(row.link, linkText, onLink, linkTip, linkTipLine)
         row.link.underline:Hide()
     end
+    row.first:SetShown(firstText ~= nil and linkText ~= nil)
+    if firstText then PaintLink(row.first, firstText, onFirst) end
     return row:GetParent().tightTitles and SECTION_TIGHT_H or SECTION_H
 end
 

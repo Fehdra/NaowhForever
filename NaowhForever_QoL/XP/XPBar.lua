@@ -1312,7 +1312,7 @@ ns.Shared.Settings.Page("QoL/XP", S):Card({
 hooksecurefunc(S, "Set", function(key)
     if key == "enabled" or (key:find("^xpBar") and key ~= "xpBarPos") then Apply() end
 end)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 hooksecurefunc(Played, "Answered", PlayedChanged)
 hooksecurefunc(Played, "LeveledUp", PlayedChanged)
 hooksecurefunc(ns, "ShowUnlockMode", function()

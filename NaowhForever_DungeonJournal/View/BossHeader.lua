@@ -1,4 +1,4 @@
--- BossHeader.lua: the top of a boss's own page: its name and kill count, its title, level and kind.
+-- BossHeader.lua: the top of a boss's own page: its portrait, name and kill count, its title, level and kind.
 local ns = _G.NaowhForever
 
 local T = ns.THEME
@@ -15,6 +15,9 @@ local TITLE_LINE_PAD = 4
 local ABOUT_GAP = 10
 local ABOUT_RISE = 2
 local INFO_KIND, INFO_TYPE, INFO_TITLE = 3, 4, 5
+local FACE = TITLE_H + TITLE_GAP + WHERE_H
+local FACE_GAP = 10
+local BUST_W, BUST_H, BUST_TOP, BUST_PAD = 88, 52, 6, 8
 local CLASSIFICATION = { [1] = ns.L("Elite"), [2] = ns.L("Rare Elite"), [3] = ns.L("Boss"), [4] = ns.L("Rare") }
 local SHOWN_TYPES = { [1] = true, [2] = true, [3] = true, [4] = true, [5] = true, [6] = true, [7] = true, [8] = true,
     [9] = true, [11] = true, [15] = true }
@@ -92,6 +95,8 @@ end
 Kinds.bossHeader = {
     New = function(view)
         local row = CreateFrame("Frame", nil, view)
+        row.face = Parts.BossFace(row, FACE)
+        row.face:SetPoint("TOPLEFT", 0, -HEADER_TOP)
         row.title = NewTitle(row, HEADER_TOP)
         row.kills = Parts.KillCount(row)
         row.kills:SetPoint("RIGHT", row, "TOPRIGHT", 0, -HEADER_TOP - TITLE_H / 2)
@@ -102,10 +107,41 @@ Kinds.bossHeader = {
     end,
     Set = function(row, boss)
         local kills = SetKills(row, boss)
+        local left = Parts.SetBossFace(row.face, boss) and FACE + FACE_GAP or 0
+        row.title:SetPoint("TOPLEFT", left, -HEADER_TOP)
         row.title:SetText(boss.name)
-        row.title:SetWidth(math.max(1, row:GetWidth() - kills))
+        row.title:SetWidth(math.max(1, row:GetWidth() - kills - left))
         row.about:SetText(AboutText(boss))
         return HEADER_TOP + TITLE_H + TITLE_GAP + WHERE_H + HEADER_PAD
+    end,
+}
+
+Kinds.bossBust = {
+    New = function(view)
+        local row = CreateFrame("Frame", nil, view)
+        row.bust = Parts.Bust(row, BUST_W, BUST_H)
+        row.bust:SetPoint("TOPLEFT")
+        row.face = Parts.BossFace(row, BUST_H)
+        row.face:SetPoint("TOPLEFT")
+        row.title = NewTitle(row, BUST_TOP)
+        row.kills = Parts.KillCount(row)
+        row.kills:SetPoint("RIGHT", row, "TOPRIGHT", 0, -BUST_H / 2)
+        row.about = NewAbout(row)
+        row.about:SetPoint("TOPLEFT", row.title, "BOTTOMLEFT", 0, -TITLE_GAP)
+        row.about:SetPoint("RIGHT")
+        return row
+    end,
+    Set = function(row, boss)
+        local kills = SetKills(row, boss)
+        local bust = Parts.SetBust(row.bust, boss)
+        local face = not bust and Parts.SetBossFace(row.face, boss, true)
+        if bust then row.face:Hide() end
+        local left = bust and BUST_W + FACE_GAP or face and BUST_H + FACE_GAP or 0
+        row.title:SetPoint("TOPLEFT", left, -BUST_TOP)
+        row.title:SetText(boss.name)
+        row.title:SetWidth(math.max(1, row:GetWidth() - kills - left))
+        row.about:SetText(AboutText(boss))
+        return BUST_H + BUST_PAD
     end,
 }
 

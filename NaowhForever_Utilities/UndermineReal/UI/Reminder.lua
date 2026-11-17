@@ -144,7 +144,7 @@ end
 
 events:SetScript("OnEvent", OnEvent)
 S.OnChange(Apply)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 hooksecurefunc(ns, "ShowUnlockMode", OnUnlock)
 hooksecurefunc(ns, "HideUnlockMode", OnLock)
 

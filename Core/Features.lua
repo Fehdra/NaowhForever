@@ -18,6 +18,7 @@ ns.FEATURES = {
         deleteConfirm = false,
         lootConfirm = false,
         lockboxSkill = false,
+        questSellPrice = false,
         questAccept = true,
         questTurnIn = true,
         questGossip = true,
@@ -148,6 +149,10 @@ ns.FEATURES = {
         mapEntrances = false,
         entranceJournal = false,
         itemSources = true,
+        favourites = true,
+        rareAlert = true,
+        mapQuestPins = true,
+        lootFinder = true,
     },
     statWeights = {
         enabled = false,
@@ -166,6 +171,7 @@ ns.FEATURES = {
         trainerPanel = true,
         spellbook = false,
         demonBooks = false,
+        weaponsShown = false,
     },
     discovery = {
         enabled = false,

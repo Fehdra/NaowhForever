@@ -43,8 +43,10 @@ ns.TownSpiritHealers = {
         { 65.6, 74.6, "spirit", "Spirit Healer", "Graveyard", nil, "AH" },
     },
     [1423] = {
+        { 33.6, 79.6, "spirit", "Spirit Healer", "Graveyard", nil, "AH" },
         { 38.2, 70.6, "spirit", "Spirit Healer", "Graveyard", nil, "AH" },
         { 39, 92.6, "spirit", "Spirit Healer", "Graveyard", nil, "AH" },
+        { 40.8, 36.2, "spirit", "Spirit Healer", "Graveyard", nil, "AH" },
         { 47.2, 44.6, "spirit", "Spirit Healer", "Graveyard", nil, "AH" },
         { 70.4, 54.4, "spirit", "Spirit Healer", "Graveyard", nil, "AH" },
         { 80, 64.6, "spirit", "Spirit Healer", "Graveyard", nil, "AH" },
@@ -97,6 +99,7 @@ ns.TownSpiritHealers = {
         { 38.4, 8.8, "spirit", "Spirit Healer", "Graveyard", nil, "AH" },
     },
     [1435] = {
+        { 27.6, 59.6, "spirit", "Spirit Healer", "Graveyard", nil, "AH" },
         { 50.2, 62.2, "spirit", "Spirit Healer", "Graveyard", nil, "AH" },
     },
     [1436] = {
@@ -185,8 +188,10 @@ ns.TownSpiritHealers = {
         { 85.6, 68.8, "spirit", "Spirit Healer", "Graveyard", nil, "AH" },
     },
     [2521] = {
+        { 35, 47.6, "spirit", "Spirit Healer", "Graveyard", nil, "AH" },
         { 40.2, 63.8, "spirit", "Spirit Healer", "Graveyard", nil, "AH" },
         { 41, 22.4, "spirit", "Spirit Healer", "Graveyard", nil, "AH" },
+        { 46.6, 41.4, "spirit", "Spirit Healer", "Graveyard", nil, "AH" },
         { 55, 68.2, "spirit", "Spirit Healer", "Graveyard", nil, "AH" },
         { 55.4, 45, "spirit", "Spirit Healer", "Graveyard", nil, "AH" },
         { 68.6, 50.2, "spirit", "Spirit Healer", "Graveyard", nil, "AH" },
@@ -195,5 +200,8 @@ ns.TownSpiritHealers = {
         { 60.8, 45.6, "spirit", "Spirit Healer", "Graveyard", nil, "AH" },
         { 62, 83.6, "spirit", "Spirit Healer", "Graveyard", nil, "AH" },
         { 76, 54.4, "spirit", "Spirit Healer", "Graveyard", nil, "AH" },
+    },
+    [2652] = {
+        { 34.6, 47.6, "spirit", "Spirit Healer", "Graveyard", nil, "AH" },
     },
 }

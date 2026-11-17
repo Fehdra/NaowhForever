@@ -11,7 +11,7 @@ ns.Journal.AddDungeon("SunkenTemple", {
             { npc = 8580, name = "Atal'alarion", model = 7873, encounters = { 3582, 2814 }, loot = { 10800, 10798, 10799 }, chance = { 38, 37, 18 } },
             { npc = 5721, name = "Dreamscythe", model = 7553, encounters = { 3588, 486 }, loot = { 12465, 12466, 12243 }, chance = { 10, 10, 9 } },
             { npc = 5720, name = "Weaver", model = 6375, encounters = { 3587, 487 }, loot = { 12243, 12466, 12465 }, chance = { 10, 9, 9 } },
-            { npc = 5710, name = "Jammal'an the Prophet", model = 6708, encounters = { 3589, 488 }, loot = { 10808, 10806, 10807, 10110 }, chance = { 30, 27, 27, 0 } },
+            { npc = 5710, name = "Jammal'an the Prophet", model = 6708, encounters = { 3589, 488 }, loot = { 10808, 10806, 10807, 10110, 273119 }, chance = { 30, 27, 27, 0, 0 } },
             { npc = 5711, name = "Ogom the Wretched", model = 6709, loot = { 10804, 10803, 10805 }, chance = { 31, 30, 30 } },
             { npc = 5719, name = "Morphaz", model = 7975, encounters = { 3586, 490 }, loot = { 12466, 12243, 12465 }, chance = { 8, 8, 8 } },
             { npc = 5722, name = "Hazzas", model = 9584, encounters = { 3585, 491 }, loot = { 12466, 12243, 12465 }, chance = { 9, 8, 8 } },

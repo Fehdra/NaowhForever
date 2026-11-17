@@ -13,7 +13,7 @@ local BANG_FILE = "Interface\\GossipFrame\\AvailableQuestIcon"
 local PERCENT = Completo.C.PERCENT
 local QUEST_PIN_SCALE = 0.5
 local EVENTS = { "QUEST_ACCEPTED", "QUEST_TURNED_IN", "QUEST_REMOVED", "PLAYER_LEVEL_UP", "SKILL_LINES_CHANGED",
-    "LEARNED_SPELL_IN_SKILL_LINE" }
+    "LEARNED_SPELL_IN_SKILL_LINE", "CALENDAR_UPDATE_EVENT_LIST" }
 local OWN_KEYS = { enabled = true, mapPins = true, mapGrey = true, mapChainsOnly = true, mapPinSize = true,
     mapDungeon = true, mapDungeonColor = true }
 local TEXT_GIVER = ns.L("Quest giver")
@@ -22,6 +22,8 @@ local TEXT_LEVEL = ns.L("Level %d")
 local TEXT_REPEATABLE = ns.L("Repeatable, ")
 local TEXT_DUNGEON = ns.L("Dungeon, ")
 local TEXT_WAYPOINT = ns.L("Click for a waypoint (again to remove it).")
+local TEXT_HIDE = ns.L("Hide %s")
+local TEXT_HIDE_HINT = ns.L("Right-click to hide a quest from the map.")
 
 local provider = CreateFromMixins(MapCanvasDataProviderMixin)
 local added, events
@@ -69,21 +71,36 @@ local function Redraw()
     if added and WorldMapFrame:IsShown() then provider:RefreshAllData() end
 end
 
+local function HideButton(root, id)
+    root:CreateButton(TEXT_HIDE:format(Q.Title(id) or id), function() Q.SetHidden(id, true) end)
+end
+
+function Completo.HideMenu(owner, quests)
+    ns.ContextMenu(owner, function(_, root)
+        for _, id in ipairs(quests) do HideButton(root, id) end
+    end)
+end
+
+Completo.TEXT_HIDE_HINT = TEXT_HIDE_HINT
+
 function NaowhForeverQuestGiverPinMixin:OnLoad()
     self:UseFrameLevelType("PIN_FRAME_LEVEL_AREA_POI")
 end
 
 function NaowhForeverQuestGiverPinMixin:CheckMouseButtonPassthrough() end
 
-function NaowhForeverQuestGiverPinMixin:OnAcquired(giver, x, y)
-    ns.Shared.PinClicks(self)
+function NaowhForeverQuestGiverPinMixin:Paint(giver, size)
     self.quests = self.quests or {}
     wipe(self.quests)
     for i, id in ipairs(giver.quests) do self.quests[i] = id end
     self.grey = giver.grey
-    local size = S.Get("mapPinSize")
     self:SetSize(size, size)
     SetMark(self.Icon, giver)
+end
+
+function NaowhForeverQuestGiverPinMixin:OnAcquired(giver, x, y)
+    ns.Shared.PinClicks(self)
+    self:Paint(giver, S.Get("mapPinSize"))
     self:SetPosition(x, y)
     self:ApplyCurrentScale()
 end
@@ -100,6 +117,7 @@ function NaowhForeverQuestGiverPinMixin:OnMouseEnter()
     end
     for _, id in ipairs(self.quests) do AddQuestLine(id) end
     GameTooltip:AddLine(TEXT_WAYPOINT, Style.Hint())
+    GameTooltip:AddLine(TEXT_HIDE_HINT, Style.Hint())
     GameTooltip:Show()
 end
 
@@ -108,6 +126,7 @@ function NaowhForeverQuestGiverPinMixin:OnMouseLeave()
 end
 
 function NaowhForeverQuestGiverPinMixin:OnClick(button)
+    if button == "RightButton" then return Completo.HideMenu(self, self.quests) end
     if button ~= "LeftButton" then return end
     local first = self.quests[1]
     local map, x, y = Q.Spot(first)
@@ -158,7 +177,9 @@ local function OnLogin(self)
 end
 
 hooksecurefunc(S, "Set", OnSet)
-hooksecurefunc(ns, "Apply", Apply)
+hooksecurefunc(Q, "SetHidden", Redraw)
+hooksecurefunc(Q, "ShowHidden", Redraw)
+ns.OnApply(Apply)
 
 local boot = CreateFrame("Frame")
 boot:RegisterEvent("PLAYER_LOGIN")

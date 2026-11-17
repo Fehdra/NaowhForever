@@ -5,6 +5,7 @@ local S = ns.QoLSettings
 local Parts, St = ns.Shared.Parts, ns.Shared.Style
 
 local CALL_PET, SUMMON_IMP = 883, 688
+local DEMONIC_PACT = 425464
 local LONE_WOLF, LONE_WOLF_TAUGHT = 415370, 409979
 local ICON = 132161
 local WIDTH, ICON_GAP = 220, 8
@@ -88,7 +89,7 @@ end
 
 local function ShouldHavePet()
     if class == "HUNTER" then return C_SpellBook.IsSpellKnown(CALL_PET) end
-    if class == "WARLOCK" then return C_SpellBook.IsSpellKnown(SUMMON_IMP) and not sacrificed end
+    if class == "WARLOCK" then return C_SpellBook.IsSpellKnown(SUMMON_IMP) end
     return false
 end
 
@@ -119,6 +120,7 @@ local function Warning()
     if S.Get("petInstanceOnly") and not IsInInstance() then return end
     if not ShouldHavePet() then return end
     if not UnitExists("pet") then
+        if sacrificed and not C_SpellBook.IsSpellKnown(DEMONIC_PACT) then return end
         if class == "HUNTER" and (C_SpellBook.IsSpellKnown(LONE_WOLF) or C_SpellBook.IsSpellKnown(LONE_WOLF_TAUGHT)) then
             return
         end
@@ -208,7 +210,7 @@ events:SetScript("OnEvent", OnEvent)
 hooksecurefunc(S, "Set", function(key)
     if key == "enabled" or key:find("^pet") then Apply() end
 end)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 hooksecurefunc(ns, "ShowUnlockMode", function()
     unlocked = On() == true
     Apply()

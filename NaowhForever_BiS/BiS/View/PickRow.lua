@@ -26,7 +26,6 @@ local WOWHEAD_KIND = B.C.WOWHEAD_KIND
 local HINT = { list = ns.L("Right-click: Wowhead link") .. PLACE_DOT .. ns.L("Shift-click: link"),
     own = ns.L("Right-click: Wowhead link") .. PLACE_DOT .. ns.L("Shift-click: link"),
     add = ns.L("Click: add it") .. PLACE_DOT .. ns.L("Right-click: Wowhead link") }
-HINT.level = HINT.own
 
 local orders = {}
 

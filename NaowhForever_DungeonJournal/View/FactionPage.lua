@@ -24,10 +24,14 @@ local KIND_TITLES = { "Gear", "Recipes", "Other" }
 local BOTH = "B"
 local PRICE_COLUMN, NO_COLUMN = "price", "none"
 local SPEND_ICON = "Interface\\Icons\\INV_Misc_Coin_02"
+local ASIDE_W, ASIDE_GAP, SPLIT_COLUMNS, CARD_SPACE = 340, 18, 2, 8
 
 local TEXT_RANK = ns.L("Rank ")
 local TEXT_EARNED_IN = ns.L("Earned in")
 local TEXT_REWARDS = ns.L("Rewards")
+local TEXT_QUARTERMASTER = ns.L("Quartermaster")
+local TEXT_RANK_VENDOR = ns.L("Rank Vendor")
+local TEXT_BATTLEGROUNDS = ns.L("Battlegrounds")
 local TEXT_QUESTS = ns.L("Quests")
 local TEXT_IN_LOG = ns.L("In your quest log")
 local TEXT_QUEST = ns.L("Quest ")
@@ -142,9 +146,9 @@ function ViewMixin:DrawRankCard(entry, x, w)
     if rank == info.renownLevel + 1 then
         right = Rep.ToGoText(info.renownLevelThreshold - info.renownReputationEarned, true)
     end
-    local rewards = entry.rewards
+    local rewards, sold = entry.rewards, Rep.RankItems(rank)
     self:Add("tier", TEXT_RANK .. rank .. PLACE_DOT .. Rep.RankTitle(rank), ns.THEME.fg, info.renownLevel >= rank,
-        right, #rewards)
+        right, #rewards + self:ListCount(sold))
     self:Space(BOSS_LOOT_GAP)
     self.column = NO_COLUMN
     for i = 1, #rewards do
@@ -154,6 +158,9 @@ function ViewMixin:DrawRankCard(entry, x, w)
         else
             self:Add("reward", reward)
         end
+    end
+    for i = 1, #sold do
+        if self:Listed(sold[i]) then self:AddItem(sold[i], nil, nil) end
     end
     self.column = nil
     return self:CloseCard(card, top)
@@ -171,6 +178,47 @@ function ViewMixin:GatherTiers(faction)
     return total
 end
 
+function ViewMixin:DrawSplitGrid(width)
+    local loose = self.gridLoose
+    self.gridWidth, self.gridLoose = width, true
+    self:DrawGrid(nil, SPLIT_COLUMNS)
+    self.gridWidth, self.gridLoose = nil, loose
+    self:Column(0, width, self.cursor)
+end
+
+function ViewMixin:DrawFactionAside(faction, x, top)
+    self:Column(x, ASIDE_W, top)
+    if Rep.Quartermaster(faction) then
+        self:Section(TEXT_QUARTERMASTER)
+        self:Space(SECTION_SPACE)
+        self:Add("vendor", faction)
+        self:Space(SECTION_SPACE)
+    end
+    if self.navigate and faction.linked and #faction.linked > 0 then
+        self:Section(TEXT_EARNED_IN, #faction.linked)
+        self:Add("links", "", faction.linked)
+        self:Space(SECTION_SPACE)
+    end
+    self:DrawRepQuests(faction)
+    return self.cursor
+end
+
+function ViewMixin:DrawFactionSplit(faction, reaction)
+    local width, top = self:GetWidth(), self.cursor
+    local mainW = width - ASIDE_W - ASIDE_GAP
+    local sideBottom = self:DrawFactionAside(faction, mainW + ASIDE_GAP, top)
+    self:Column(0, mainW, top)
+    self:DrawSpend(faction, reaction)
+    local total = self:GatherTiers(faction)
+    self:Section(TEXT_REWARDS, total)
+    self:Space(SECTION_SPACE)
+    self:DrawSplitGrid(mainW)
+    if total == 0 then self:Note(self:HiddenWhy(faction)) end
+    self:DrawBisNote()
+    self:Column(0, width, math.max(sideBottom, self.cursor))
+    self:Finish()
+end
+
 function ViewMixin:DrawFaction(faction)
     self:Begin(nil, nil, nil, faction)
     self:Add("page", faction)
@@ -178,6 +226,7 @@ function ViewMixin:DrawFaction(faction)
     local counts = wipe(self.trackCounts)
     for _, tier in ipairs(faction.tiers) do counts[tier.standing] = self:ListCount(tier.items) end
     self:Add("track", reaction, value, max, counts)
+    if self.factionAside then return self:DrawFactionSplit(faction, reaction) end
     self:DrawSpend(faction, reaction)
     if self.navigate and faction.linked and #faction.linked > 0 then
         self:Add("links", TEXT_EARNED_IN, faction.linked)
@@ -300,6 +349,43 @@ function ViewMixin:GatherRanks(top)
     return count
 end
 
+function ViewMixin:DrawRankAside(x, top)
+    self:Column(x, ASIDE_W, top)
+    if Rep.RankVendor() then
+        self:Section(TEXT_RANK_VENDOR)
+        self:Space(SECTION_SPACE)
+        self:Add("vendor", J.RANK)
+        self:Space(SECTION_SPACE)
+    end
+    local factions, shown = J.Factions(J.RANK.tab), 0
+    for _, faction in ipairs(factions) do
+        if Rep.Shown(faction) then shown = shown + 1 end
+    end
+    self:Section(TEXT_BATTLEGROUNDS, shown)
+    self:Space(SECTION_SPACE)
+    for _, faction in ipairs(factions) do
+        if Rep.Shown(faction) then
+            self:Add("factionCard", faction)
+            self:Space(CARD_SPACE)
+        end
+    end
+    return self.cursor
+end
+
+function ViewMixin:DrawRankSplit(info)
+    local width, top = self:GetWidth(), self.cursor
+    local mainW = width - ASIDE_W - ASIDE_GAP
+    local sideBottom = self:DrawRankAside(mainW + ASIDE_GAP, top)
+    self:Column(0, mainW, top)
+    local count = self:GatherRanks(info.maxLevel)
+    self:Section(TEXT_RANK_REWARDS, count)
+    self:Space(SECTION_SPACE)
+    self:DrawSplitGrid(mainW)
+    if count == 0 then self:Note(TEXT_NO_RANK_REWARDS) end
+    self:Column(0, width, math.max(sideBottom, self.cursor))
+    self:Finish()
+end
+
 function ViewMixin:DrawRank()
     self:Begin(nil, nil, nil, J.RANK)
     local info = Rep.Rank()
@@ -311,6 +397,7 @@ function ViewMixin:DrawRank()
         return
     end
     self:Add("rankTrack", info)
+    if self.factionAside then return self:DrawRankSplit(info) end
     local count = self:GatherRanks(info.maxLevel)
     self:Section(TEXT_RANK_REWARDS, count)
     self:Space(SECTION_SPACE)

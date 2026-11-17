@@ -1,4 +1,4 @@
--- BossCards.lua: a boss card's header: its kill order, name, Naowh's tip, level, kill count and what its filters hide.
+-- BossCards.lua: a boss card's header: its kill order or this run's kill, portrait, name, Naowh's tip, level, kill count and what its filters hide.
 local ns = _G.NaowhForever
 
 local T = ns.THEME
@@ -11,6 +11,7 @@ local TIP_RGB, INFO, BORDER_RGB = St.TIP_RGB, St.INFO, St.BORDER_RGB
 local BADGE, CARD_HEADER_H, CARD_NAME_SIZE = St.BADGE, St.CARD_HEADER_H, St.CARD_NAME_SIZE
 local TIP_ICON, SMALL_SIZE, TINY_SIZE, TIP_X = St.TIP_ICON, St.SMALL_SIZE, St.TINY_SIZE, St.CURSOR_TIP_X
 local RULE_ALPHA, BADGE_ALPHA, PLACE_DOT = St.RULE_ALPHA, St.BADGE_ALPHA, St.PLACE_DOT
+local DONE_MARK, HAVE_RGB, RARE_RGB, RING = St.DONE_MARK, St.HAVE_RGB, St.RARE_RGB, St.RING
 
 local NAME_TOP = 11
 local BADGE_LIFT = 2
@@ -24,8 +25,14 @@ local TIP_GAP = 4
 local TIP_ROOM = 10
 local NOTE_GAP = 12
 local NOTE_MIN = 40
+local FACE = 34
+local FACE_GAP = 8
+local BUST_W, BUST_H = 48, 28
 
 local TEXT_MENU_HINT = ns.L("Right-click: Wowhead Link")
+local TEXT_MORE_HINT = ns.L("Right-click for more")
+local TEXT_ONLY_BEST = ns.L("Show Only BiS and Upgrades")
+local TEXT_ALL_LOOT = ns.L("Show All Its Loot")
 local TEXT_FILTERED = ns.L("+%d filtered")
 local TEXT_LEVEL = ns.L("Level ")
 local TEXT_FILTERED_LINE = ns.L("%d of its items hidden by your filters (top right).")
@@ -34,6 +41,9 @@ local TEXT_SHOW_BEST = ns.L("Click to show only its BiS and upgrades")
 local TEXT_WOWHEAD = ns.L("Wowhead Link")
 local TEXT_NOTHING_FOR_CLASS = ns.L("Nothing for your class")
 local TEXT_NO_LOOT = ns.L("No boss loot known yet")
+local TEXT_OPEN_BOSS = ns.L("Click to open its page")
+local TEXT_KILLED_RUN = ns.L("Killed this run")
+local TEXT_NEXT = ns.L("Next boss")
 
 local function TipEnter(button)
     button.icon:SetVertexColor(T.fg.r, T.fg.g, T.fg.b)
@@ -52,21 +62,43 @@ local function WowheadPage(boss)
     if boss.chest then return "object", boss.chest end
 end
 
+local function DungeonOf(view, boss)
+    if view.dungeon then return view.dungeon end
+    return boss.npc and select(2, J.Boss(boss.npc))
+end
+
+local function Opens(view, boss)
+    return view.openBoss ~= nil and DungeonOf(view, boss) ~= nil
+end
+
 local function BossEnter(row)
     row.hovered = true
     local view = row:GetParent()
     view:ApplyPin()
     if not Tip(row, "ANCHOR_CURSOR_RIGHT", TIP_X, 0) then return end
-    if row.canPin then
+    local opens = Opens(view, row.boss)
+    if opens then
+        GameTooltip:SetText(row.boss.name, 1, 1, 1)
+        GameTooltip:AddLine(TEXT_OPEN_BOSS, T.accentSoft.r, T.accentSoft.g, T.accentSoft.b)
+    elseif row.canPin then
         GameTooltip:SetText(view.pinned == row.boss and TEXT_SHOW_ALL or TEXT_SHOW_BEST, 1, 1, 1)
     else
         GameTooltip:SetText(row.boss.name, 1, 1, 1)
+    end
+    if row.run == "killed" then
+        GameTooltip:AddLine(TEXT_KILLED_RUN, HAVE_RGB.r, HAVE_RGB.g, HAVE_RGB.b)
+    elseif row.run == "next" then
+        GameTooltip:AddLine(TEXT_NEXT, T.accentSoft.r, T.accentSoft.g, T.accentSoft.b)
     end
     if row.forever then GameTooltip:AddLine(ForeverLine()) end
     if row.hidden > 0 then
         GameTooltip:AddLine(TEXT_FILTERED_LINE:format(row.hidden), T.muted.r, T.muted.g, T.muted.b, true)
     end
-    if WowheadPage(row.boss) then GameTooltip:AddLine(TEXT_MENU_HINT, T.muted.r, T.muted.g, T.muted.b) end
+    if opens and row.canPin then
+        GameTooltip:AddLine(TEXT_MORE_HINT, T.muted.r, T.muted.g, T.muted.b)
+    elseif WowheadPage(row.boss) then
+        GameTooltip:AddLine(TEXT_MENU_HINT, T.muted.r, T.muted.g, T.muted.b)
+    end
     GameTooltip:Show()
 end
 
@@ -76,20 +108,30 @@ local function BossLeave(row)
     GameTooltip:Hide()
 end
 
-local function OpenWowheadMenu(row, boss)
+local function OpenBossMenu(row, boss)
+    local view = row:GetParent()
     local kind, id = WowheadPage(boss)
-    if not kind then return end
+    local pins = row.canPin and Opens(view, boss)
+    if not (kind or pins) then return end
     ns.ContextMenu(row, function(_, root)
         root:CreateTitle(boss.name)
-        root:CreateButton(TEXT_WOWHEAD, function() Parts.CopyWowhead(kind, id, boss.name) end)
+        if pins then
+            root:CreateButton(view.pinned == boss and TEXT_ALL_LOOT or TEXT_ONLY_BEST, function() view:Pin(boss) end)
+        end
+        if kind then root:CreateButton(TEXT_WOWHEAD, function() Parts.CopyWowhead(kind, id, boss.name) end) end
     end)
 end
 
 local function BossClicked(row, button)
     local boss = row.boss
-    if button == "RightButton" then return OpenWowheadMenu(row, boss) end
+    if button == "RightButton" then return OpenBossMenu(row, boss) end
+    local view = row:GetParent()
+    if Opens(view, boss) then
+        GameTooltip:Hide()
+        return view.openBoss(boss, DungeonOf(view, boss))
+    end
     if not row.canPin then return end
-    row:GetParent():Pin(boss)
+    view:Pin(boss)
     BossEnter(row)
 end
 
@@ -123,6 +165,22 @@ local function NewRule(row)
     rule:SetPoint("BOTTOMRIGHT")
     ns.Hairline(rule, "h")
     return rule
+end
+
+local function NewRing(row)
+    local ring = row:CreateTexture(nil, "OVERLAY")
+    ring:SetTexture(RING, nil, nil, "TRILINEAR")
+    ring:SetAllPoints(row.face)
+    ring:SetVertexColor(RARE_RGB.r, RARE_RGB.g, RARE_RGB.b)
+    ring:Hide()
+    return ring
+end
+
+local function SetTag(row, boss, tag)
+    local color = boss.rare and RARE_RGB or T.muted
+    row.rare:SetTextColor(color.r, color.g, color.b)
+    row.rare:SetText(tag or "")
+    row.rare:SetShown(tag ~= nil)
 end
 
 local function StatsText(boss, hidden)
@@ -176,6 +234,10 @@ Kinds.boss = {
     New = function(view)
         local row = CreateFrame("Frame", nil, view)
         NewBadge(row)
+        row.strip = Parts.CardStrip(row)
+        row.bust = Parts.Bust(row, BUST_W, BUST_H)
+        row.face = Parts.BossFace(row, FACE)
+        row.ring = NewRing(row)
         row.name = ns.Font(row, CARD_NAME_SIZE, nil, T.fg)
         row.name:SetJustifyH("LEFT")
         row.name:SetWordWrap(false)
@@ -193,25 +255,40 @@ Kinds.boss = {
         row:SetScript("OnMouseUp", BossClicked)
         return row
     end,
-    Set = function(row, boss, number, shown, hidden)
+    Set = function(row, boss, number, shown, hidden, run)
         local view = row:GetParent()
-        row.boss, row.hovered, row.hidden = boss, false, hidden or 0
+        local new = view.lootDense == true
+        row.boss, row.hovered, row.hidden, row.run = boss, false, hidden or 0, run
         row:EnableMouse(false)
         row.badge:SetShown(number ~= nil)
-        row.number:SetText(number or "")
+        row.number:SetText(run == "killed" and DONE_MARK or number or "")
         local left = number and BADGE + BADGE_GAP or 0
+        row.strip:SetShown(new)
+        row.bust:SetPoint("LEFT", row, "TOPLEFT", left, -CARD_HEADER_H / 2)
+        local bust = new and Parts.SetBust(row.bust, boss)
+        if not bust then row.bust:Hide() end
+        row.face:SetPoint("LEFT", row, "TOPLEFT", left, -CARD_HEADER_H / 2)
+        local face = not bust and Parts.SetBossFace(row.face, boss, new)
+        if bust then row.face:Hide() end
+        row.ring:SetShown(face and boss.rare == true)
+        if bust then left = left + BUST_W + FACE_GAP end
+        if face then left = left + FACE + FACE_GAP end
         row.name:ClearAllPoints()
         row.name:SetPoint("TOPLEFT", left, -NAME_TOP)
         row.name:SetWidth(0)
         row.forever = J.IsForeverBoss(boss)
         row.name:SetText(boss.name)
         local tag = J.BossTag(boss)
-        row.rare:SetText(tag or "")
-        row.rare:SetShown(tag ~= nil)
+        SetTag(row, boss, tag)
         row.stats:SetWidth(0)
-        row.stats:SetText(StatsText(boss, row.hidden))
+        row.stats:SetText(new and (row.hidden > 0 and ns.Color("muted", TEXT_FILTERED:format(row.hidden)) or "")
+            or StatsText(boss, row.hidden))
         local right = SetKills(row, boss, view)
         local tip = SetTipButton(row, boss, view, tag)
+        if new then
+            row.tipButton:Hide()
+            tip = nil
+        end
         local after = (tag and TAG_GAP + math.ceil(row.rare:GetStringWidth()) or 0) + (tip and TIP_ICON + TIP_ROOM or 0)
         FitName(row, left, after, right)
         row.rule:SetShown(shown > 0)

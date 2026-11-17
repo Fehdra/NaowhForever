@@ -208,16 +208,13 @@ function BossPanel.NotCounted(dungeon)
     return TEXT_NOT_A_FIGHT
 end
 
-local function Draw()
-    local boss = shown.boss
+local function DrawHistory(boss, dungeon)
     Kills.Gather(boss)
     local record = Kills.Record(boss)
-    panel.title:SetText(boss.name:upper())
-    view:Begin(nil, nil, nil)
     view.showChance = false
     view.bare = true
     Build(boss, record)
-    if not Kills.Counted(boss) then view:Note(BossPanel.NotCounted(shown.dungeon)) end
+    if not Kills.Counted(boss) then view:Note(BossPanel.NotCounted(dungeon)) end
     view:Section(TEXT_KILLS, record and record.n or 0)
     view:Space(SECTION_SPACE)
     if #entries == 0 then view:Note(TEXT_NOTHING_YET) end
@@ -227,7 +224,20 @@ local function Draw()
         view:Note(TEXT_LATEST:format(#record.at, date(KILL_DATE, record.first)))
     end
     view:Space(SECTION_SPACE)
+end
+
+local function Draw()
+    panel.title:SetText(shown.boss.name:upper())
+    view:Begin(nil, nil, nil)
+    DrawHistory(shown.boss, shown.dungeon)
     view:Finish()
+end
+
+function BossPanel.DrawInto(target, boss, dungeon)
+    local own = view
+    view = target
+    DrawHistory(boss, dungeon)
+    view = own
 end
 
 function BossPanel.Show(boss, from, dungeon)

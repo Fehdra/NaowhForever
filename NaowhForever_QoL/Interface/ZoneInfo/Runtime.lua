@@ -230,5 +230,5 @@ local function OnSetting(key)
     if key == "enabled" or key:find("^zoneInfo") then Z.Apply() end
 end
 S.OnChange(OnSetting)
-hooksecurefunc(ns, "Apply", Z.Apply)
+ns.OnApply(Z.Apply)
 Z.Apply()

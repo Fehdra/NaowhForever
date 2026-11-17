@@ -172,4 +172,4 @@ S.OnChange(RedrawSoon)
 hooksecurefunc(ns.UI, "RefreshPage", function()
     if view == "sets" then RedrawSoon() end
 end)
-hooksecurefunc(ns, "Apply", RedrawSoon)
+ns.OnApply(RedrawSoon)

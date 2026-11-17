@@ -389,7 +389,7 @@ ns.PlaceTopCentreWidgets = PlaceWidgets
 
 pending:SetScript("OnEvent", OnPending)
 hooksecurefunc(S, "Set", SettingChanged)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 hooksecurefunc(ns, "ShowUnlockMode", Unlocked)
 hooksecurefunc(ns, "HideUnlockMode", Locked)
 

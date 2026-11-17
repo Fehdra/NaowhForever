@@ -11,7 +11,7 @@ ns.Journal.AddDungeon("RazorfenDowns", {
         { bosses = {
             { npc = 7355, name = "Tuten'kash", model = 7845, encounters = { 2780 }, loot = { 10776, 10775, 10777 }, chance = { 34, 32, 30 } },
             { npc = 7357, name = "Mordresh Fire Eye", model = 8055, encounters = { 2782 }, loot = { 10770, 10769, 10771 }, chance = { 33, 32, 32 } },
-            { npc = 8567, name = "Glutton", model = 7864, encounters = { 2784 }, loot = { 10772, 10774 }, chance = { 50, 48 } },
+            { npc = 8567, name = "Glutton", model = 7864, encounters = { 2784 }, loot = { 10772, 10774, 274385 }, chance = { 50, 48, 0 } },
             { npc = 7358, name = "Amnennar the Coldbringer", model = 7971, encounters = { 2785 }, loot = { 10762, 10763, 10764, 10765, 10761, 274381 }, chance = { 39, 37, 29, 27, 19, 0 } },
             { npc = 7354, name = "Ragglesnout", model = 11382, rare = true, encounters = { 2783 }, loot = { 10767, 10768, 10758 }, chance = { 40, 38, 20 } },
             { npc = 7356, name = "Plaguemaw the Rotting", model = 6124, rare = true, encounters = { 2781 }, loot = { 10760, 10766, 274380 }, chance = { 63, 33, 0 } },

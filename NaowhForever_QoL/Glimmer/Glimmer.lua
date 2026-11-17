@@ -41,7 +41,7 @@ local function SplitGivers()
     S.Set("giver", S.Get("quest"))
 end
 
-hooksecurefunc(ns, "Apply", SplitGivers)
+ns.OnApply(SplitGivers)
 
 function G.On()
     return S.Get("enabled") and true or false

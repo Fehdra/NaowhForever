@@ -132,5 +132,5 @@ function ns.LiftsCommand(arg)
 end
 
 S.OnChange(Lifts.Apply)
-hooksecurefunc(ns, "Apply", Lifts.Apply)
+ns.OnApply(Lifts.Apply)
 Lifts.Apply()

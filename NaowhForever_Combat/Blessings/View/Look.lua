@@ -216,7 +216,7 @@ function Look.Place(frame, row, x, y)
     frame:SetSize(size, size)
     local font, outline, missing = Look.font, Look.outline, tints[RED]
     Parts.HudFont(frame.timer, font, Look.timerSize, outline)
-    if frame.watchText then Parts.HudFont(frame.watchText, font, Look.timerSize, outline) end
+    if frame.watchText and frame.watchText:CanBeAccessedInContext() then Parts.HudFont(frame.watchText, font, Look.timerSize, outline) end
     Parts.HudFont(frame.mark, font, MARK_SIZE, outline)
     frame.mark:SetTextColor(missing.r, missing.g, missing.b)
     if frame.label then PlaceLabel(frame, size) end

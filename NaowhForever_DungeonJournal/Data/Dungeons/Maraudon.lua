@@ -10,7 +10,7 @@ ns.Journal.AddDungeon("Maraudon", {
         { bosses = {
             { npc = 13282, name = "Noxxion", model = 11172, encounters = { 422 }, loot = { 17746, 17744, 17745 }, chance = { 36, 36, 18 } },
             { npc = 12258, name = "Razorlash", model = 12389, encounters = { 423 }, loot = { 17749, 17750, 17748, 17751 }, chance = { 24, 24, 24, 24 } },
-            { npc = 12236, name = "Lord Vyletongue", model = 12334, encounters = { 424 }, loot = { 17754, 17752, 17755 }, chance = { 29, 29, 28 } },
+            { npc = 12236, name = "Lord Vyletongue", model = 12334, encounters = { 424 }, loot = { 17754, 17752, 17755, 275864 }, chance = { 29, 29, 28, 0 } },
             { npc = 12225, name = "Celebras the Cursed", model = 12350, encounters = { 425 }, loot = { 17739, 17738, 17740, 14448 }, chance = { 32, 32, 30, 0 } },
             { npc = 12203, name = "Landslide", model = 12293, encounters = { 426 }, loot = { 17943, 17737, 17736, 17734, 14666, 14794, 14960, 15642 }, chance = { 26, 24, 24, 23, 0, 0, 0, 0 } },
             { npc = 13601, name = "Tinkerer Gizlock", model = 7125, encounters = { 427 }, loot = { 17719, 17718, 17717 }, chance = { 33, 33, 33 } },

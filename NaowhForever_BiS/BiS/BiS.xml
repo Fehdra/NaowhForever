@@ -13,6 +13,7 @@
     <Script file="Auto.lua"/>
     <Script file="Enchants.lua"/>
     <Script file="Sharing.lua"/>
+    <Script file="MythicSim.lua"/>
     <Script file="Marks.lua"/>
     <Script file="Alerts.lua"/>
     <Script file="Quests.lua"/>

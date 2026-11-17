@@ -85,7 +85,10 @@ local ASK_KEYS = { SPACE = true, S = true, UP = true, DOWN = true }
 local REASONS = {
     under = ns.L("%s under the cheapest listing, %s."),
     match = ns.L("Matches the cheapest listing, %s."),
+    silver = ns.L("Items post in whole silver, so this is %s under the cheapest listing, %s."),
     yours = ns.L("Yours is already the cheapest, at %s, so this matches it."),
+    underPast = ns.L("%s under %s, the cheapest after %s listed far under the rest."),
+    matchPast = ns.L("Matches %s, the cheapest after %s listed far under the rest."),
     scan = ns.L("Nobody is selling this right now. Priced at your last scan, %s."),
     vendor = ns.L("Nobody is selling this and your scans have no price for it. Check the price before you post."),
     hand = ns.L("Your price, set by hand."),
@@ -146,14 +149,18 @@ local function CanPost(entry)
     return Sell.Quantity(entry) > 0 and (deposit or 0) <= GetMoney() and Sell.BidFits(entry)
 end
 
-local function Reason(entry, price, why, ref)
+local function Reason(entry, price, why, ref, passed)
     if failed then return REASONS.failed end
     if entry.vendorBetter then return REASONS.vendorBetter:format(Coins(entry.vendor)) end
     if why == "hand" then return REASONS.hand end
     local state = Listings.state
     if state == "noanswer" then return REASONS.noanswer end
     if state ~= "listed" then return REASONS[state or "searching"] end
+    local past = passed and passed > 0 and BreakUpLargeNumbers(passed)
+    if why == "under" and past then return REASONS.underPast:format(Coins(ref - price), Coins(ref), past) end
     if why == "under" then return REASONS.under:format(Coins(ref - price), Coins(ref)) end
+    if why == "silver" then return REASONS.silver:format(Coins(ref - price), Coins(ref)) end
+    if why == "match" and past then return REASONS.matchPast:format(Coins(ref), past) end
     if why == "vendor" then return REASONS.vendor end
     return REASONS[why]:format(Coins(ref))
 end
@@ -234,7 +241,7 @@ local function DrawFocus()
         page.chart:Hide()
         return
     end
-    local price, why, ref = Sell.Price(entry)
+    local price, why, ref, passed = Sell.Price(entry)
     head.icon.texture:SetTexture(entry.icon)
     head.link = entry.link
     local color = Items.QualityColor(entry.itemID) or T.fg
@@ -242,7 +249,7 @@ local function DrawFocus()
     head.name:SetText(TEXT_COUNT:format(ItemName(entry), entry.count))
     head.sub:SetText(entry.scan and TEXT_SCAN_SUB:format(Coins(entry.scan)) or TEXT_NO_SCAN_SUB)
     head.listed:SetText(entry.vendorBetter and "" or ListedText())
-    reason.text:SetText(Reason(entry, price, why, ref))
+    reason.text:SetText(Reason(entry, price, why, ref, passed))
     DrawForm(entry, price)
     DrawPost(entry, price)
     listPane:SetHeight(listPane:Paint(entry, price))
@@ -517,9 +524,10 @@ local function PostAsked()
 end
 
 local function AcceptAsk()
-    asking.onClose = nil
-    asking:Hide()
+    local dimmer = asking
+    dimmer.onClose = nil
     PostAsked()
+    dimmer:Hide()
 end
 
 local function Idle() end
@@ -532,7 +540,7 @@ local function DoPost()
     if not risk then return Send(entry, count, price, startBid) end
     ask.key, ask.count, ask.price, ask.bid = entry.key, count, price, startBid
     local _, dimmer = ns.Confirm(ASKS[risk]:format(ItemName(entry), Coins(price), Coins(ref)), PostAsked, AskClosed,
-        TEXT_POST_ANYWAY, TEXT_CANCEL)
+        TEXT_POST_ANYWAY, TEXT_CANCEL, true)
     asking = dimmer
 end
 

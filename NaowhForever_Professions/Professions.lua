@@ -53,7 +53,7 @@ local function SplitTooltipCharacters()
     S.Set("disenchantDealsTooltipAllCharacters", all)
 end
 
-hooksecurefunc(ns, "Apply", SplitTooltipCharacters)
+ns.OnApply(SplitTooltipCharacters)
 
 local temporary = {}
 

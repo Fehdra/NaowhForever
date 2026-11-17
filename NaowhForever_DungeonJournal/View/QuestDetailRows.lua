@@ -1,4 +1,4 @@
--- QuestDetailRows.lua: the quest panel's rows: the quest's title and state, and an objective with its bar.
+-- QuestDetailRows.lua: the quest panel's rows: the quest's title and state, an objective with its bar, and an item it asks for.
 local ns = _G.NaowhForever
 
 local T = ns.THEME
@@ -93,3 +93,5 @@ Kinds.objective = {
         return OBJECTIVE_H
     end,
 }
+
+Kinds.questItem = ns.Shared.Kinds.item

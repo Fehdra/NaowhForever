@@ -606,7 +606,7 @@ end
 
 events:SetScript("OnEvent", OnEvent)
 hooksecurefunc(S, "Set", OnSettingChanged)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 ns.OnAuctionHouseMoved(Render)
 
 local boot = CreateFrame("Frame")

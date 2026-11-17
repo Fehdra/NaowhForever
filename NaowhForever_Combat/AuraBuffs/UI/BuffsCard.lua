@@ -35,11 +35,17 @@ local NEEDS_THORNS = ns.L("Needs Thorns")
 local TEXT_WEAPON = "Weapon Enhancement"
 local TEXT_AT_60 = "Hide in the World at Level 60"
 local TEXT_CARRIED = "Off: a reminder even with none in your bags, so you know to buy some."
+local TEXT_PICK = "Off: no reminder for this kind."
 local TEXT_NOTHING = ns.L("Nothing to remind you of here.")
 local TEXT_BLESSINGS = ns.L("Off by default: the Blessings module covers them.")
+local TEXT_CONSUMABLE_PICKS = "Consumables to Remind"
 local TEXT_RAID_PICKS = "Raid Buffs to Remind"
 local TEXT_PERSONAL_PICKS = "Personal Buffs to Remind"
 local TEXT_THORNS_TANK = "Thorns Only on Tank"
+local TEXT_TYPED = "Your Spell"
+local TEXT_REMOVE = "Remove"
+local TEXT_UNKNOWN = ns.L("Unknown spell")
+local MAX_TYPED = 8
 
 local PERSONAL, ALL_PERSONAL = {}, {}
 local _, playerClass = UnitClass("player")
@@ -110,8 +116,9 @@ local function PaintPreview(shot, state)
     end
     for i = 1, RAID_SAMPLE - 1 do
         local p = PREVIEW[i]
-        if consumables then Put(shot.cells[i], p.item and C_Item.GetItemIconByID(p.item) or C_Spell.GetSpellTexture(p.spell), p.count) end
-        shot.cells[i]:SetShown(consumables)
+        local on = consumables and R.ConsumablePicked(p.kind)
+        if on then Put(shot.cells[i], p.item and C_Item.GetItemIconByID(p.item) or C_Spell.GetSpellTexture(p.spell), p.count) end
+        shot.cells[i]:SetShown(on)
     end
     if bag then Put(shot.bag, C_Item.GetItemIconByID(SLEEPING_BAG)) end
     shot.bag:SetShown(bag and true or false)
@@ -158,6 +165,18 @@ local function PickRow(family)
         end }
 end
 
+local function ConsumableRow(category)
+    return { key = "consumablePicks", field = category, label = A.CATEGORY_NAMES[category], toggle = true,
+        needs = Enabled, why = OFF, help = TEXT_PICK,
+        get = function() return R.ConsumablePicked(category) end,
+        set = function(on)
+            local picks = {}
+            for k, v in pairs(S.Get("consumablePicks")) do picks[k] = v end
+            picks[category] = on
+            S.Set("consumablePicks", picks)
+        end }
+end
+
 local function CarriedRow(category, label, needs, why)
     return { key = "carriedPicks", field = category, label = label, toggle = true, needs = needs, why = why,
         help = TEXT_CARRIED,
@@ -188,6 +207,28 @@ local function TankRow(family)
         help = "Reminds you to put Thorns on your group's tank, or on yourself while solo." }, family)
 end
 
+local function TypedSpell(i)
+    local family = R.CustomBuffs()[i]
+    return family and family.spells[1]
+end
+
+local function TypedRow(i)
+    return { label = TEXT_TYPED, buttonText = TEXT_REMOVE, needs = PersonalBuffsOn, why = NEEDS_PERSONAL,
+        help = "Stops reminding you of this spell.",
+        hidden = function() return TypedSpell(i) == nil end,
+        note = function()
+            local id = TypedSpell(i)
+            return id and ((C_Spell.GetSpellName(id) or TEXT_UNKNOWN) .. " (" .. id .. ")") or ""
+        end,
+        button = function()
+            local keep = {}
+            for n, family in ipairs(R.CustomBuffs()) do
+                if n ~= i then keep[#keep + 1] = family.spells[1] end
+            end
+            S.Set("personalBuffExtra", table.concat(keep, ", "))
+        end }
+end
+
 local rows = {
     Group("Consumables"),
     { key = "consumablesWorld", label = "Show in the World", toggle = true, needs = Enabled, why = OFF },
@@ -210,10 +251,14 @@ local rows = {
       help = "Your Elemental Attractor in the world and dungeons, when Magical Awareness is missing." },
     { key = "hideResting", label = "Hide While Resting", toggle = true, needs = Enabled, why = OFF,
       help = "No consumable or personal buff reminders in cities and inns." },
-    Group("Only If I Carry One"),
+    Group(TEXT_CONSUMABLE_PICKS),
 }
+for _, category in ipairs(A.CATEGORY_ORDER) do rows[#rows + 1] = ConsumableRow(category) end
+rows[#rows + 1] = Group("Only If I Carry One")
 for _, category in ipairs(A.CATEGORY_ORDER) do
-    rows[#rows + 1] = CarriedRow(category, A.CATEGORY_NAMES[category], Enabled, OFF)
+    if not D.DEFAULT_GROUPS[category].carried then
+        rows[#rows + 1] = CarriedRow(category, A.CATEGORY_NAMES[category], Enabled, OFF)
+    end
 end
 rows[#rows + 1] = CarriedRow("weapon", TEXT_WEAPON, WeaponOn, NEEDS_WEAPON)
 rows[#rows + 1] = Group("Raid Buffs", true)
@@ -266,6 +311,10 @@ for _, family in ipairs(ALL_PERSONAL) do
     rows[#rows + 1] = PersonalRow(family)
     if family.key == "thorns" then rows[#rows + 1] = TankRow(family) end
 end
+rows[#rows + 1] = { key = "personalBuffExtra", label = "Spell IDs", text = true, wide = true,
+    needs = PersonalBuffsOn, why = NEEDS_PERSONAL,
+    help = "Your own buffs to remind you of, by the ID of the spell you cast, separated by spaces or commas." }
+for i = 1, MAX_TYPED do rows[#rows + 1] = TypedRow(i) end
 rows[#rows + 1] = Group("Glow")
 rows[#rows + 1] = { key = "buffGlow", label = "Glow", toggle = true, needs = Enabled, why = OFF,
     help = "A glow around each reminder icon, since each is a buff that is missing or running out." }

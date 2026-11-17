@@ -118,7 +118,13 @@ local function Attach(to, info)
     fx:SetIgnoreParentAlpha(true)
     fx:ClearAllPoints()
     local giver = info.category == "giver"
-    fx:SetPoint("CENTER", to, "CENTER", 0, giver and St.PLATE_Y + S.Get("giverOffset") or St.PLATE_Y)
+    local y = St.PLATE_Y
+    if giver then
+        y = y + S.Get("giverOffset")
+    elseif info.category == "bobber" then
+        y = St.BOBBER_Y
+    end
+    fx:SetPoint("CENTER", to, "CENTER", 0, y)
     if info.category == "corpse" or (giver and S.Get("giverHideBar")) then HideBar(to) end
     line:ClearAllPoints()
     line:SetPoint("TOP", to, "BOTTOM", 0, St.LINE_Y)
@@ -241,7 +247,7 @@ local function OnSet(key)
 end
 
 hooksecurefunc(S, "Set", OnSet)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 
 local boot = CreateFrame("Frame")
 boot:RegisterEvent("PLAYER_LOGIN")

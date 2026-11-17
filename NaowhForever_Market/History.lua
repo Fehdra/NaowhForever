@@ -6,8 +6,8 @@ local C = Market.C
 
 local STORE = "marketHistory"
 local PERCENT = 100
-local ENTRY = "%d:%d"
-local COUNTED = "%d:%d:%d"
+local ENTRY = "%d:%.0f"
+local COUNTED = "%d:%.0f:%d"
 local SEP = ","
 local NO_COUNTS = {}
 

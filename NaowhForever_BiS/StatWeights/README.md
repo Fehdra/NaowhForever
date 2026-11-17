@@ -9,7 +9,9 @@ scales on the BiS List's title bar), and only their changes are kept, for the ac
 - **On (Upgrades on Tooltips):** a line on the tooltip of gear that is an upgrade for your spec,
   in its name: "Fire: (arrow) +9% upgrade", and under it what the item is weighed against.
   Nothing on gear that is not one. A ring or trinket is weighed against the weaker of the two
-  you wear, a two-hander against both hands.
+  you wear, a two-hander against both hands. While you hold a two-hander, a one-hander or an
+  off-hand item is weighed with the best item in your bags for the other hand, and the line
+  names it: "+4% upgrade (dot) Combat (dot) with Thrash Blade".
 - **On (Upgrade Marks):** the arrow and percent on the item itself, no hover needed: quest rewards
   (at the quest giver and in the quest log and map), merchants, the loot window, loot rolls and the
   auction house's browse list. Among two or more reward choices, a gold coin marks the one that
@@ -100,6 +102,16 @@ StatWeights/
 - Under `MIN_GAIN` (half a percent) is no upgrade. A ring or trinket is weighed against the weaker of
   the two you wear, a two-hander against both hands. The game files a cloak under cloth; everyone
   wears one, so its subclass is read as 0 for the class rules.
+- An item for one hand costs you the two-hander you hold, so it is weighed with a partner for the
+  other hand: the best in your bags that your class can use, and for a weapon in the off hand only
+  when `CanDualWield`. Both hands' best and next best (for when the item hovered is itself the best)
+  are found in one pass over your bags, kept per set of weights, and read again only after
+  `BAG_UPDATE`, `BAG_UPDATE_DELAYED`, a gear change, a level or learning to dual wield; your bags
+  are never read while you hold no two-hander. The bag events are registered on the first such
+  pass. A pass that met an item the game had no data for yet listens for `GET_ITEM_INFO_RECEIVED`
+  once, so the pass is made again when it arrives. A partner is always an item you have: two new
+  items offered together do not pair with each other, and a second copy of the item hovered is not
+  its partner.
 - The comparison tooltips beside an item's (what you wear) have no `GetItem` on this client: those go
   by the ID. An item's own link is read where there is one, for its random stats.
 - A simulator's export is WoWSims' EP export: `( <tool>: v1: "Name": Class=Rogue, Agility=2.1, ... )`.
@@ -126,9 +138,11 @@ StatWeights/
   `Data/IntPerCrit.lua`'s Intellect, between its levels in a straight line. Both read only while
   your stats are not secret; in combat the last reading stands. An Intellect or Spirit you set or
   import yourself is never worked out over.
-- A Healer Stat Weights export names its crit rating per point (`SpellCritRating`) where every
-  other import is per 1%; its `SpellHaste` key, which no simulator uses, tells it apart, and its
-  crit is read times 14.
+- A Healer Stat Weights export before 13 Nov 2026 names its crit rating per point (`SpellCritRating`)
+  where every other import is per 1%; its `SpellHaste` key, which no simulator uses, tells it apart,
+  and its crit is read times 14. Its newer export uses Pawn's `CritRating` and `HasteRating`, per 1%.
+- A healer's import reads crit and hit as Spell Crit and Spell Hit, the ones a healer is weighed by
+  and Healer Mana prices Intellect's crit with: a Pawn string names them `CritRating` and `HitRating`.
 - Upgrade Marks hook the game's own painters once, on first enable: `QuestInfo_ShowRewards`,
   `SetItemButtonQuality` (the quest and loot buttons, again when an item's data arrives late),
   `MerchantFrameItem_UpdateQuality` and `GroupLootFrame_SetupItemDisplay`. The auction house's
@@ -140,5 +154,6 @@ StatWeights/
 ## Checking
 
 - `lua Tools/regression/test-stat-weights.lua`: the defaults (every spec, its anchor, ranges,
-  ratings), your changes and new defaults, sharing, the gain math, the tooltip line and its
+  ratings), your changes and new defaults, sharing, the gain math, a pair against a two-hander
+  and its one read of your bags, the tooltip line and its
   hook only once on, the window, Healer Mana, a healer's measured export and Mana Upgrades.

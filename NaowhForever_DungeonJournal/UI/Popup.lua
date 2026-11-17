@@ -43,6 +43,7 @@ local function Open(boss, dungeon)
     popup.title:SetText(dungeon.name:upper())
     popup.backdrop:Paint(1)
     popup:Show()
+    view.lootDense = J.Settings.Get("newLayout") == true
     view:DrawBossLoot(boss, dungeon)
 end
 

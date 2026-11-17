@@ -239,7 +239,7 @@ hooksecurefunc(GI, "Close", Listen)
 S.OnChange(function(key)
     if key == "groupInspectShare" or key == "groupInspect" then Listen() end
 end)
-hooksecurefunc(ns, "Apply", Listen)
+ns.OnApply(Listen)
 frame = CreateFrame("Frame")
 frame:SetScript("OnEvent", OnEvent)
 Toggle("PLAYER_ENTERING_WORLD", true)

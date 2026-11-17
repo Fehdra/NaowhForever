@@ -662,11 +662,16 @@ local function Update()
     if yards > REACHED + LEAVE_MARGIN then seenAway = true end
     if yards > near + LEAVE_MARGIN then seenFar = true end
     local reach = seenFar and near or REACHED
-    if shown.user and not shown.guide and not shown.onRoute and not selfCleared and seenAway and yards <= reach and OnWaypointMap() then
-        selfCleared = true
-        Arrived()
-        ns.ClearWaypoint()
-        return
+    if shown.user and not shown.guide and not selfCleared and seenAway and yards <= reach and OnWaypointMap() then
+        if not shown.onRoute then
+            selfCleared = true
+            Arrived()
+            ns.ClearWaypoint()
+            return
+        elseif ns.WaypointRouteReached() then
+            Arrived()
+            return
+        end
     end
     pin:SetShown(not (behind or reached) and (mode ~= "edge" or edgeOn))
     cue:SetShown(behind and not reached and edgeOn)
@@ -895,7 +900,7 @@ hooksecurefunc(S, "Set", function(key)
         Apply()
     end
 end)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 hooksecurefunc(ns, "ShowUnlockMode", function()
     unlocked = On() == true
     if unlocked and not driver then Build() end

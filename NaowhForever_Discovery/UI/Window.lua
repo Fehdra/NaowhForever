@@ -1,10 +1,11 @@
--- Window.lua: Discovery's own window (/nfdiscovery): the Library Books, Sleeping Bag, Field Journal, Quest List and Rares tabs.
+-- Window.lua: Discovery's own window (/nfdiscovery): the Library Books, Sleeping Bag, Attunements, Field Journal, Quest List and Rares tabs.
 local ns = _G.NaowhForever
 
 local Discovery = ns.Discovery
 local C = Discovery.C
 local Library = Discovery.Library
 local Bag = Discovery.Bag
+local Attune = Discovery.Attune
 local Field = Discovery.Field
 local Style = Discovery.Style
 local V = Discovery.View
@@ -25,15 +26,21 @@ local EVENTS = { "BAG_UPDATE_DELAYED", "QUEST_TURNED_IN", "QUEST_ACCEPTED", "PLA
 local FILTERS = {
     { key = "books", label = "Library Books", tip = "Every book for your faction, a tick on those handed in." },
     { key = "bag", label = "Sleeping Bag", tip = "The Cozy Sleeping Bag's hidden quest chain, step by step." },
+    { key = "attune", label = "Attunements", tip = "The quest chain for each dungeon key and attunement, step by step." },
     { key = "journal", label = "Field Journal", tip = "The fish you have caught, the herbs you have picked and the dishes you have cooked." },
     { key = "quests", label = "Quest List", tip = "Every quest of every zone, and where you are in each chain." },
     { key = "rares", label = "Rares", tip = "Every rare of every zone, and which of them you have killed." },
+    { key = "history", label = "Quest History", tip = "The quests you have taken, handed in and dropped, day by day." },
 }
-local QUEST_TABS = { quests = true, rares = true }
+local QUEST_TABS = { quests = true, rares = true, history = true }
 local PAGES = {
     { key = "fish", label = "Fish", tip = "Every fish you can catch, and where." },
     { key = "herbs", label = "Herbs", tip = "Every herb you can pick, and where it grows." },
     { key = "dishes", label = "Cooking", tip = "Every dish you can cook, and where to learn it." },
+}
+local ATTUNE_PAGES = {
+    { key = "raids", label = "Raids", tip = "The quest chain for each raid attunement, step by step." },
+    { key = "dungeons", label = "Dungeons", tip = "The quest chain for each dungeon key, step by step." },
 }
 local RANKS = { "Apprentice", "Journeyman", "Expert", "Artisan" }
 local NO_EVENTS = {}
@@ -48,10 +55,15 @@ local TEXT_SEPARATOR = "  -  "
 local TEXT_FOR_FACTION = ns.L(" books for your faction")
 local TEXT_SCHOOLS = "Schools of fish"
 local TEXT_KEPT = ns.L("Kept for this character.")
+local TEXT_KEY = "%s: %s"
+local TEXT_STEP_OF = ns.L("Step %d of %d")
+local TEXT_HAVE = ns.L("Done")
+local TEXT_ITEM = ns.L("Item ")
 
 local window, scroll, view, questScroll
 local filter = "books"
 local page = "fish"
+local attunePage = "raids"
 local zones
 local zoneBooks = {}
 local rankCounts = {}
@@ -88,6 +100,31 @@ local function DrawBag(self)
     self:Section(TEXT_OPTIONAL)
     local sideDone = C_QuestLog.IsQuestFlaggedCompleted(side.done)
     self:Add("step", side, "", sideDone and "done" or "optional", false)
+    self:Fit(EVENTS)
+end
+
+local function KeyLine(self, entry, at, total)
+    local name = Attune.Title(entry)
+    if not name then
+        self.waitingFor[entry.item], self.waiting = true, true
+        name = TEXT_ITEM .. entry.item
+    end
+    local have = at > total or Attune.Have(entry)
+    return TEXT_KEY:format(name, have and TEXT_HAVE or TEXT_STEP_OF:format(at, total))
+end
+
+local function DrawAttunements(self)
+    local raids = attunePage == "raids"
+    for _, entry in ipairs(ns.Attunements.list) do
+        if (entry.raid == true) == raids then
+            local steps = Attune.Steps(entry)
+            local at = Attune.At(entry)
+            self:Section(entry.dungeon, #steps)
+            self:Note(KeyLine(self, entry, at, #steps))
+            for i, id in ipairs(steps) do self:Add("attune", id, i, Attune.State(id, i, at), i % 2 == 0) end
+            self:Space(Style.SECTION_GAP)
+        end
+    end
     self:Fit(EVENTS)
 end
 
@@ -169,6 +206,7 @@ function Draw:Redraw()
     zones = zones or ZoneOrder()
     self:Clear()
     if filter == "bag" then return DrawBag(self) end
+    if filter == "attune" then return DrawAttunements(self) end
     if filter == "journal" then return DrawJournal(self) end
     DrawBooks(self)
 end
@@ -187,6 +225,7 @@ local function ShowFilter(opening)
     local quests = QUEST_TABS[filter]
     scroll:SetShown(not quests)
     window.pages:SetShown(filter == "journal")
+    window.attunePages:SetShown(filter == "attune")
     if quests then
         ns.Completo.Tabs.Show(filter, opening)
     else
@@ -206,6 +245,13 @@ end
 local function PickPage(key)
     page = key
     Parts.PaintTabs(window.pages, page)
+    scroll:SetVerticalScroll(0)
+    view:Redraw()
+end
+
+local function PickAttunePage(key)
+    attunePage = key
+    Parts.PaintTabs(window.attunePages, attunePage)
     scroll:SetVerticalScroll(0)
     view:Redraw()
 end
@@ -235,6 +281,9 @@ local function Build()
     window.pages = Parts.Tabs(window, 1, PAGES, PickPage)
     Parts.FitTabs(window.pages, PAGES, TAB_MARGIN, search:GetWidth())
     window.pages:SetPoint("RIGHT", search, "RIGHT")
+    window.attunePages = Parts.Tabs(window, 1, ATTUNE_PAGES, PickAttunePage)
+    Parts.FitTabs(window.attunePages, ATTUNE_PAGES, TAB_MARGIN, search:GetWidth())
+    window.attunePages:SetPoint("RIGHT", search, "RIGHT")
     top = top + Style.TAB_H + Style.TAB_GAP + SCROLL_TOP_GAP
     scroll = ns.UI.SlimScroll(window)
     PlaceScroll(scroll, left, top, footer)
@@ -248,6 +297,7 @@ local function Paint()
     window.backdrop:Paint(1)
     Parts.PaintTabs(window.filters, filter)
     Parts.PaintTabs(window.pages, page)
+    Parts.PaintTabs(window.attunePages, attunePage)
     if QUEST_TABS[filter] then return end
     PaintNote()
 end
@@ -280,4 +330,4 @@ function ns.ToggleDiscoveryWindow(tab)
 end
 
 Field.OnChange(OnFieldChanged)
-hooksecurefunc(ns, "Apply", OnApply)
+ns.OnApply(OnApply)

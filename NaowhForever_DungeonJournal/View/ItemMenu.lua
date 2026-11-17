@@ -1,8 +1,9 @@
--- ItemMenu.lua: an item's right-click menu: the BiS list and its Wowhead link.
+-- ItemMenu.lua: an item's right-click menu: the BiS list, Favourites and its Wowhead link.
 local ns = _G.NaowhForever
 
 local J = ns.Journal
 local Loot = J.Loot
+local Favourites = J.Favourites
 
 local BIS_ADDON = "NaowhForever_BiS"
 
@@ -11,6 +12,8 @@ local TEXT_TURN_ON = ns.L("Turn on BiS List")
 local TEXT_ADD = ns.L("Add to BiS List")
 local TEXT_PROMOTE = ns.L("Make it #1")
 local TEXT_REMOVE = ns.L("Remove from BiS List")
+local TEXT_FAVOURITE_ADD = ns.L("Add to Favourites")
+local TEXT_FAVOURITE_REMOVE = ns.L("Remove from Favourites")
 local TEXT_WOWHEAD = ns.L("Wowhead Link")
 
 local function AddBisButtons(root, itemID, Then, onChange)
@@ -41,6 +44,10 @@ function J.View.ItemMenu(owner, itemID, onChange)
         if Loot.BisGear(itemID) and not J.IsNotYet(itemID) then
             AddBisButtons(root, itemID, Then, onChange)
             root:CreateDivider()
+        end
+        if Favourites.On() then
+            root:CreateButton(Favourites.Is(itemID) and TEXT_FAVOURITE_REMOVE or TEXT_FAVOURITE_ADD,
+                function() Then(Favourites.Toggle) end)
         end
         root:CreateButton(TEXT_WOWHEAD, function() J.View.Parts.CopyWowhead("item", itemID, name) end)
     end)

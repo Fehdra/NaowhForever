@@ -310,8 +310,8 @@ events:SetScript("OnEvent", OnEvent)
 hooksecurefunc(S, "Set", function(key)
     if key == "enabled" or key:find("^quest") or key:find("^gossip") then Apply() end
 end)
-hooksecurefunc(ns, "Apply", Apply)
-hooksecurefunc(ns, "Apply", Changed)
+ns.OnApply(Apply)
+ns.OnApply(Changed)
 
 local boot = CreateFrame("Frame")
 boot:RegisterEvent("PLAYER_LOGIN")

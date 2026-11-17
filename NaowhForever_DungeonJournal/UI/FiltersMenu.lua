@@ -20,10 +20,12 @@ local MENU_BAND = 0.08
 local MENU_DROP = 6
 local COUNT_GAP = 2
 local BUTTON_PAD = 4
+local LABEL_COUNT_GAP = 5
 
 local TEXT_ONE_ON = ns.L("Filters: 1 hiding loot or bosses")
 local TEXT_MANY_ON = ns.L("Filters: %d hiding loot or bosses")
 local TEXT_CLICK = ns.L("Click to choose what is listed and shown.")
+local TEXT_FILTERS = "Filters"
 
 local window, button, menu
 
@@ -35,11 +37,15 @@ local function Hiding(option)
     return option.hides ~= nil and S.Get(option.key) == option.hides and Available(option)
 end
 
+local function Offered(group)
+    return not group.newLayout or S.Get("newLayout") == true
+end
+
 local function FiltersOn()
     local on = 0
     for _, group in ipairs(GROUPS) do
         for _, option in ipairs(group.options) do
-            if Hiding(option) then on = on + 1 end
+            if Offered(group) and Hiding(option) then on = on + 1 end
         end
     end
     return on
@@ -61,10 +67,12 @@ local function PaintMenu()
         part:SetPoint("TOPLEFT", MENU_PAD, -y)
         part:SetPoint("RIGHT", -MENU_PAD, 0)
         local option = part.option
-        if option then
+        local offered = Offered(part.group)
+        part:SetShown(offered)
+        if offered and option then
             PaintRow(part, option)
             y = y + MENU_ROW_H
-        else
+        elseif offered then
             y = y + (part.gap or 0)
             part:SetPoint("TOPLEFT", MENU_PAD, -y)
             y = y + MENU_TITLE_H
@@ -74,7 +82,11 @@ local function PaintMenu()
 end
 
 local function RowClicked(row)
-    if Available(row.option) then S.Set(row.option.key, not S.Get(row.option.key)) end
+    local option = row.option
+    if not Available(option) then return end
+    local on = not S.Get(option.key)
+    if not on and option.other and not S.Get(option.other) then S.Set(option.other, true) end
+    S.Set(option.key, on)
 end
 
 local function RowEnter(row)
@@ -139,12 +151,18 @@ local function MenuHidden(self)
 end
 
 local function AddGroup(g, group)
+    menu.added[g] = true
     local title = ns.Font(menu, SMALL_SIZE, nil, T.muted)
     title:SetText(group.title:upper())
     title:SetJustifyH("LEFT")
     title.gap = g > 1 and MENU_GROUP_GAP or 0
+    title.group = group
     menu.parts[#menu.parts + 1] = title
-    for _, option in ipairs(group.options) do menu.parts[#menu.parts + 1] = MenuRow(option) end
+    for _, option in ipairs(group.options) do
+        local row = MenuRow(option)
+        row.group = group
+        menu.parts[#menu.parts + 1] = row
+    end
 end
 
 local function BuildMenu()
@@ -156,8 +174,7 @@ local function BuildMenu()
     menu:SetPoint("TOPRIGHT", button, "BOTTOMRIGHT", 0, -MENU_DROP)
     ns.Solid(menu, "BACKGROUND", T.panel, 1):SetAllPoints()
     ns.Border(menu, BORDER_RGB)
-    menu.parts = {}
-    for g, group in ipairs(GROUPS) do AddGroup(g, group) end
+    menu.parts, menu.added = {}, {}
     menu:SetScript("OnShow", MenuShown)
     menu:SetScript("OnHide", MenuHidden)
     menu:SetScript("OnEvent", MenuMouseDown)
@@ -171,6 +188,9 @@ local function OpenFilters()
         return
     end
     GameTooltip:Hide()
+    for g, group in ipairs(GROUPS) do
+        if Offered(group) and not menu.added[g] then AddGroup(g, group) end
+    end
     menu:Show()
     PaintMenu()
 end
@@ -199,8 +219,17 @@ end
 
 function FiltersMenu.Paint()
     local on = FiltersOn()
+    local labelled = S.Get("newLayout") == true
     button.count:SetText(on > 0 and on or "")
-    button:SetWidth(BAR_ICON + BUTTON_PAD + (on > 0 and math.ceil(button.count:GetStringWidth()) + COUNT_GAP or 0))
+    local count = on > 0 and math.ceil(button.count:GetStringWidth()) + COUNT_GAP or 0
+    Parts.LabelBar(button, labelled and TEXT_FILTERS or nil)
+    button.count:ClearAllPoints()
+    button.count:SetPoint("LEFT", labelled and button.label or button.icon, "RIGHT", labelled and LABEL_COUNT_GAP or COUNT_GAP, 0)
+    if labelled then
+        button:SetWidth(button:GetWidth() + count + (on > 0 and LABEL_COUNT_GAP or 0))
+    else
+        button:SetWidth(BAR_ICON + BUTTON_PAD + count)
+    end
 end
 
 function FiltersMenu.Repaint()

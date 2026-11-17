@@ -12,6 +12,13 @@ Top Bar launcher, its key binding, or Open Group Finder on its settings page) ha
 Your Group and Create. Opening it turns the module on. With Open With the Group Finder Key on (Settings >
 Key Binding, off to start), the game's Group Finder key, I to start, opens it instead of the game's.
 
+Withdrawn for now, until its rework: `ns.FEATURE_GROUP_FINDER` is `false` in `Core/Features.lua`, so
+`GroupFinder.lua` returns before making `ns.GroupFinder` (its store is still made, keeping the saved
+switch) and every other file returns with it, whatever the saved switch says. Settings > Modules, the
+Dungeons & Groups page and the Dungeon Journal's Find Group leave it out, and it has no `/nflfg`. To
+bring it back, set the flag to `true` and put its `NAOWHFOREVER_LFG` line back in `Bindings.xml`
+(`NaowhForever_ToggleModule("lfg")`) and Group Finder back in the Utilities TOC's Notes.
+
 ## Browse
 
 ```
@@ -30,8 +37,8 @@ Key Binding, off to start), the game's Group Finder key, I to start, opens it in
 ```
 
 - The Dungeon menu picks what is searched: the dungeons for your level (to start), every dungeon, or one,
-  listed by level with those outside your level greyed. Picking while a search runs does nothing; Search
-  searches the picked one again.
+  listed by level with those outside your level greyed. A pick made while a search runs is searched as
+  soon as that one ends; Search searches the picked one again.
 - A row is the leader first (class, name, level, zone, the group's spots, their minimum and score, Apply),
   then the dungeon, the leader's kills and quests there, and how long ago it was listed.
 - The filter box keeps the listings whose dungeon, leader or note has what you type; the count says
@@ -219,6 +226,8 @@ kills.
   failure sends an event.
 - The Dungeon menu's picks are searches rather than a filter on the last results, so a dungeon outside your
   level is found too, and the list always matches the pick. The filter box only narrows what is shown.
+- `ns.OpenGroupFinder(activityID)` opens Browse searching that one activity, as its pick in the Dungeon
+  menu does: the Dungeon Journal's Find Group, from a click.
 - The Dungeon menu scrolls past `MENU_H` (400): Forever lists over thirty dungeons, more than a screen holds.
 - The group's spots start at `SLOTS_X` (300) on every row so they line up down the list; the leader's
   zone is cut short before them.

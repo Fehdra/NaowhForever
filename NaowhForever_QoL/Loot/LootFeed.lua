@@ -465,7 +465,7 @@ local function HideWindowOn()
 end
 
 local function StackRoom(itemID)
-    local stack = C_Item.GetItemMaxStackSizeByID(itemID)
+    local stack = itemID and C_Item.GetItemMaxStackSizeByID(itemID)
     if not stack then return 0 end
     local room = 0
     for bag = 0, NUM_BAG_SLOTS do
@@ -486,7 +486,7 @@ local function AllTakeable()
         if not (isCoin or currencyID) then
             if threshold and quality and quality >= threshold then return false end
             local link = GetLootSlotLink(i)
-            if not (link and quantity <= StackRoom(C_Item.GetItemInfoInstant(link))) then items = items + 1 end
+            if not (link and quantity and quantity <=StackRoom(C_Item.GetItemInfoInstant(link))) then items = items + 1 end
         end
     end
     local free = 0
@@ -611,7 +611,7 @@ hooksecurefunc(S, "Set", function(key)
         Apply()
     end
 end)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
 hooksecurefunc(ns, "ShowUnlockMode", function()
     unlocked = true
     if On() then

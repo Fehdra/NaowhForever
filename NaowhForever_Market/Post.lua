@@ -59,13 +59,15 @@ local function HookWarning()
 end
 
 local function OnEvent(_, event, created, total)
-    if not waiting or confirm then return end
+    if not waiting then return end
+    if event == "AUCTION_HOUSE_POST_ERROR" or event == "AUCTION_MULTISELL_FAILURE" then return Done(false) end
+    if confirm then return end
     if event == "AUCTION_HOUSE_AUCTION_CREATED" then
         if sent.multisell then Wait() else Done(true) end
-    elseif event == "AUCTION_MULTISELL_UPDATE" then
-        if created >= total then Done(true) else Wait() end
+    elseif created >= total then
+        Done(true)
     else
-        Done(false)
+        Wait()
     end
 end
 

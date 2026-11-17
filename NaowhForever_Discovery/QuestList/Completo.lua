@@ -11,6 +11,9 @@ local S = ns.UI.ModuleSettings("completo", {
     enabled = F.enabled, hideDone = false,
     mapPins = F.mapPins, mapGrey = false, mapChainsOnly = false, mapPinSize = 20,
     mapDungeon = true, mapDungeonColor = false,
+    mapObjectives = F.mapObjectives, mapObjectivesTracked = false, mapObjectivePinSize = 20,
+    minimapQuests = F.minimapQuests, minimapQuestSize = 16, history = F.history,
+    unitTips = F.unitTips, partyProgress = F.partyProgress,
     rareHideKilled = false, rareAlert = F.rareAlert, rareAlertKilled = false, rareAlertSkull = false,
     rareSound = true, rareSoundKey = "file:gruntlinghorn", rareAlertPosition = nil, rareAlertScale = 1,
     rareAlertTime = 20, rareAlertFont = "", rareAlertFontSize = 13, rareAlertOutline = "",
@@ -28,6 +31,8 @@ local function LoadData(data, key)
     setmetatable(rares, nil)
     if not C_AddOns.LoadAddOn(DATA_ADDON) then
         quests.Zones, quests.Quests, quests.Requires, quests.Chains = {}, {}, {}, {}
+        quests.Objectives, quests.HandIns, quests.Creatures = {}, {}, {}
+        quests.Events, quests.Holidays, quests.FaireSpots = {}, {}, {}
         rares.Zones, rares.Rares = {}, {}
     end
     return rawget(data, key)
@@ -67,7 +72,7 @@ local function OnLogin(self)
 end
 
 D.OnChange(OnDiscoverySet)
-hooksecurefunc(ns, "Apply", Sync)
+ns.OnApply(Sync)
 
 local boot = CreateFrame("Frame")
 boot:RegisterEvent("PLAYER_LOGIN")

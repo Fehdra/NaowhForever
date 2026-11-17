@@ -68,6 +68,7 @@ local COVERS = {
 function CB.Category(itemID)
     if D.WEAPON[itemID] then return "weapon" end
     if CB.Has(ns.HEALTHSTONES, itemID) then return "healthstone" end
+    if D.OTHER[itemID] then return "other" end
     local _, _, _, _, _, classID, subclassID = C_Item.GetItemInfoInstant(itemID)
     if classID == C.TRADE_GOODS_CLASS then return D.TRADE_GOODS[subclassID] end
     if classID ~= C.CONSUMABLE_CLASS then return nil end

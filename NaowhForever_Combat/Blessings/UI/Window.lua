@@ -106,7 +106,7 @@ function ns.ToggleBlessingsWindow()
 end
 
 hooksecurefunc(ns.UI, "RefreshPage", RedrawSoon)
-hooksecurefunc(ns, "Apply", RedrawSoon)
+ns.OnApply(RedrawSoon)
 hooksecurefunc(B.Settings, "Set", function(key)
     if key == "blessWindowScale" and window then window:SetScale(Scale()) end
 end)

@@ -14,6 +14,8 @@ local S = ns.UI.ModuleSettings("discovery", {
     bagTracker = F.bagTracker, bagTrackerScale = 1, bagTrackerAlpha = 1, bagMapPins = F.bagMapPins,
     bagMapPinSize = 20,
     fieldJournal = F.fieldJournal,
+    attuneTracker = F.attuneTracker, attuneTrackerScale = 1, attuneTrackerAlpha = 1,
+    attuneMapPins = F.attuneMapPins, attuneMapPinSize = 20,
 })
 ns.DiscoverySettings = S
 
@@ -27,4 +29,4 @@ local function SplitOpacity()
     end
 end
 
-hooksecurefunc(ns, "Apply", SplitOpacity)
+ns.OnApply(SplitOpacity)

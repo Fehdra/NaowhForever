@@ -102,4 +102,4 @@ end
 
 SW.OnChange(Forget)
 S.OnChange(OnSetting)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)

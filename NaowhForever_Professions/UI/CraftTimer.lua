@@ -24,6 +24,7 @@ local GAP = 0.3
 local GUESS_CAST = 3
 local MIN_BATCH = 2
 local STALE = 5
+local STOP_GRACE = 1
 local WATCH_EVERY = 1
 local MS = 1000
 local SECONDS_PER_MINUTE = 60
@@ -35,11 +36,16 @@ local CAST_EVENTS = { "UNIT_SPELLCAST_START", "UNIT_SPELLCAST_SUCCEEDED", "UNIT_
     "UNIT_SPELLCAST_FAILED" }
 local TEXT_CLOCK = "%d:%02d"
 local TEXT_DONE = ns.L("%d / %d crafted")
+local MOVER_LABEL = "Total Craft Timer"
+local PAGE, CARD = "Professions/Settings", "Professions/Settings:craftTimer"
+local SAMPLE_ICON = "Interface\\Icons\\INV_Ingot_02"
+local SAMPLE_NAME, SAMPLE_DONE, SAMPLE_COUNT, SAMPLE_SHARE, SAMPLE_LEFT = ns.L("Smelt Copper"), 4, 10, 0.45, 15
 
 local job
 local bar, watch
 local hidden = {}
 local hooked = false
+local unlocked
 local events = CreateFrame("Frame")
 
 local function On()
@@ -150,29 +156,53 @@ function Look.Progress(frame, share, left)
 end
 
 local function OnUpdate(self)
-    if not job then return self:Hide() end
+    if not job then
+        if not unlocked then self:Hide() end
+        return
+    end
     HideCastBars()
     local elapsed = GetTime() - job.start
     Look.Progress(self, elapsed / job.known, job.known - elapsed)
+end
+
+local function SavePosition(pos)
+    local scale = bar:GetScale()
+    S.Set("craftTimerPos", { point = pos.point, relPoint = pos.relPoint, x = pos.x * scale, y = pos.y * scale })
 end
 
 local function Build()
     bar = Look.New(UIParent, "NaowhForeverCraftTimer")
     Look.Style(bar)
     bar:SetFrameStrata("MEDIUM")
+    bar:SetMovable(true)
+    bar:SetClampedToScreen(true)
     bar:SetScript("OnUpdate", OnUpdate)
+    bar.mover = ns.UI.AttachMover(bar, MOVER_LABEL, SavePosition, PAGE, CARD)
     bar:Hide()
 end
 
 local function Place()
-    local flight = _G.NaowhForeverFlightTimer
+    local flight, pos = _G.NaowhForeverFlightTimer, S.Get("craftTimerPos")
     bar:ClearAllPoints()
-    if flight then
-        bar:SetScale(flight:GetScale())
+    if flight then bar:SetScale(flight:GetScale()) end
+    local scale = bar:GetScale()
+    if pos then
+        bar:SetPoint(pos.point, UIParent, pos.relPoint, pos.x / scale, pos.y / scale)
+    elseif flight then
         bar:SetPoint("CENTER", flight, "CENTER")
     else
         bar:SetPoint("TOP", UIParent, "TOP", 0, FALLBACK_DROP)
     end
+end
+
+local function ShowSample()
+    if not bar then Build() end
+    Place()
+    Look.Fill(bar, SAMPLE_ICON, SAMPLE_NAME, SAMPLE_DONE, SAMPLE_COUNT)
+    Look.Pips(bar, SAMPLE_COUNT, SAMPLE_DONE, function(i) return i / SAMPLE_COUNT end)
+    Look.Progress(bar, SAMPLE_SHARE, SAMPLE_LEFT)
+    bar.mover:Show()
+    bar:Show()
 end
 
 local function PipAt(i)
@@ -195,8 +225,9 @@ local function Stop()
         watch:Cancel()
         watch = nil
     end
-    if bar then bar:Hide() end
     RestoreCastBars()
+    if unlocked then return ShowSample() end
+    if bar then bar:Hide() end
 end
 
 local function Resync(castLeft)
@@ -205,6 +236,7 @@ local function Resync(castLeft)
 end
 
 local function OnStart()
+    job.stoppedAt = nil
     if job.lastEnd then job.gap = GetTime() - job.lastEnd end
     local _, _, _, startMS, endMS = UnitCastingInfo("player")
     if not (startMS and endMS) then return end
@@ -222,9 +254,20 @@ local function OnSucceeded()
     Show()
 end
 
+local function CastStopped()
+    local stopped = job
+    stopped.stoppedAt = GetTime()
+    C_Timer.After(STOP_GRACE, function()
+        if job == stopped and job.stoppedAt and select(CASTING_SPELL, UnitCastingInfo("player")) ~= job.recipeID then
+            Stop()
+        end
+    end)
+end
+
 local function OnEvent(_, event, _, _, spellID)
     if not job then return end
-    if event == "UPDATE_TRADESKILL_CAST_STOPPED" then return Stop() end
+    -- Closing the profession window can send this while the batch casts on.
+    if event == "UPDATE_TRADESKILL_CAST_STOPPED" then return CastStopped() end
     if spellID ~= job.recipeID then return end
     if event == "UNIT_SPELLCAST_START" then return OnStart() end
     if event == "UNIT_SPELLCAST_SUCCEEDED" then return OnSucceeded() end
@@ -258,7 +301,15 @@ local function OnCraft(recipeID, count)
 end
 
 local function Apply()
-    if not On() then return Stop() end
+    if not On() then
+        unlocked = false
+        if bar then bar.mover:Hide() end
+        return Stop()
+    end
+    if bar and not job then
+        Place()
+        if unlocked then ShowSample() end
+    end
     if hooked then return end
     hooked = true
     hooksecurefunc(C_TradeSkillUI, "CraftRecipe", OnCraft)
@@ -270,14 +321,28 @@ local function OnSettingChanged(key)
         Apply()
     elseif key == "craftTimerShowCastBar" then
         if S.Get(key) then RestoreCastBars() elseif job then HideCastBars() end
-    elseif bar and key:find("^craftTimer") then
+    elseif bar and key:find("^craftTimer") and key ~= "craftTimerPos" then
         Look.Style(bar)
     end
 end
 
+local function OnUnlock()
+    unlocked = On() == true
+    if unlocked and not job then ShowSample() elseif unlocked then bar.mover:Show() end
+end
+
+local function OnLock()
+    unlocked = false
+    if not bar then return end
+    bar.mover:Hide()
+    if job then Show() else bar:Hide() end
+end
+
 events:SetScript("OnEvent", OnEvent)
 hooksecurefunc(S, "Set", OnSettingChanged)
-hooksecurefunc(ns, "Apply", Apply)
+ns.OnApply(Apply)
+hooksecurefunc(ns, "ShowUnlockMode", OnUnlock)
+hooksecurefunc(ns, "HideUnlockMode", OnLock)
 
 local boot = CreateFrame("Frame")
 boot:RegisterEvent("PLAYER_LOGIN")
